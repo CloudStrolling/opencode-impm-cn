@@ -1,0 +1,232 @@
+/**
+ * Copyright 2026 jenemy8023 <jenemy8023@163.com>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * impm_project_analyzer 工具
+ * 扫描源代码目录，生成项目地图 Markdown（文件、函数、类清单）。
+ * 用于存量项目反推初始化与 impm-project-update 更新项目地图。
+ */
+
+import { existsSync, readdirSync, readFileSync, statSync } from "fs";
+import { join, relative } from "path";
+import { listFilesRecursive } from "../utils/paths.js";
+
+/** 默认排除目录 */
+const DEFAULT_EXCLUDED = new Set([
+    "node_modules",
+    ".git",
+    "docs",
+    "dist",
+    "build",
+    "coverage",
+    ".opencode",
+    "assets",
+    "deploy",
+    ".idea",
+    ".vscode",
+    "__pycache__",
+    ".venv",
+    "venv",
+    "target",
+    "out",
+    "bin",
+    "obj",
+    ".next",
+    ".nuxt",
+    "vendor",
+    ".cache",
+]);
+
+/** 代码文件扩展名 → 语言 */
+const EXT_LANG: Record<string, string> = {
+    ".ts": "TypeScript",
+    ".tsx": "TypeScript",
+    ".js": "JavaScript",
+    ".jsx": "JavaScript",
+    ".py": "Python",
+    ".java": "Java",
+    ".kt": "Kotlin",
+    ".go": "Go",
+    ".c": "C",
+    ".cpp": "C++",
+    ".h": "C/C++",
+    ".hpp": "C++",
+    ".cs": "C#",
+    ".rs": "Rust",
+    ".php": "PHP",
+    ".rb": "Ruby",
+    ".swift": "Swift",
+    ".sql": "SQL",
+    ".vue": "Vue",
+    ".svelte": "Svelte",
+};
+
+/** 按语言提取函数/类名 */
+function extractSymbols(content: string, ext: string): string[] {
+    const symbols: string[] = [];
+    const add = (re: RegExp) => {
+        for (const m of content.matchAll(re)) {
+            if (m[1]) {
+                symbols.push(m[1]);
+            }
+        }
+    };
+    switch (ext) {
+        case ".ts":
+        case ".tsx":
+        case ".js":
+        case ".jsx":
+            add(/^\s*(?:export\s+)?(?:default\s+)?(?:async\s+)?function\s+([A-Za-z_$][\w$]*)/gm);
+            add(/^\s*(?:export\s+)?(?:default\s+)?class\s+([A-Za-z_$][\w$]*)/gm);
+            add(/^\s*(?:export\s+)?const\s+([A-Za-z_$][\w$]*)\s*=\s*(?:async\s*)?\([^)]*\)\s*=>/gm);
+            break;
+        case ".py":
+            add(/^\s*(?:async\s+)?def\s+([A-Za-z_]\w*)/gm);
+            add(/^\s*class\s+([A-Za-z_]\w*)/gm);
+            break;
+        case ".java":
+        case ".kt":
+            add(/^\s*(?:public|private|protected)?\s*(?:static\s+)?(?:final\s+)?(?:[\w<>\[\],.\s]+?)\s+([A-Za-z_]\w*)\s*\([^)]*\)\s*(?:\{|throws|$)/gm);
+            add(/^\s*(?:public|private|protected)?\s*(?:abstract\s+)?(?:class|interface|enum)\s+([A-Za-z_]\w*)/gm);
+            break;
+        case ".go":
+            add(/^func\s+([A-Za-z_]\w*)/gm);
+            add(/^type\s+([A-Za-z_]\w*)\s+(?:struct|interface)/gm);
+            break;
+        case ".c":
+        case ".cpp":
+        case ".h":
+        case ".hpp":
+            add(/^\s*(?:class|struct|namespace)\s+([A-Za-z_]\w*)/gm);
+            add(/^\s*[\w:*<>\[\],\s]+\s+([A-Za-z_]\w*)\s*\([^)]*\)\s*\{/gm);
+            break;
+        case ".cs":
+            add(/^\s*(?:public|private|protected|internal)?\s*(?:static\s+)?(?:async\s+)?[\w<>\[\],\s]+\s+([A-Za-z_]\w*)\s*\([^)]*\)/gm);
+            add(/^\s*(?:public|private|protected|internal)?\s*(?:abstract\s+)?(?:sealed\s+)?class\s+([A-Za-z_]\w*)/gm);
+            break;
+        case ".php":
+            add(/^\s*(?:public|private|protected)?\s*function\s+([A-Za-z_]\w*)/gm);
+            add(/^\s*(?:abstract\s+)?class\s+([A-Za-z_]\w*)/gm);
+            break;
+        case ".sql":
+            add(/CREATE\s+(?:TABLE|VIEW|PROCEDURE|FUNCTION|INDEX)\s+(?:`?[\w]+`?\.)?`?([\w]+)`?/gim);
+            break;
+        default:
+            break;
+    }
+    return [...new Set(symbols)];
+}
+
+/** 提取文件首个注释行作为描述 */
+function firstComment(content: string, ext: string): string {
+    const line = content
+        .split(/\r?\n/)
+        .find((l) => /^\s*(\/\/|\*|#|--|;)/.test(l.trim()));
+    if (!line) {
+        return "";
+    }
+    return line.trim().replace(/^(\/\/|\*|#|--|;)\s*/, "").slice(0, 80);
+}
+
+export const projectAnalyzerDefinition = {
+    description:
+        "扫描源代码目录生成项目地图：列出各目录下代码文件及其函数、类清单（按语言识别）。存量项目初始化反推结构、更新项目地图时使用。",
+};
+
+export function projectAnalyzerExecute(args: {
+    projectRoot: string;
+    sourceDirs?: string[];
+    excludeDirs?: string[];
+}) {
+    try {
+        const extraExcluded = new Set(
+            (args.excludeDirs ?? []).map((d) => d.trim()).filter(Boolean),
+        );
+        const excluded = new Set([...DEFAULT_EXCLUDED, ...extraExcluded]);
+
+        let rootDirs: string[];
+        if (args.sourceDirs && args.sourceDirs.length > 0) {
+            rootDirs = args.sourceDirs;
+        } else {
+            const top = existsSync(args.projectRoot)
+                ? readdirSync(args.projectRoot).filter((n) => !n.startsWith("."))
+                : [];
+            rootDirs = top.filter((n) => !excluded.has(n));
+        }
+
+        const files: Array<{ path: string; lang: string }> = [];
+        for (const dir of rootDirs) {
+            const full = join(args.projectRoot, dir);
+            if (!existsSync(full) || !statSync(full).isDirectory()) {
+                continue;
+            }
+            for (const f of listFilesRecursive(full)) {
+                const parts = f.split(/[\\/]/);
+                if (parts.some((p) => excluded.has(p))) {
+                    continue;
+                }
+                const ext = parts[parts.length - 1].slice(parts[parts.length - 1].lastIndexOf(".")).toLowerCase();
+                if (EXT_LANG[ext] || /\.(md|json|ya?ml|toml|ini|cfg|txt)$/i.test(f)) {
+                    files.push({ path: f, lang: EXT_LANG[ext] ?? "config" });
+                }
+            }
+        }
+
+        files.sort((a, b) => a.path.localeCompare(b.path));
+
+        const lines = ["# 项目地图", "", `共扫描 ${files.length} 个文件。`, ""];
+        let currentGroup = "";
+        for (const f of files) {
+            const rel = relative(args.projectRoot, f.path).replace(/\\/g, "/");
+            const group = rel.includes("/") ? rel.split("/")[0] : "（根目录）";
+            if (group !== currentGroup) {
+                currentGroup = group;
+                lines.push(`## ${group}/`, "");
+            }
+            let entry = `- \`${rel}\``;
+            if (f.lang) {
+                entry += `（${f.lang}）`;
+            }
+            try {
+                const content = readFileSync(f.path, "utf8").slice(0, 200_000);
+                const desc = firstComment(content, f.path.slice(f.path.lastIndexOf(".")));
+                if (desc) {
+                    entry += ` — ${desc}`;
+                }
+                const symbols = extractSymbols(content, f.path.slice(f.path.lastIndexOf(".")));
+                if (symbols.length > 0) {
+                    entry += `：${symbols.slice(0, 20).join(", ")}${symbols.length > 20 ? "…" : ""}`;
+                }
+            } catch {
+                // 二进制或不可读文件，跳过提取
+            }
+            lines.push(entry);
+        }
+        lines.push("");
+
+        return {
+            success: true,
+            sourceDirs: rootDirs,
+            fileCount: files.length,
+            map: lines.join("\n"),
+        };
+    } catch (err) {
+        return {
+            success: false,
+            error: err instanceof Error ? err.message : String(err),
+        };
+    }
+}

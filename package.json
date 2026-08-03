@@ -1,0 +1,36 @@
+{
+  "name": "opencode-impm-cn",
+  "version": "0.1.0",
+  "description": "我是项目经理（AI项目经理）OpenCode 插件 - 中文版工程化全流程开发套件（agents + commands + skills + 工具）",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "install:plugin": "node scripts/install.mjs",
+    "postinstall": "node scripts/install.mjs"
+  },
+  "keywords": [
+    "opencode-plugin",
+    "opencode",
+    "impm",
+    "project-manager",
+    "ai-project-manager",
+    "tdd"
+  ],
+  "author": "jenemy8023 <jenemy8023@163.com>",
+  "license": "Apache-2.0",
+  "files": [
+    "dist/",
+    "assets/",
+    "scripts/install.mjs"
+  ],
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "@types/node": "^22.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

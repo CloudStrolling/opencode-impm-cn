@@ -1,0 +1,43 @@
+# 依赖
+node_modules/
+
+# 编译产物
+dist/
+*.tsbuildinfo
+*.js.map
+*.d.ts.map
+
+# 安装生成目录（套件安装脚本复制 .opencode/ 下的 agents/commands/skills/plugins）
+.opencode/
+
+# npm 打包产物
+*.tgz
+
+# 环境文件
+.env
+.env.local
+.env.*.local
+
+# 日志文件
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 编辑器/IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS 文件
+.DS_Store
+Thumbs.db
+
+# 测试覆盖率
+coverage/
+
+# 依赖缓存
+.pnp
+.pnp.js
