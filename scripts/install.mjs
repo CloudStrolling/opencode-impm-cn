@@ -164,7 +164,8 @@ function main() {
         }
 
         console.log(`复制 ${dir}/ -> .opencode/${dir}/ ...`);
-        copyDirRecursive(srcDir, destDir);
+        // clean=true：先清空目标目录再复制，避免重复安装残留旧文件（幂等安装）
+        copyDirRecursive(srcDir, destDir, true);
     }
 
     const pluginDest = join(opencodeDir, "plugins", "impm");

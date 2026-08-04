@@ -1,4 +1,4 @@
-# Copyright 2026 jenemy8023 <jenemy8023@163.com>
+﻿# Copyright 2026 jenemy8023 <jenemy8023@163.com>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -58,12 +58,17 @@ foreach ($dir in @("commands", "agents", "skills")) {
         continue
     }
     Write-Host "复制 $dir/ -> .opencode/$dir/ ..."
+    # 先删除已存在的目标目录，避免 Copy-Item 把源目录嵌套复制进已有目录（重复安装）
+    if (Test-Path $destDir) {
+        Remove-Item -Path $destDir -Recurse -Force
+    }
     Copy-Item -Path $srcDir -Destination $destDir -Recurse -Force
 }
 
 if (Test-Path $distDir) {
     $pluginDest = Join-Path $opencodeDir "plugins\impm"
     Write-Host "安装本地插件 -> .opencode/plugins/impm/ ..."
+    New-Item -ItemType Directory -Path $pluginDest -Force | Out-Null
     Copy-Item -Path (Join-Path $pluginRoot "package.json") -Destination $pluginDest -Force
     Copy-Item -Path $distDir -Destination (Join-Path $pluginDest "dist") -Recurse -Force
 } else {
