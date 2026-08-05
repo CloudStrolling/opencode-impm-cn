@@ -40,13 +40,19 @@ description: 将当前项目纳入 git 管理，根据操作系统与项目编�
 - 未在 git 管理内：调用 impm_git(projectRoot, init) 将项目纳入 git 管理，并核对 git 仓库初始化成功。
 
 ### 步骤 2：创建/更新 .gitignore
-根据操作系统（Windows）、项目编程语言（通过 impm_project_info 获取）与开发工具要求，在项目根目录创建或更新 .gitignore，至少排除：
-- 依赖目录：node_modules、vendor、.venv 等（按编程语言调整）
-- 构建产物：dist、build、out、target、__pycache__ 等（按编程语言调整）
-- 工具与配置目录：.opencode、.idea、.vscode、*.iml、.DS_Store
-- 日志与临时文件：*.log、tmp、temp、*.tmp
-- 环境与密钥：.env、*.local、.secret（密钥类文件一律不提交）
-核对 .gitignore 已包含上述忽略项。
+1. 直接读取技能模板文件 `.opencode/skills/template/GITIGNORE-TEMPLATE`（该文件与本技能文件同级目录下，相对路径为 `../template/GITIGNORE-TEMPLATE`），以模板内容为基础创建或更新项目根目录的 .gitignore。
+2. 根据项目编程语言（通过 impm_project_info 获取）与操作系统（Windows），从模板中裁剪调整：
+   - 保留与项目相关的语言段（如前端/Node.js、Python、Java、Rust、Go、PHP 等）；
+   - 删除与项目无关的语言段，避免误伤无关文件；
+   - 操作系统、IDE、AI 开发工具等通用段保持不变；
+   - 必要时补充项目特有的排除项（如框架产物、私有配置等）。
+3. 若 .gitignore 已存在，对照模板检查是否有遗漏或需要更新的地方，并直接更新。
+4. 核对 .gitignore 已包含关键忽略项：
+   - 依赖目录：node_modules、vendor、.venv 等（按编程语言调整）
+   - 构建产物：dist、build、out、target、__pycache__ 等（按编程语言调整）
+   - 工具与配置目录：.opencode、.idea、.vscode、*.iml、.DS_Store
+   - 日志与临时文件：*.log、tmp、temp、*.tmp
+   - 环境与密钥：.env、*.local、.secret（密钥类文件一律不提交）
 
 ### 步骤 3：初始提交
 调用 impm_git(projectRoot, commit, null, 初始化impm项目) 做一次初始提交，提交当前全部初始化内容，并通过 impm_git(projectRoot, status) 或 log 核对提交成功。
