@@ -103,6 +103,23 @@ function copyDirRecursive(src, dest, clean = false) {
     }
 }
 
+function ensureOpenCodePackageJson(opencodeDir) {
+    const pkgPath = join(opencodeDir, "package.json");
+    let pkg = {};
+    if (existsSync(pkgPath)) {
+        try {
+            pkg = JSON.parse(readFileSync(pkgPath, "utf-8"));
+        } catch {
+            console.warn(`  .opencode/package.json 解析失败，将重建`);
+        }
+    }
+    if (pkg.type !== "module") {
+        pkg.type = "module";
+        writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n", "utf-8");
+        console.log("更新 .opencode/package.json（type: module，保证插件入口按 ESM 解析）");
+    }
+}
+
 function updateOpenCodeConfig(projectRoot) {
     const configPath = join(projectRoot, "opencode.json");
 
@@ -182,9 +199,18 @@ function main() {
             );
         }
         copyDirRecursive(DIST_DIR, pluginDestDir);
+
+        // opencode 只自动发现 .opencode/plugins/ 下直接 *.js/*.ts 文件（不递归子目录），
+        // 因此必须在根目录生成入口文件指向 dist 编译产物
+        const pluginEntry = join(opencodeDir, "plugins", "impm.js");
+        writeFileSync(pluginEntry, 'export { default } from "./impm/dist/index.js";\n', "utf-8");
+        console.log("生成插件入口文件 -> .opencode/plugins/impm.js");
     } else {
         console.warn(`  跳过：dist 目录不存在（请先执行 npm run build）: ${DIST_DIR}`);
     }
+
+    // 确保 .opencode/package.json 声明 ESM（入口文件 impm.js 使用 export 语法）
+    ensureOpenCodePackageJson(opencodeDir);
 
     console.log("");
 

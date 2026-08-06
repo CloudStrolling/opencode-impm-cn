@@ -70,10 +70,60 @@ if (Test-Path $distDir) {
     Write-Host "安装本地插件 -> .opencode/plugins/impm/ ..."
     New-Item -ItemType Directory -Path $pluginDest -Force | Out-Null
     Copy-Item -Path (Join-Path $pluginRoot "package.json") -Destination $pluginDest -Force
-    Copy-Item -Path $distDir -Destination (Join-Path $pluginDest "dist") -Recurse -Force
+    # 先清空旧目标目录，再复制 dist 内容（而非目录本身），避免嵌套出 dist/dist（幂等安装）
+    $pluginDistDest = Join-Path $pluginDest "dist"
+    if (Test-Path $pluginDistDest) {
+        Remove-Item -Path $pluginDistDest -Recurse -Force
+    }
+    New-Item -ItemType Directory -Path $pluginDistDest -Force | Out-Null
+    Copy-Item -Path (Join-Path $distDir "*") -Destination $pluginDistDest -Recurse -Force
+
+    # opencode 只自动发现 .opencode/plugins/ 下直接 *.js/*.ts 文件（不递归子目录），
+    # 因此必须在根目录生成入口文件指向 dist 编译产物
+    $pluginEntry = Join-Path $opencodeDir "plugins\impm.js"
+    [System.IO.File]::WriteAllText($pluginEntry, 'export { default } from "./impm/dist/index.js";' + [Environment]::NewLine)
+    Write-Host "生成插件入口文件 -> .opencode/plugins/impm.js"
 } else {
     Write-Warning "跳过：dist 目录不存在（请先执行 npm run build）: $distDir"
 }
+
+# 确保 .opencode/package.json 声明 ESM（入口文件 impm.js 使用 export 语法）
+$opencodePkgPath = Join-Path $opencodeDir "package.json"
+if (Test-Path $opencodePkgPath) {
+    $pkgJson = Get-Content -Path $opencodePkgPath -Raw -Encoding UTF8 | ConvertFrom-Json
+    if ($pkgJson.type -ne "module") {
+        $pkgJson | Add-Member -NotePropertyName type -NotePropertyValue "module" -Force
+        [System.IO.File]::WriteAllText($opencodePkgPath, ($pkgJson | ConvertTo-Json -Depth 10))
+        Write-Host "更新 .opencode/package.json（type: module）"
+    }
+} else {
+    [System.IO.File]::WriteAllText($opencodePkgPath, '{"type": "module"}')
+    Write-Host "生成 .opencode/package.json（type: module）"
+}
+
+# 更新 opencode.json 配置（npm 安装模式注册插件名；本地自安装模式由入口文件自动发现）
+$configPath = Join-Path $targetRoot "opencode.json"
+if (Test-Path $configPath) {
+    $config = Get-Content -Path $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
+} else {
+    $config = @{}
+}
+if (-not $config.'$schema') {
+    $config | Add-Member -NotePropertyName '$schema' -NotePropertyValue "https://opencode.ai/config.json" -Force
+}
+$resolvedTarget = (Resolve-Path $targetRoot).Path
+$isSelfInstall = ($resolvedTarget -eq $pluginRoot.Path)
+if (-not $isSelfInstall) {
+    $plugins = @($config.plugin)
+    if ($plugins -notcontains "opencode-impm-cn") {
+        $plugins += "opencode-impm-cn"
+    }
+    $config | Add-Member -NotePropertyName plugin -NotePropertyValue $plugins -Force
+    Write-Host "配置文件已更新: $configPath（plugin: opencode-impm-cn）"
+} else {
+    Write-Host "本地自安装：跳过 config.plugin 注册（插件入口文件由 .opencode/plugins/ 自动发现）"
+}
+[System.IO.File]::WriteAllText($configPath, ($config | ConvertTo-Json -Depth 10))
 
 Write-Host ""
 Write-Host "============================================"
