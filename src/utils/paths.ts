@@ -196,17 +196,20 @@ export function isDirEmpty(dir: string): boolean {
     return entries.length === 0;
 }
 
-/** 递归列出目录下所有文件 */
-export function listFilesRecursive(dir: string): string[] {
-    if (!existsSync(dir)) {
+/** 递归列出目录下所有文件（防御性：跳过非法条目，限制递归深度防止符号链接/交接点循环） */
+export function listFilesRecursive(dir: string, depth = 0): string[] {
+    if (typeof dir !== "string" || !dir || !existsSync(dir) || depth > 64) {
         return [];
     }
     const files: string[] = [];
     for (const name of readdirSync(dir)) {
+        if (typeof name !== "string") {
+            continue;
+        }
         const full = join(dir, name);
         try {
             if (statSync(full).isDirectory()) {
-                files.push(...listFilesRecursive(full));
+                files.push(...listFilesRecursive(full, depth + 1));
             } else {
                 files.push(full);
             }

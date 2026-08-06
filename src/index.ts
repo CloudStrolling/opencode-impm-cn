@@ -56,6 +56,39 @@ function createArraySchema(description: string) {
     };
 }
 
+/**
+ * 工具结果适配：opencode v1.18+ 的插件工具桥接层（tool/registry.ts）只接受
+ * string 或 { output: string } 两种结果形态，其余字段一律丢弃；
+ * 返回普通对象会导致 output=undefined，进而触发 truncate 层 text.split 崩溃
+ * （Cannot read properties of undefined (reading 'split')）。
+ * 统一把对象结果序列化为 output 字符串。
+ */
+function toToolResult(result: unknown): unknown {
+    if (typeof result === "string") {
+        return result;
+    }
+    if (result && typeof result === "object") {
+        const r = result as Record<string, unknown>;
+        if (typeof r.output === "string") {
+            return result;
+        }
+    }
+    return { output: JSON.stringify(result, null, 2) };
+}
+
+/** 包装工具定义：把 execute 返回结果统一转成 opencode 桥接层兼容形态 */
+function wrapToolResult(def: {
+    description?: string;
+    args?: Record<string, unknown>;
+    execute: (args: Record<string, unknown>) => Promise<unknown> | unknown;
+}) {
+    const execute = def.execute;
+    return {
+        ...def,
+        execute: async (args: Record<string, unknown>) => toToolResult(await execute(args)),
+    };
+}
+
 interface ToolContext {
     project: { path: string };
     directory: string;
@@ -72,12 +105,7 @@ export default async function impmPlugin(context: ToolContext) {
     // 内置功能：prompt-recorder（提问记录 + 对话导出，含钩子与 3 个手动工具）
     const promptRecorder = await createPromptRecorder(projectRoot);
 
-    return {
-        /** chat.message 钩子：用户提问时自动记录到 prompts.md */
-        "chat.message": promptRecorder.chatMessage,
-        /** 事件钩子：主会话回合结束时自动回填 token、导出对话 */
-        event: promptRecorder.event,
-        tool: {
+    const tools = {
             /** 项目信息读取工具 — 从 docs/project.md 解析项目基本信息 */
             impm_project_info: {
                 description: projectInfoDefinition.description,
@@ -358,7 +386,16 @@ export default async function impmPlugin(context: ToolContext) {
             impm_prompt_finalize: promptRecorder.tool.impm_prompt_finalize,
             /** 提问记录工具（prompt-recorder 内置功能）— 导出对话快照 */
             impm_prompt_export: promptRecorder.tool.impm_prompt_export,
-        },
+        };
+
+    return {
+        /** chat.message 钩子：用户提问时自动记录到 prompts.md */
+        "chat.message": promptRecorder.chatMessage,
+        /** 事件钩子：主会话回合结束时自动回填 token、导出对话 */
+        event: promptRecorder.event,
+        tool: Object.fromEntries(
+            Object.entries(tools).map(([id, def]) => [id, wrapToolResult(def)]),
+        ),
     };
 }
 

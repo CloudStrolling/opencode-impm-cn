@@ -80,33 +80,49 @@ export const isInitDefinition = {
 };
 
 export function isInitExecute(args: { projectRoot: string }) {
-    const root = args.projectRoot;
-    const projectMdPath = join(root, "docs", "project.md");
-    const sadMdPath = join(root, "docs", "sad.md");
-
-    const projectMdExists = existsSync(projectMdPath);
-    const sadMdExists = existsSync(sadMdPath);
-
-    let files: string[] = [];
     try {
-        files = listFilesRecursive(root).filter((f) => {
-            const parts = f.split(/[\\/]/);
-            return !parts.some((p) => EXCLUDED_DIRS.has(p));
-        });
-    } catch {
-        files = [];
-    }
+        const root = args?.projectRoot?.trim();
+        if (!root) {
+            return {
+                success: false,
+                error: "缺少必填参数 projectRoot（项目根目录的绝对路径）。",
+            };
+        }
+        const projectMdPath = join(root, "docs", "project.md");
+        const sadMdPath = join(root, "docs", "sad.md");
 
-    return {
-        success: true,
-        initialized: projectMdExists && sadMdExists,
-        projectMd: projectMdExists,
-        sadMd: sadMdExists,
-        emptyProject: files.length === 0,
-        sourceFileCount: files.length,
-        hint:
-            projectMdExists && sadMdExists
-                ? "项目已初始化，直接进入对应流程阶段。"
-                : "项目未初始化，需执行 /impm-init 完成初始化；空项目按标准结构写入，存量项目按存量代码反推补全。",
-    };
+        const projectMdExists = existsSync(projectMdPath);
+        const sadMdExists = existsSync(sadMdPath);
+
+        let files: string[] = [];
+        try {
+            files = listFilesRecursive(root).filter((f) => {
+                if (typeof f !== "string") {
+                    return false;
+                }
+                const parts = f.split(/[\\/]/);
+                return !parts.some((p) => EXCLUDED_DIRS.has(p));
+            });
+        } catch {
+            files = [];
+        }
+
+        return {
+            success: true,
+            initialized: projectMdExists && sadMdExists,
+            projectMd: projectMdExists,
+            sadMd: sadMdExists,
+            emptyProject: files.length === 0,
+            sourceFileCount: files.length,
+            hint:
+                projectMdExists && sadMdExists
+                    ? "项目已初始化，直接进入对应流程阶段。"
+                    : "项目未初始化，需执行 /impm-init 完成初始化；空项目按标准结构写入，存量项目按存量代码反推补全。",
+        };
+    } catch (err) {
+        return {
+            success: false,
+            error: err instanceof Error ? err.message : String(err),
+        };
+    }
 }
