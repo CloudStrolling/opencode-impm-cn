@@ -1,12 +1,13 @@
 ---
 name: impm-init-lld
-description: 读取 LLD-TEMPLATE.MD 模板，根据项目代码、文档及 PRD、SAD 反推详细设计文档，写入版本文档并复制到主文档 docs/{项目英文缩写}-lld.md。当初始化阶段需要编写详细设计时使用。
+description: 读取 LLD-TEMPLATE.MD 模板，根据项目代码、文档及 PRD、SAD 反推整体业务逻辑的详细设计文档（模块划分、业务流程、核心业务逻辑等，不涉及接口细节设计），写入版本文档并复制到主文档 docs/{项目英文缩写}-lld.md。当初始化阶段需要编写详细设计时使用。
 ---
 
 # impm-init-lld 技能
 ## 触发词
 - LLD
 - 详细设计
+- 业务逻辑设计
 - 类图
 - 时序图
 
@@ -34,11 +35,11 @@ description: 读取 LLD-TEMPLATE.MD 模板，根据项目代码、文档及 PRD�
 
 ## 执行步骤
 ### 步骤 1：读取模板
-调用 impm_template_reader(projectRoot, LLD-TEMPLATE.MD) 读取详细设计文档模板，明确模板章节：模块概述、类图、时序图、接口实现细节、异常处理策略、单元测试策略等。
+调用 impm_template_reader(projectRoot, LLD-TEMPLATE.MD) 读取详细设计文档模板，明确模板章节：模块概述、模块划分与职责、类图、核心业务流程时序图、状态图、核心业务逻辑、业务规则与约束、业务数据流、异常处理策略、单元测试策略等。注意：LLD 聚焦整体业务逻辑设计，接口定义、请求/响应参数等接口细节由 API 设计文档负责，LLD 中不重复编写。
 
 ### 步骤 2：反推详细设计
-通过 impm_doc_reader 读取已有文档（重点是 PRD、SAD，以及 docs/{项目英文缩写}-api.md 接口定义），结合当前项目代码与文档，按模板格式填写 LLD：
-- 存量项目：从现有代码（类、模块、调用链）反推模块划分、类图、时序图与实现细节。
+通过 impm_doc_reader 读取已有文档（重点是 PRD、SAD，必要时参考 docs/{项目英文缩写}-api.md 了解接口全貌），结合当前项目代码与文档，从业务逻辑视角反推模块划分、业务流程、核心业务逻辑与业务规则，按模板格式填写 LLD：
+- 存量项目：从现有代码（类、模块、调用链、业务处理流程）反推模块划分、类图、核心业务流程时序图与业务规则。
 - 空项目：按模板结构写入空文档，章节标题保留，内容填写“待补充”或空值。
 
 ### 步骤 3：写入版本文档并复制主文档
@@ -52,6 +53,6 @@ description: 读取 LLD-TEMPLATE.MD 模板，根据项目代码、文档及 PRD�
 - docs/{项目英文缩写}-lld.md
 
 ## 完成后提示
-- 如需继续执行下一步骤，请输入 /impm-init-testcase
+- 如需继续执行下一步骤，请输入 /impm-init-task
 - 如需继续执行本阶段后续所有步骤，请输入 /impm-init
 <!-- SPDX-License-Identifier: Apache-2.0 / Copyright 2026 jenemy8023 <jenemy8023@163.com> -->

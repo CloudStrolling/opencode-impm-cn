@@ -83,10 +83,10 @@ PM → BA / SA / TL / DBA / TE / SCM / DW / CS / WS / FEE / BEE / SSE
 
 **文件：** `assets/agents/tl.md`
 
-**执行技能：** `impm-init-api`、`impm-init-lld`、`impm-api-create`、`impm-lld-create`、`impm-task-create`、`impm-task-coding-context`、`impm-task-coding-api`、`impm-coding-review`
+**执行技能：** `impm-init-api`、`impm-init-lld`、`impm-init-task`、`impm-api-create`、`impm-lld-create`、`impm-task-create`、`impm-task-coding-context`、`impm-task-coding-api`、`impm-coding-review`
 
 **职责：**
-- 编写 API 接口设计文档与详细设计文档（LLD）
+- 编写 API 接口设计文档与详细设计文档（LLD，聚焦整体业务逻辑设计，接口细节由 API 文档负责）
 - 将开发需求拆解为可执行的任务清单（task JSON，含上下游依赖）
 - 编码阶段收集需求上下文（context.md）
 - 代码质量审核（安全漏洞、性能陷阱、代码质量、架构合规性、测试覆盖）

@@ -1,15 +1,15 @@
 ---
 name: impm-lld-create
-description: 根据 SAD 与当前版本 PRD，按 LLD 模板完成当前版本新增需求的详细设计文档。
+description: 根据 SAD 与当前版本 PRD，按 LLD 模板完成当前版本新增需求的整体业务逻辑详细设计文档（模块划分、业务流程、核心业务逻辑等，不涉及接口细节设计）。
 ---
 
 # impm-lld-create 技能
 
 ## 触发词
-详细设计、LLD、模块设计、类图、时序图、impm-lld-create
+详细设计、LLD、模块设计、业务逻辑设计、类图、时序图、impm-lld-create
 
 ## 何时使用
-在 API 接口设计完成（impm-api-create 之后）时使用，根据 SAD（docs/{项目英文缩写}-sad.md）和当前版本的 PRD，参考现有详细设计 docs/{项目英文缩写}-lld.md（可能为空），按 LLD 模板完成当前版本新增需求的详细设计，写入版本目录，并在版本进度文件中记录本步骤。
+在 API 接口设计完成（impm-api-create 之后）时使用，根据 SAD（docs/{项目英文缩写}-sad.md）和当前版本的 PRD，参考现有详细设计 docs/{项目英文缩写}-lld.md（可能为空），按 LLD 模板完成当前版本新增需求的整体业务逻辑详细设计，写入版本目录，并在版本进度文件中记录本步骤。注意：LLD 聚焦整体业务逻辑设计（模块划分、业务流程、核心业务逻辑、业务规则等），接口定义、请求/响应参数等接口细节由 API 设计文档负责，LLD 中不重复编写。
 
 ## 执行角色
 本技能由 TL subagent 负责执行。执行时使用 Skill 工具加载本技能。
@@ -32,7 +32,7 @@ description: 根据 SAD 与当前版本 PRD，按 LLD 模板完成当前版本�
 ## 执行步骤
 
 ### 步骤 1：读取模板
-调用 impm_template_reader 读取模板 LLD-TEMPLATE.MD，明确详细设计文档的章节结构与填写格式。
+调用 impm_template_reader 读取模板 LLD-TEMPLATE.MD，明确详细设计文档的章节结构与填写格式（业务逻辑设计导向，不含接口细节）。
 
 ### 步骤 2：收集设计依据
 调用 impm_doc_reader 读取：
@@ -41,7 +41,7 @@ description: 根据 SAD 与当前版本 PRD，按 LLD 模板完成当前版本�
 3. 现有详细设计文档 docs/{项目英文缩写}-lld.md（可能为空，作为参考）。
 
 ### 步骤 3：完成当前版本详细设计
-根据 SAD 和当前版本的 PRD，参考现有详细设计 docs/{项目英文缩写}-lld.md（可能为空），套用 LLD 模板格式，完成当前版本新增需求的详细设计。调用 impm_doc_writer（docType=lld，target=version）写入 docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-lld-v{当前版本号}.md。
+根据 SAD 和当前版本的 PRD，参考现有详细设计 docs/{项目英文缩写}-lld.md（可能为空），套用 LLD 模板格式，从业务逻辑视角完成当前版本新增需求的详细设计（模块划分与职责、类图、核心业务流程时序图、状态图、核心业务逻辑、业务规则与约束、业务数据流等；接口定义与请求/响应参数不写入 LLD）。调用 impm_doc_writer（docType=lld，target=version）写入 docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-lld-v{当前版本号}.md。
 
 ### 步骤 4：记录进度
 调用 impm_progress（action=add，stepName=impm-lld-create，status=已完成）在版本进度文件 docs/{项目英文缩写}-v{当前版本号}/version_progress.md 表格第一行插入新行。

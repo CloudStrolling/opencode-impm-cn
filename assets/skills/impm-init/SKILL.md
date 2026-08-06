@@ -1,6 +1,6 @@
 ---
 name: impm-init
-description: 编排初始化阶段全部12个步骤（impm-init-isinit、impm-init-git、impm-init-project、impm-init-version、impm-init-urs、impm-init-prd、impm-init-sad、impm-init-dbd、impm-init-api、impm-init-lld、impm-init-testcase、impm-init-commit），严格按顺序依次执行并汇报结果。当用户输入 /impm-init 或要求初始化 impm 工程时使用。
+description: 编排初始化阶段全部13个步骤（impm-init-isinit、impm-init-git、impm-init-project、impm-init-version、impm-init-urs、impm-init-prd、impm-init-sad、impm-init-dbd、impm-init-api、impm-init-lld、impm-init-task、impm-init-testcase、impm-init-commit），严格按顺序依次执行并汇报结果。当用户输入 /impm-init 或要求初始化 impm 工程时使用。
 ---
 
 # impm-init 技能
@@ -72,20 +72,24 @@ description: 编排初始化阶段全部12个步骤（impm-init-isinit、impm-in
 核对文件存在，并核对/补录进度行（impm-init-api，已完成）。
 
 ### 步骤 j：执行 impm-init-lld（详细设计）
-加载并执行 impm-init-lld 技能：调用 impm_template_reader(projectRoot, LLD-TEMPLATE.MD) 读取模板，根据项目代码、文档及 PRD、SAD 反推或按空结构生成详细设计文档，impm_doc_writer docType=lld target=main 写入版本文档并复制到主文档 docs/{项目英文缩写}-lld.md。核对两个文件存在且内容一致，并核对/补录进度行（impm-init-lld，已完成）。
+加载并执行 impm-init-lld 技能：调用 impm_template_reader(projectRoot, LLD-TEMPLATE.MD) 读取模板，根据项目代码、文档及 PRD、SAD 反推或按空结构生成整体业务逻辑的详细设计文档，impm_doc_writer docType=lld target=main 写入版本文档并复制到主文档 docs/{项目英文缩写}-lld.md。核对两个文件存在且内容一致，并核对/补录进度行（impm-init-lld，已完成）。
 
-### 步骤 k：执行 impm-init-testcase（测试用例与测试脚本）
+### 步骤 k：执行 impm-init-task（任务清单）
+加载并执行 impm-init-task 技能：调用 impm_template_reader(projectRoot, TASK-TEMPLATE.json) 读取模板，根据 PRD、LLD、SAD 及 API 文档反推任务清单，impm_task_manager action=init 校验并写入版本文档 docs/{项目英文缩写}-v0.0.1/{项目英文缩写}-task-v0.0.1.json。核对文件存在且 JSON 格式正确，并核对/补录进度行（impm-init-task，已完成）。
+
+### 步骤 l：执行 impm-init-testcase（测试用例与测试脚本）
 加载并执行 impm-init-testcase 技能：调用 impm_template_reader(projectRoot, TESTCASE-TEMPLATE.MD) 读取模板，根据项目代码、文档及 PRD、LLD 确定测试用例，impm_doc_writer docType=testcase target=main 写入版本文档 docs/{项目英文缩写}-v0.0.1/{项目英文缩写}-testcase-v0.0.1.md 并复制到主文档 docs/{项目英文缩写}-testcase.md；根据用例完成测试函数编写，并生成自动化测试脚本（scripts/API-TEST/ 下）。核对文档与脚本存在，并核对/补录进度行（impm-init-testcase，已完成）。
 
-### 步骤 l：执行 impm-init-commit（最终提交）
+### 步骤 m：执行 impm-init-commit（最终提交）
 加载并执行 impm-init-commit 技能：调用 impm_git(projectRoot, status) 确认工作区状态，调用 impm_git(projectRoot, commit, null, {项目英文缩写}-v0.0.1-初始化impm项目) 提交所有初始化内容，核对提交成功。
 
-### 步骤 m：记录编排完成并汇报
+### 步骤 n：记录编排完成并汇报
 调用 impm_progress(projectRoot, {项目英文缩写}, {当前版本号}, add, impm-init, 已完成) 记录本编排技能完成；向用户汇报初始化阶段全部完成，汇报内容包括：初始化方式（空项目/存量项目）、产出文件清单、各步骤执行角色（PM/SCM/SA/BA/DBA/TL/TE）、版本进度表位置与下一步建议。
 
 ## 交付物
 - 版本目录 docs/{项目英文缩写}-v0.0.1/ 及其全部初始化文档
 - 主文档 docs/project.md、docs/sad.md、docs/{项目英文缩写}-urs.md、docs/{项目英文缩写}-prd.md、docs/{项目英文缩写}-api.md、docs/{项目英文缩写}-dbd.md、docs/{项目英文缩写}-dbd.sql、docs/{项目英文缩写}-lld.md、docs/{项目英文缩写}-testcase.md
+- 任务清单 docs/{项目英文缩写}-v0.0.1/{项目英文缩写}-task-v0.0.1.json
 - 版本进度表 version_progress.md
 - .gitignore 与 git 初始提交记录
 - 自动化测试脚本 scripts/API-TEST/

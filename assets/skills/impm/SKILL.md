@@ -39,7 +39,7 @@ description: impm 总流程技能，自动执行瀑布式开发全部四个阶�
 1. 使用 Skill 工具加载并执行 impm-init 技能。
 2. 先执行 impm-init-isinit 判断项目是否已初始化：
    - 若 docs/project.md 与 docs/sad.md 都存在且非空，说明已初始化，跳过整个初始化阶段；
-   - 若为空项目或存量项目，依次执行初始化全部步骤。
+   - 若为空项目或存量项目，依次执行初始化全部步骤：impm-init-isinit → impm-init-git → impm-init-project → impm-init-version → impm-init-urs → impm-init-prd → impm-init-sad → impm-init-dbd → impm-init-api → impm-init-lld → impm-init-task → impm-init-testcase → impm-init-commit。
 3. 初始化阶段完成后，检查 version_progress.md 确认初始化步骤已记录。
 
 ### 阶段二：需求分析整理（impm-docs）

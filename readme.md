@@ -85,14 +85,14 @@ PM Agent 会按四阶段依次推进：
 
 | 阶段 | 编排命令 | 说明 |
 | --- | --- | --- |
-| 阶段 1：初始化 | `/impm-init` | 初始化项目：判定项目类型、创建版本目录与进度表、生成 URS/PRD/SAD/DBD/API/LLD/测试用例初始文档并提交 |
+| 阶段 1：初始化 | `/impm-init` | 初始化项目：判定项目类型、创建版本目录与进度表、生成 URS/PRD/SAD/DBD/API/LLD/任务清单/测试用例初始文档并提交 |
 | 阶段 2：需求分析整理 | `/impm-docs` | 确认当前版本需求：创建版本分支与版本目录、生成 URS/PRD、更新 SAD、生成 DBD/API/LLD、创建任务清单并提交 |
 | 阶段 3：编码开发 | `/impm-coding` | 循环执行任务：收集上下文 → 代码查询 → 网络查询 → 数据库/API 设计 → 测试用例 → 编码 → 写测试 → 跑测试 → 提交，直至全部任务完成 |
 | 阶段 4：回归测试和版本文档整理 | `/impm-finish` | 回归测试、代码注释、代码审核、项目地图更新、文档合并、更新 readme/agent/部署文档、合并主分支 |
 
 也可以单独执行某个步骤的命令，例如 `/impm-init-urs`、`/impm-prd-create`、`/impm-task-coding-code` 等。
 
-## 命令清单（45 个）
+## 命令清单（46 个）
 
 ### 总流程
 
@@ -115,6 +115,7 @@ PM Agent 会按四阶段依次推进：
 | `/impm-init-dbd` | 生成数据库设计文档与 SQL 脚本 |
 | `/impm-init-api` | 生成 API 接口设计文档 |
 | `/impm-init-lld` | 生成详细设计文档 |
+| `/impm-init-task` | 生成任务清单（task JSON） |
 | `/impm-init-testcase` | 生成测试用例文档 |
 | `/impm-init-commit` | 提交初始化阶段全部产出 |
 
