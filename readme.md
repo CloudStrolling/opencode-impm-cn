@@ -10,7 +10,7 @@ opencode-impm-cn 是一套 OpenCode 插件套件，包含：
 
 - **13 个专业 AI Agent**：由 PM（项目经理）统一调度，BA / SA / TL / DBA / TE / SCM / DW / CS / WS / FEE / BEE / SSE 各司其职。
 - **45 个技能（Skill）与 45 个命令（Command）**：每个瀑布步骤对应一个技能和一个命令，严格按序执行，不跳过、不乱序、不并行。
-- **11 个插件工具（Tool）**：文档读写、版本管理、进度管理、任务调度、上下文构建、项目分析、git 操作等，由技能调用。
+- **14 个插件工具（Tool）**：文档读写、版本管理、进度管理、任务调度、上下文构建、项目分析、git 操作、提问记录与对话导出（prompt-recorder）等，由技能调用。
 - **10 个标准文档模板**：URS / PRD / SAD / DBD / API / LLD / TESTCASE / TASK / REVIEW / PROJECT，保证文档结构统一。
 
 ## 核心特性
@@ -30,7 +30,7 @@ opencode-impm-cn/
 │   ├── commands/                # 45 个命令（.md）
 │   └── skills/                  # 45 个技能（每技能一个目录）+ template/ 模板
 ├── src/                         # 插件源码（TypeScript）
-│   ├── tools/                   # 11 个工具的实现
+│   ├── tools/                   # 14 个工具的实现（含 prompt-recorder）
 │   ├── utils/                   # 路径 / 版本 / git / 项目信息工具
 │   └── index.ts                 # 插件入口
 ├── scripts/
@@ -164,7 +164,7 @@ PM Agent 会按四阶段依次推进：
 | `/impm-deploy-update` | 更新编译部署方案（deploy/build.md、deploy/deploy.md） |
 | `/impm-git-merge` | 合并版本分支到主分支 |
 
-## 插件工具（11 个）
+## 插件工具（14 个）
 
 | 工具 | 说明 |
 | --- | --- |
@@ -179,6 +179,14 @@ PM Agent 会按四阶段依次推进：
 | `impm_context_builder` | 构建任务精简上下文 |
 | `impm_project_analyzer` | 扫描源码生成项目地图 |
 | `impm_git` | git 操作：init / status / branch / checkout / commit / merge / pull / log |
+| `impm_prompt_record` | 将用户提问补录到 `docs/prompts/prompts.md` 表格（幂等） |
+| `impm_prompt_finalize` | 聚合主会话+全部子会话 token 并回填 prompts.md |
+| `impm_prompt_export` | 导出主会话+全部子会话对话（含思考与回答）到 `docs/prompts/prompt-{年月日}-{session_id}.md` |
+
+### prompt-recorder 内置功能
+
+- **自动记录**：主会话每回合结束时（session.idle 事件）自动将用户提问追加到 `docs/prompts/prompts.md` 表格（session_id、提问时间、提示词内容、输入token、输出token、缓存命中、缓存写入），并回填 token 统计、导出对话快照。
+- **token 统计口径**：直读 opencode SQLite 数据库（session 表 tokens_* 列），聚合主会话与全部子会话；输出 token = 输出 + 思考。
 
 ## 文档标准路径
 
@@ -194,6 +202,8 @@ PM Agent 会按四阶段依次推进：
 | 任务目录 | `docs/{缩写}-v{版本}/task_{任务编号}/`（context.md、cs.md、ws.md、testcase.md） |
 | 接口测试脚本 | `scripts/API-TEST/{缩写}-api-test-v{版本}.py` |
 | 编译/部署方案 | `deploy/build.md`、`deploy/deploy.md` |
+| 提问记录 | `docs/prompts/prompts.md` |
+| 对话快照 | `docs/prompts/prompt-{年月日}-{session_id}.md` |
 | 项目说明 | 根目录 `readme.md`、`agent.md` |
 
 ## 许可

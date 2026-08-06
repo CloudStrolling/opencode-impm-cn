@@ -18,8 +18,9 @@
  * opencode-impm 插件入口
  *
  * 这是"我是项目经理"（AI项目经理）OpenCode插件的入口文件。
- * 插件注册了 11 个自定义工具：项目信息、初始化判定、文档读写、模板读取、
- * 版本管理、进度管理、任务调度、上下文构建、项目分析、git 操作。
+ * 插件注册了 14 个自定义工具：项目信息、初始化判定、文档读写、模板读取、
+ * 版本管理、进度管理、任务调度、上下文构建、项目分析、git 操作，
+ * 以及 prompt-recorder 内置功能的 3 个工具（提问记录、token 回填、对话导出）。
  *
  * 使用方式：
  * 1. npm 包模式：在 opencode.json 中配置 "plugin": ["opencode-impm"]
@@ -37,6 +38,7 @@ import { taskManagerDefinition, taskManagerExecute } from "./tools/task-manager.
 import { contextBuilderDefinition, contextBuilderExecute } from "./tools/context-builder.js";
 import { projectAnalyzerDefinition, projectAnalyzerExecute } from "./tools/project-analyzer.js";
 import { gitHelperDefinition, gitHelperExecute } from "./tools/git-helper.js";
+import { createPromptRecorder } from "./tools/prompt-recorder.js";
 
 /**
  * 创建 OpenCode 工具参数的 schema
@@ -67,8 +69,14 @@ interface ToolContext {
 export default async function impmPlugin(context: ToolContext) {
     const projectRoot = context.project?.path || context.directory;
 
+    // 内置功能：prompt-recorder（提问记录 + 对话导出，含钩子与 3 个手动工具）
+    const promptRecorder = await createPromptRecorder(projectRoot);
+
     return {
-        /** 自定义工具注册表 */
+        /** chat.message 钩子：用户提问时自动记录到 prompts.md */
+        "chat.message": promptRecorder.chatMessage,
+        /** 事件钩子：主会话回合结束时自动回填 token、导出对话 */
+        event: promptRecorder.event,
         tool: {
             /** 项目信息读取工具 — 从 docs/project.md 解析项目基本信息 */
             impm_project_info: {
@@ -343,6 +351,13 @@ export default async function impmPlugin(context: ToolContext) {
                     });
                 },
             },
+
+            /** 提问记录工具（prompt-recorder 内置功能）— 补录用户提问 */
+            impm_prompt_record: promptRecorder.tool.impm_prompt_record,
+            /** 提问记录工具（prompt-recorder 内置功能）— 重算 token 并回填 */
+            impm_prompt_finalize: promptRecorder.tool.impm_prompt_finalize,
+            /** 提问记录工具（prompt-recorder 内置功能）— 导出对话快照 */
+            impm_prompt_export: promptRecorder.tool.impm_prompt_export,
         },
     };
 }
