@@ -4330,3 +4330,5 @@ cache.write = 缓存写入token
 **唯一注意点**：我们表格的"输出token"列 = output+reasoning 合并显示（思考与可见输出同为输出类、单价相同，合并才是一次调用的完整输出）。四列相加口径成立，不会重复计。
 
 - 步骤结束（原因: stop, tokens: 5038+847）
+
+<!-- SPDX-License-Identifier: Apache-2.0 / Copyright 2026 jenemy8023 <jenemy8023@163.com> -->

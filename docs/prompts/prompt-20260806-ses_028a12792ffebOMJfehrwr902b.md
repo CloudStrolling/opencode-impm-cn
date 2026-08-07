@@ -27,3 +27,5 @@
 > 模型: zhipuai-coding-plan/glm-5v-turbo | agent: build
 
 - 文件补丁: D:/jenemy/develop/OpenCodeProjects/opencode-impm-cn/docs/prompts/prompt-20260806-ses_028a12792ffebOMJfehrwr902b.md, D:/jenemy/develop/OpenCodeProjects/opencode-impm-cn/docs/prompts/prompts.md
+
+<!-- SPDX-License-Identifier: Apache-2.0 / Copyright 2026 jenemy8023 <jenemy8023@163.com> -->

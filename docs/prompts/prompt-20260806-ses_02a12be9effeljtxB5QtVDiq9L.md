@@ -5448,3 +5448,5 @@ The prompt-recorder correlation was coincidental: its 3 tools return `Promise<st
 Note: this session still has the old plugin loaded at boot; restart opencode here to pick up the fix. Want me to commit the change in `opencode-impm-cn`?
 
 - 步骤结束（原因: stop, tokens: 430+992）
+
+<!-- SPDX-License-Identifier: Apache-2.0 / Copyright 2026 jenemy8023 <jenemy8023@163.com> -->

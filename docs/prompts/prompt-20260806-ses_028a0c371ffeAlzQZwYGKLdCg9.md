@@ -37,3 +37,5 @@
 工具返回结果原文：`undefined is not an object (evaluating 'u.split')`
 
 - 步骤结束（原因: stop, tokens: 86+21）
+
+<!-- SPDX-License-Identifier: Apache-2.0 / Copyright 2026 jenemy8023 <jenemy8023@163.com> -->

@@ -38,6 +38,7 @@ opencode-impm-cn/
 │   └── install.ps1              # 安装脚本（Windows PowerShell）
 ├── docs/                        # 项目文档目录（由流程自动生成）
 ├── opencode.json                # OpenCode 配置文件
+├── LICENSE                      # Apache License 2.0 协议全文
 ├── readme.md                    # 本文档（由 impm-doc-update 维护）
 └── agent.md                     # Agent 使用说明（由 impm-doc-update 维护）
 ```
@@ -209,7 +210,7 @@ PM Agent 会按四阶段依次推进：
 
 ## 许可
 
-Apache License 2.0
+本项目采用 [Apache License 2.0](LICENSE)，完整协议内容见仓库根目录 [LICENSE](LICENSE) 文件。
 
 Copyright 2026 jenemy8023 <jenemy8023@163.com>
 
