@@ -12,7 +12,27 @@ description: 编排回归测试和版本文档整理阶段（阶段4）的全部
 阶段3编码开发全部完成、版本内所有任务均已提交后，需要执行回归测试和版本文档整理时使用。本技能是阶段4的编排入口，负责严格按顺序调度其余8个技能。
 
 ## 执行角色
-本技能由 PM subagent 负责执行。执行时使用 Skill 工具加载本技能。
+本技能由 项目经理（主控 Agent） 负责执行（编排），执行时使用 Skill 工具加载本技能。内部子步骤必须按下方「通用调度要求」派发对应 subagent 执行，PM 只调度、检查与决策。
+
+## 通用调度要求（本技能所有子步骤必须遵守）
+1. 启动方式：每个子步骤通过 task 工具启动对应 subagent（subagent_type 必须与下方对照表完全一致）执行对应技能；禁止 PM 自己代替 subagent 执行具体事务（唯一例外：对照表中标注"PM 直接执行"的步骤）。
+2. task 提示词必传上下文（缺一不可）：项目根目录绝对路径（projectRoot）、项目英文缩写（{项目英文缩写}）、当前版本号（{当前版本号}）、用户输入 $ARGUMENTS 原文（含用户提到的文件路径）、技能名（要求 subagent 先用 Skill 工具加载技能再执行）、任务编号（{任务编号}，编码阶段适用）。
+3. task 提示词模板（每个子步骤照此填写）：
+   "以 {subagent 中文名}（subagent_type={x}）身份执行 impm 的 {技能名} 技能；先用 Skill 工具加载技能 {技能名}；必须携带的上下文：项目根目录={绝对路径}、项目英文缩写={缩写}、当前版本号={版本号}、用户输入={原文}、任务编号={taskId}（如适用）；按技能执行步骤完成全部操作后，返回：产出文件路径清单与 version_progress.md 中 {技能名} 的进度状态。"
+4. 完成核对：每步 subagent 返回后，核对产出文件存在、version_progress.md 已记录该步骤状态，全部正确才能进入下一步。
+5. 顺序纪律：严格执行顺序，不跳过、不乱序、不并行、不合并；任一子步骤失败时先定位原因，必要时回退重做，不得绕过。
+
+### 子步骤 subagent 对照表（impm-finish）
+| 子步骤 | 技能名 | subagent_type |
+|----|----|----|
+| 1 | impm-regression-test | te |
+| 2 | impm-coding-comment | dw |
+| 3 | impm-coding-review | tl |
+| 4 | impm-project-update | sa |
+| 5 | impm-doc-merge | dw |
+| 6 | impm-doc-update | dw |
+| 7 | impm-deploy-update | dw |
+| 8 | impm-git-merge | scm |
 
 ## 关键变量定义与取值
 | 变量 | 说明 | 获取方式 |

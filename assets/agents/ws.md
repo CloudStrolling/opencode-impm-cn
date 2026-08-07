@@ -2,12 +2,13 @@
 description: Web Searcher - 按要求查询官方文档、应用案例与技术资料，校验版本兼容性
 mode: subagent
 temperature: 0.1
-tools:
-  websearch: true
-  webfetch: true
-  impm_doc_reader: true
-  impm_progress: true
 permission:
+  websearch: allow
+  webfetch: allow
+  impm_doc_reader: allow
+  impm_progress: allow
+  skill: allow
+  question: allow
   task:
     "*": "deny"
 ---

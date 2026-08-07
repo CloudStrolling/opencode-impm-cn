@@ -2,13 +2,14 @@
 description: Code Searcher - 按要求查询本地代码，为任务提供现有代码与工具类信息
 mode: subagent
 temperature: 0.1
-tools:
-  read: true
-  grep: true
-  glob: true
-  impm_doc_reader: true
-  impm_progress: true
 permission:
+  read: allow
+  grep: allow
+  glob: allow
+  impm_doc_reader: allow
+  impm_progress: allow
+  skill: allow
+  question: allow
   task:
     "*": "deny"
 ---

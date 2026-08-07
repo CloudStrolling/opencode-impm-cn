@@ -14,7 +14,12 @@ description: 将当前任务的全部修改提交到 git，并把任务状态更
 单个任务的全部编码步骤与测试全部完成并确认通过后，需要把该任务的修改提交到 git 并更新任务状态时使用。
 
 ## 执行角色
-本技能由 scm subagent 负责执行。执行时使用 Skill 工具加载本技能。
+本技能由 软件配置工程师（subagent_type=scm）subagent 负责执行，执行时使用 Skill 工具加载本技能。
+
+## 调度说明（PM/上级编排者启动本技能时必须遵守）
+1. 启动方式：使用 task 工具启动 subagent，subagent_type 必须为 `scm`；禁止由 PM 或编排者自己代替执行本技能内容。
+2. 提示词必传上下文（缺一不可）：项目根目录绝对路径（projectRoot）、项目英文缩写（{项目英文缩写}）、当前版本号（{当前版本号}）、用户输入 $ARGUMENTS 原文（含用户提到的文件路径）、技能名（impm-task-coding-gitcommit，要求 subagent 先用 Skill 工具加载本技能再执行）、任务编号（taskId，从 $ARGUMENTS 提取，缺失时用 impm_task_manager 查询下一个可执行任务）。
+3. 完成要求：等待 subagent 返回完成结果后，核对产出文件与 version_progress.md 进度记录，全部正确后才能进入下一步。
 
 ## 关键变量定义与取值
 | 变量 | 说明 | 获取方式 |

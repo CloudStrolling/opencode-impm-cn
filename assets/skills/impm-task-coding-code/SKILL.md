@@ -14,10 +14,12 @@ description: 按任务 taskType 由 BEE/FEE/SSE subagent 实现编码，力求�
 当前任务的上下文、数据库设计、API 设计与测试用例就绪后，需要按任务 taskType 实现编码时使用。
 
 ## 执行角色
-本技能由 sse、fee、bee subagent 负责执行。执行时使用 Skill 工具加载本技能。调度方（impm-task-coding）按任务 taskType 选择对应角色：
-- taskType=backend：由 bee subagent 执行；
-- taskType=frontend：由 fee subagent 执行；
-- taskType=common：由 sse subagent 执行。
+本技能由 sse、fee、bee subagent 负责执行，执行时使用 Skill 工具加载本技能。调度方（impm-task-coding）按任务 taskType 选择对应角色：common→sse、frontend→fee、backend→bee。
+
+## 调度说明（PM/impm-task-coding 启动本技能时必须遵守）
+1. 启动方式：使用 task 工具启动 subagent，subagent_type 由任务 taskType 决定：common→`sse`、frontend→`fee`、backend→`bee`；禁止由调度方自己代替执行本技能内容。
+2. 提示词必传上下文（缺一不可）：项目根目录绝对路径（projectRoot）、项目英文缩写（{项目英文缩写}）、当前版本号（{当前版本号}）、任务编号（taskId）、技能名（impm-task-coding-code，要求 subagent 先用 Skill 工具加载本技能再执行）、任务 taskType。
+3. 完成要求：等待 subagent 返回完成结果后，核对代码产出与需求覆盖，全部正确后才能进入下一步。
 
 ## 关键变量定义与取值
 | 变量 | 说明 | 获取方式 |

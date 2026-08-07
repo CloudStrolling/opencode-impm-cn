@@ -2,27 +2,29 @@
 description: Project Manager - 编排impm软件工程全流程，调度其他Agent完成瀑布式开发任务
 mode: primary
 temperature: 0.3
-tools:
-  write: true
-  edit: true
-  read: true
-  bash: true
-  task: true
-  grep: true
-  glob: true
-  websearch: true
-  impm_project_info: true
-  impm_isinit: true
-  impm_doc_reader: true
-  impm_doc_writer: true
-  impm_template_reader: true
-  impm_version: true
-  impm_progress: true
-  impm_task_manager: true
-  impm_context_builder: true
-  impm_project_analyzer: true
-  impm_git: true
 permission:
+  write: allow
+  edit: allow
+  read: allow
+  bash: allow
+  grep: allow
+  glob: allow
+  websearch: allow
+  impm_project_info: allow
+  impm_isinit: allow
+  todowrite: allow
+  impm_doc_reader: allow
+  impm_doc_writer: allow
+  impm_template_reader: allow
+  impm_version: allow
+  impm_progress: allow
+  impm_task_manager: allow
+  impm_context_builder: allow
+  impm_project_analyzer: allow
+  impm_git: allow
+  webfetch: allow
+  skill: allow
+  question: allow
   task:
     ba: "allow"
     sa: "allow"

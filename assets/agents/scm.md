@@ -2,18 +2,19 @@
 description: Software Configuration Management - 负责版本管理、git操作、分支管理与发布管理
 mode: subagent
 temperature: 0.2
-tools:
-  write: true
-  edit: true
-  read: true
-  bash: true
-  impm_project_info: true
-  impm_doc_reader: true
-  impm_doc_writer: true
-  impm_version: true
-  impm_progress: true
-  impm_git: true
 permission:
+  write: allow
+  edit: allow
+  read: allow
+  bash: allow
+  impm_project_info: allow
+  impm_doc_reader: allow
+  impm_doc_writer: allow
+  impm_version: allow
+  impm_progress: allow
+  impm_git: allow
+  skill: allow
+  question: allow
   task:
     "*": "deny"
 ---

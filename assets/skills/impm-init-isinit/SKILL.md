@@ -4,6 +4,7 @@ description: 判断当前项目是否已初始化（docs/project.md 与 docs/sad
 ---
 
 # impm-init-isinit 技能
+
 ## 触发词
 - 初始化判定
 - 是否已初始化
@@ -16,7 +17,12 @@ description: 判断当前项目是否已初始化（docs/project.md 与 docs/sad
 - 用户询问当前项目是否已初始化、应按空项目还是存量项目处理时。
 
 ## 执行角色
-本技能由 PM subagent 负责执行。执行时使用 Skill 工具加载本技能。
+本技能由 PM（项目经理，主控 Agent）直接执行，不启动 subagent。
+
+## 调度说明（启动本技能时必须遵守）
+1. 本技能不启动 subagent，由 PM 直接执行。
+2. 执行上下文：项目根目录绝对路径（projectRoot）；判定结果（空项目/存量项目/已初始化）必须作为上下文传交给后续步骤。
+3. 完成要求：isinit 的进度行由 impm-init-version 步骤统一补录，本步骤结束后将判定结论反馈给用户与后续步骤。
 
 ## 关键变量定义与取值
 | 变量 | 说明 | 获取方式 |
