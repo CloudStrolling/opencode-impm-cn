@@ -16,3 +16,4 @@
 | ses_024d54cc1ffebXztv4z2fCz49e | 2026-08-07 15:40:37 | 1、在项目中添加apache2.0的协议内容，同步修改readme.md。2、检查所有的源代码，如果没有apache2.0的license 就加上，其中Copyright 部分：Copyright 2026 jenemy8023 <jenemy8023@163.com>。3、检查所有的md文档，如果没有：<!-- SPDX-License-Identifier: Apache-2.0 / Copyright 2026 jenemy8023 <jenemy8023@163.com> --> 就在md的末尾加上。 | 47903 | 16767 | 953984 | 0 |
 | ses_023599b73ffeduH984sJQ2XsGS | 2026-08-07 22:35:21 | src目录下的所有源代码添加备注。包括：文件备注，函数备注，重要变量备注，核心功能代码块备注。script目录下的两个安装脚本增加代码块备注。 | 73406 | 21206 | 1130624 | 0 |
 | ses_023599b73ffeduH984sJQ2XsGS | 2026-08-07 23:06:01 | 你自己当前的模型  big pickle是基于哪一款开源模型的变种？ | 27173 | 321 | 0 | 0 |
+| ses_023599b73ffeduH984sJQ2XsGS | 2026-08-08 21:29:58 | 在项目下  npm run build时  怎么确定内部的版本号的？ | 28929 | 1320 | 91264 | 0 |
