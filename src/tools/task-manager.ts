@@ -30,8 +30,10 @@ import { dirname } from "path";
 import { getDocPath } from "../utils/paths.js";
 import { resolveAbbrev } from "../utils/project.js";
 
+/** 任务合法状态集合 */
 export const TASK_STATUSES = ["未完成", "执行中", "已完成"] as const;
 
+/** 任务条目：id/status 为必填字段，title、userStoryId、apiId、upstreamTaskIds 等其余字段透传 */
 export interface TaskItem {
     id: string;
     title: string;
@@ -39,6 +41,7 @@ export interface TaskItem {
     [key: string]: unknown;
 }
 
+/** 任务清单文件路径（沿用标准文档路径规则） */
 function taskFilePath(projectRoot: string, abbrev: string, version: string): string {
     return getDocPath(projectRoot, abbrev, version, "task");
 }
@@ -48,6 +51,7 @@ export interface TaskListFile {
     tasks: TaskItem[];
 }
 
+/** 读取任务清单：兼容纯数组与 { payload, tasks } 两种存储形态，分离附加信息与任务数组 */
 function readTaskList(file: string): TaskListFile {
     const data = JSON.parse(readFileSync(file, "utf8"));
     const tasks = Array.isArray(data) ? data : data?.tasks;
@@ -62,6 +66,7 @@ function readTaskList(file: string): TaskListFile {
     return { payload, tasks: tasks as TaskItem[] };
 }
 
+/** 写回任务清单：保留附加信息（payload）并序列化任务数组 */
 function writeTaskList(
     file: string,
     payload: Record<string, unknown>,
@@ -74,6 +79,7 @@ function writeTaskList(
     );
 }
 
+/** 判断任务的上游依赖是否全部完成（上游任务不存在时视为已完成） */
 function upstreamDone(task: TaskItem, tasks: TaskItem[]): boolean {
     const upstream: unknown[] = (task.upstreamTaskIds ?? []) as unknown[];
     for (const id of upstream) {
@@ -88,6 +94,7 @@ function upstreamDone(task: TaskItem, tasks: TaskItem[]): boolean {
     return true;
 }
 
+/** 生成任务清单摘要：总数、按状态计数、未完成任务列表 */
 function summaryOf(tasks: TaskItem[]) {
     const byStatus: Record<string, number> = {};
     for (const t of tasks) {

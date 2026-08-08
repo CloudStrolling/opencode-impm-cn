@@ -48,6 +48,7 @@ function createStringSchema(description: string) {
     return { type: "string" as const, description };
 }
 
+/** 创建 OpenCode 工具参数的数组 schema（字符串数组） */
 function createArraySchema(description: string) {
     return {
         type: "array" as const,
@@ -89,6 +90,7 @@ function wrapToolResult(def: {
     };
 }
 
+/** 插件运行上下文：OpenCode 注入的项目路径与工作区目录 */
 interface ToolContext {
     project: { path: string };
     directory: string;

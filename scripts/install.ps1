@@ -23,10 +23,12 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+# 路径常量：插件根目录、可分发资源目录、TypeScript 编译产物目录
 $pluginRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
 $assetsDir = Join-Path $pluginRoot "assets"
 $distDir = Join-Path $pluginRoot "dist"
 
+# 解析安装目标项目：-Target 参数优先，其次 INIT_CWD（npm 依赖安装场景），最后回退到当前目录
 if ($Target -ne "") {
     $targetRoot = $Target
 } elseif ($env:INIT_CWD -and ((Resolve-Path $env:INIT_CWD) -ne $pluginRoot)) {
@@ -50,6 +52,7 @@ if (-not (Test-Path $assetsDir)) {
 
 $opencodeDir = Join-Path $targetRoot ".opencode"
 
+# 复制 agents/commands/skills 资源到目标项目 .opencode/（逐个目录处理，缺失则跳过）
 foreach ($dir in @("commands", "agents", "skills")) {
     $srcDir = Join-Path $assetsDir $dir
     $destDir = Join-Path $opencodeDir $dir

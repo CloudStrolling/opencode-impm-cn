@@ -46,6 +46,7 @@ import { fileURLToPath } from "node:url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+// 路径常量：插件根目录、可分发资源目录、TypeScript 编译产物目录
 const PLUGIN_ROOT = resolve(__dirname, "..");
 const ASSETS_DIR = join(PLUGIN_ROOT, "assets");
 const DIST_DIR = join(PLUGIN_ROOT, "dist");
@@ -53,6 +54,7 @@ const DIST_DIR = join(PLUGIN_ROOT, "dist");
 const ASSET_DIRS = ["commands", "agents", "skills"];
 const PACKAGE_NAME = "opencode-impm-cn";
 
+/** 解析安装目标项目：--target 参数优先，其次 INIT_CWD（npm 依赖安装场景），最后回退到当前目录 */
 function resolveTargetProject(args) {
     const targetIndex = args.indexOf("--target");
     if (targetIndex !== -1 && targetIndex + 1 < args.length) {
@@ -70,6 +72,7 @@ function resolveTargetProject(args) {
     return process.cwd();
 }
 
+/** 递归复制目录；clean=true 时先清空目标目录再复制（保证重复安装幂等、不残留旧文件） */
 function copyDirRecursive(src, dest, clean = false) {
     if (!existsSync(src)) {
         console.warn(`  跳过：源目录不存在 ${src}`);
@@ -103,6 +106,7 @@ function copyDirRecursive(src, dest, clean = false) {
     }
 }
 
+/** 确保 .opencode/package.json 声明 type: module（插件入口文件 impm.js 按 ESM 解析） */
 function ensureOpenCodePackageJson(opencodeDir) {
     const pkgPath = join(opencodeDir, "package.json");
     let pkg = {};
@@ -120,6 +124,7 @@ function ensureOpenCodePackageJson(opencodeDir) {
     }
 }
 
+/** 更新目标项目 opencode.json：补 $schema；非自安装时把插件名注册到 config.plugin */
 function updateOpenCodeConfig(projectRoot) {
     const configPath = join(projectRoot, "opencode.json");
 
@@ -150,6 +155,7 @@ function updateOpenCodeConfig(projectRoot) {
     writeFileSync(configPath, JSON.stringify(config, null, 2) + "\n", "utf-8");
 }
 
+/** 安装主流程：解析目标项目 → 复制 assets 资源 → 安装插件编译产物 → 生成入口文件 → 更新配置 */
 function main() {
     const args = process.argv.slice(2);
     const targetRoot = resolveTargetProject(args);

@@ -66,6 +66,7 @@ function extractUserStory(prdContent: string, userStoryId?: string): string {
 /** 从 SAD 提取与任务相关的架构章节 */
 function extractSadSections(sadContent: string): string {
     const lines = sadContent.split(/\r?\n/);
+    // 只保留标题含架构相关关键词的章节
     const KEYWORDS = /总体|架构|模块|接口|数据|技术|目录|流程|安全|部署|环境|设计|约束/;
     const sections: string[] = [];
     let current: string[] = [];

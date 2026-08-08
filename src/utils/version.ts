@@ -20,6 +20,7 @@
 
 /** 解析版本号字符串为 [major, minor, patch] */
 export function parseVersion(version: string): [number, number, number] {
+    // 去掉 v 前缀并按点分割；无法解析的段按 0 处理（容错）
     const v = version.replace(/^[vV]/, "").trim();
     const parts = v.split(".").map((p) => parseInt(p, 10) || 0);
     return [parts[0] ?? 0, parts[1] ?? 0, parts[2] ?? 0];

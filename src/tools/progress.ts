@@ -85,12 +85,14 @@ const STEP_ALIASES: Record<string, string> = {
     "impm-sad-create": "impm-sad-update",
 };
 
+/** 步骤名规范化：历史别名映射到规范步骤名 */
 function normalizeStepName(stepName: string): string {
     const key = stepName.trim();
     const aliased = STEP_ALIASES[key];
     return aliased ?? key;
 }
 
+/** 是否为流程已知步骤名 */
 function isKnownStep(stepName: string): boolean {
     return KNOWN_STEP_NAMES.includes(stepName);
 }
@@ -101,9 +103,12 @@ export interface ProgressRow {
     status: string;
 }
 
+/** 进度表数据行正则：| 序号 | 步骤名 | 状态 | */
 const ROW_RE = /^\|\s*(\d+)\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|$/;
+/** 表头行正则（解析时跳过表头） */
 const HEADER_RE = /^\|\s*步骤序号/;
 
+/** 解析进度表文本为数据行数组（跳过表头与分隔行） */
 function parseRows(content: string): ProgressRow[] {
     const rows: ProgressRow[] = [];
     for (const line of content.split(/\r?\n/)) {
@@ -121,6 +126,7 @@ function parseRows(content: string): ProgressRow[] {
     return rows;
 }
 
+/** 渲染进度表 Markdown 文本（标题 + 表头 + 数据行） */
 function buildFile(abbrev: string, version: string, rows: ProgressRow[]): string {
     const lines = [
         `# 版本进度 - ${abbrev}-v${normalizeVersion(version)}`,

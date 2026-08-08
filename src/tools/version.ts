@@ -31,6 +31,7 @@ export const versionDefinition = {
         "版本号管理：action=current 获取 docs 下当前最新版本号；action=next 在最大版本号 z 值上 +1（可传 hintVersion 指定版本号）；action=init 创建版本目录 docs/{项目英文缩写}-v{版本号}（传 hintVersion 时使用指定版本号，否则自动取下一个版本号）。创建版本目录、确定当前版本号时使用。",
 };
 
+/** 确定版本号：hintVersion 合法时优先使用，否则最新版本 patch+1，无版本目录时从 0.0.1 开始；返回 null 表示 hintVersion 非法 */
 function pickVersion(args: {
     projectRoot: string;
     abbrev: string;
@@ -141,10 +142,12 @@ export function versionExecute(args: {
     }
 }
 
+/** 列出全部版本号并按版本号降序（最新在前） */
 function listAll(projectRoot: string, abbrev: string): string[] {
     return scanVersionDirs(projectRoot, abbrev).sort(compareDesc);
 }
 
+/** 版本号降序比较（数字感知，避免字符串排序把 0.10.0 排在 0.9.0 前面） */
 function compareDesc(a: string, b: string): number {
     return b.localeCompare(a, undefined, { numeric: true });
 }

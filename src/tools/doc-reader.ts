@@ -42,6 +42,7 @@ export const docReaderDefinition = {
         "读取项目管理文档：按标准路径读取 docs 下的文档（project、sad、urs、prd、dbd、api、lld、testcase、task、sql、review、context、cs、ws 等）。读取任务清单（task）时返回任务摘要与完整内容。",
 };
 
+/** 解析任务清单 JSON，返回摘要：总数、按状态计数、未完成任务列表；解析失败返回 null */
 function parseTaskSummary(content: string) {
     try {
         const data = JSON.parse(content);

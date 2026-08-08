@@ -21,8 +21,11 @@
  */
 declare module "bun:sqlite" {
     export class Database {
+        /** 打开数据库文件（readonly 为只读模式） */
         constructor(path: string, options?: { readonly?: boolean });
+        /** 预编译 SQL，返回可带参执行的语句句柄（all 查询多行、get 查询单行） */
         prepare(sql: string): { all(...params: unknown[]): unknown[]; get(...params: unknown[]): unknown };
+        /** 关闭数据库连接 */
         close(): void;
     }
 }

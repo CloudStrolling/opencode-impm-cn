@@ -31,6 +31,7 @@ export const templateReaderDefinition = {
         "读取模板文件：按模板名从 .opencode/skills/template、assets/skills/template 或插件内置目录读取模板内容（如 PROJECT-TEMPLATE.MD、TASK-TEMPLATE.json 等）。生成各类文档前读取模板时使用。",
 };
 
+/** 在目录中查找模板：文件名与模板名不区分大小写匹配，支持省略扩展名 */
 function matchTemplate(dir: string, base: string): string | null {
     if (!existsSync(dir)) {
         return null;
@@ -47,6 +48,7 @@ function matchTemplate(dir: string, base: string): string | null {
     return null;
 }
 
+/** 列出目录下全部模板文件名（排除隐藏文件） */
 function listTemplates(dir: string): string[] {
     if (!existsSync(dir)) {
         return [];

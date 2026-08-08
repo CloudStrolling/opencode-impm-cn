@@ -51,6 +51,7 @@ export function docWriterExecute(args: {
         const content = String(args.content);
         const target = args.target === "main" ? "main" : "version";
 
+        // 固定路径文档（project/sad/readme/agent/deploy）无需版本目录，其余文档需解析缩写与版本号
         const needsVersion = !["project", "sad", "readme", "agent", "deploy-build", "deploy-deploy"].includes(docType);
         let abbrev = "";
         let version = args.version;

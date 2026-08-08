@@ -20,6 +20,7 @@
 
 import { execSync } from "child_process";
 
+/** 执行 git 命令并返回去空白后的输出；失败时抛出含命令信息的中文错误 */
 function gitExec(cwd: string, command: string): string {
     try {
         return execSync(`git ${command}`, {

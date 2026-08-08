@@ -167,6 +167,7 @@ export function projectAnalyzerExecute(args: {
             rootDirs = top.filter((n) => !excluded.has(n));
         }
 
+        // 收集目标目录下全部代码/配置文件（按扩展名识别语言）
         const files: Array<{ path: string; lang: string }> = [];
         for (const dir of rootDirs) {
             const full = join(args.projectRoot, dir);

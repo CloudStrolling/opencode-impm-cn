@@ -700,8 +700,8 @@ async function exportSession(
  * @param projectRoot 项目根目录
  */
 export async function createPromptRecorder(projectRoot: string) {
-    let busy = false;
-    let exporting = false;
+    let busy = false; // 事件处理互斥锁：防止 session.idle 并发重入
+    let exporting = false; // 导出互斥锁：防止并发写导出文件
 
     /** 刷新导出文件（防止并发写） */
     const refreshExport = async (dbPath: string, sessionId: string): Promise<void> => {

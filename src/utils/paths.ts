@@ -21,6 +21,7 @@
 import { existsSync, readdirSync, statSync } from "fs";
 import { join } from "path";
 
+/** 文档类型枚举：决定文档存放路径与命名规则 */
 export type DocType =
     | "project"
     | "sad"
@@ -178,6 +179,7 @@ export function getDocPath(
     }
 }
 
+/** 版本目录名正则：{项目英文缩写}-v{版本号} */
 const VERSION_DIR_RE = /^([a-z0-9_-]+)-v(\d+\.\d+\.\d+)$/;
 
 /** 扫描 docs 下的版本目录，返回版本号列表（不含 v 前缀），按升序 */
@@ -208,6 +210,7 @@ export function isDirEmpty(dir: string): boolean {
     if (!existsSync(dir)) {
         return true;
     }
+    // 忽略隐藏文件后无任何条目即视为空目录
     const entries = readdirSync(dir).filter((n) => !n.startsWith("."));
     return entries.length === 0;
 }

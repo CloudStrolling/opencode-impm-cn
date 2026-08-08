@@ -43,6 +43,7 @@ export function gitHelperExecute(args: {
 }) {
     const root = args.projectRoot;
     const action = args.action;
+    /** 安全执行包装：捕获异常并统一返回 { success, output | error } 结果结构 */
     const safe = <T>(fn: () => T): { success: boolean; output?: T; error?: string } => {
         try {
             return { success: true, output: fn() };

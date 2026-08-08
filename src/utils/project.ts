@@ -34,6 +34,7 @@ export interface ProjectInfo {
     database: string;
 }
 
+/** project.md 字段名 → 解析正则映射表（逐行匹配） */
 const FIELD_MAP: Array<[keyof ProjectInfo, RegExp]> = [
     ["nameCn", /^\*{0,2}项目中文名称\*{0,2}\s*[:：]\s*(.+)$/],
     ["nameEn", /^\*{0,2}项目英文名称\*{0,2}\s*[:：]\s*(.+)$/],
@@ -70,6 +71,7 @@ export function readProjectInfo(projectRoot: string): ProjectInfo {
             }
         }
     }
+    // 文档中未填写缩写时，尝试从版本目录名（docs/{缩写}-v{x.y.z}）反推
     if (!info.abbrev) {
         const inferred = inferAbbrevFromDirs(projectRoot);
         if (inferred) {
