@@ -1,6 +1,6 @@
 # Agent 使用说明
 
-opencode-impm-cn 编排了 13 个专业 AI Agent，由 PM Agent（项目经理）统一调度，按照 impm 工程化流程（初始化 → 需求分析整理 → 编码开发 → 回归测试和版本文档整理）协同完成开发任务。
+opencode-impm-cn 编排了 13 个专业 AI Agent，由 PM Agent（项目经理）统一调度，按照 impm 工程化流程（初始化 → 需求分析整理 → 编码开发 → 回归测试和版本文档整理）协同完成开发任务；并提供两条轻量流程（敏捷冲刺 `/impm-sprint`、热修复 `/impm-hotfix`）用于小批量迭代与紧急 bug 修复，环节更少、token 消耗更低。
 
 ---
 
@@ -41,7 +41,7 @@ PM 是 impm 流程的核心编排者，不直接编写功能代码，而是调�
 PM → BA / SA / TL / DBA / TE / SCM / DW / CS / WS / FEE / BEE / SSE
 ```
 
-**使用方式：** 在 OpenCode 中输入 `/impm` 启动完整流程，或输入子命令执行特定阶段（如 `/impm-init`、`/impm-docs`、`/impm-coding`、`/impm-finish`）。
+**使用方式：** 在 OpenCode 中输入 `/impm` 启动完整流程，或输入子命令执行特定阶段（如 `/impm-init`、`/impm-docs`、`/impm-coding`、`/impm-finish`）；轻量需求输入 `/impm-sprint`（敏捷冲刺），紧急 bug 输入 `/impm-hotfix`（热修复）。
 
 ---
 
@@ -116,7 +116,7 @@ PM → BA / SA / TL / DBA / TE / SCM / DW / CS / WS / FEE / BEE / SSE
 
 **文件：** `assets/agents/te.md`
 
-**执行技能：** `impm-init-testcase`、`impm-task-coding-testcase`、`impm-task-coding-writetest`、`impm-task-coding-runtest`、`impm-regression-test`
+**执行技能：** `impm-init-testcase`、`impm-task-coding-testcase`、`impm-task-coding-writetest`、`impm-task-coding-runtest`、`impm-regression-test`、`impm-sprint-test`（敏捷测试，合并 writetest+runtest）
 
 **职责：**
 - 按模板编写测试用例（正常路径、边界条件、异常路径）
@@ -206,10 +206,12 @@ PM → BA / SA / TL / DBA / TE / SCM / DW / CS / WS / FEE / BEE / SSE
 
 **文件：** `assets/agents/fee.md`、`assets/agents/bee.md`、`assets/agents/sse.md`
 
-**执行技能：** `impm-task-coding-code`
+**执行技能：** `impm-task-coding-code`、`impm-sprint-code`（敏捷编码，跳过前置文档）、`impm-hotfix-fix`（热修复编码，最小改动）
 
 **职责：**
-- 根据编码上下文（context.md/cs.md/ws.md）与测试用例实现功能代码
+- 根据编码上下文（context.md/cs.md/ws.md）与测试用例实现功能代码（瀑布流程）
+- 敏捷冲刺：根据调度方传入的需求简报要点直接编码，跳过 context/cs/ws/testcase 前置环节
+- 热修复：根据调度方传入的根因分析与修复方案做最小改动修复，并补充回归测试
 - 前端业务需求 → FEE Agent
 - 后端业务需求 → BEE Agent
 - 公共/通用需求 → SSE Agent
@@ -261,6 +263,16 @@ PM → BA / SA / TL / DBA / TE / SCM / DW / CS / WS / FEE / BEE / SSE
                         ├── SA   → 项目地图更新
                         ├── DW   → 文档合并、readme/agent、部署文档
                         └── SCM  → 合并主分支
+
+轻量流程（独立于四阶段）：
+  ├── [敏捷冲刺] /impm-sprint
+  │   ├── PM   → 需求简报、版本与任务、汇总留存（impm_* 工具直接完成），维护 docs 根目录敏捷需求汇总主文档 docs/{缩写}-sprint.md
+  │   ├── FEE/BEE/SSE → 编码（impm-sprint-code，跳过前置文档）
+  │   ├── TE   → 测试（impm-sprint-test，合并 writetest+runtest）
+  │   └── SCM  → 提交合并（复用 impm-git-merge）
+  └── [热修复] /impm-hotfix
+      ├── PM   → 定位分析、留存提交（不建版本目录，main 分支直接提交）
+      └── FEE/BEE/SSE → 修复编码（impm-hotfix-fix，最小改动）
 ```
 
 ---
@@ -268,11 +280,12 @@ PM → BA / SA / TL / DBA / TE / SCM / DW / CS / WS / FEE / BEE / SSE
 ## 注意事项
 
 1. **严格按序执行**：四阶段步骤固定顺序，不跳过、不乱序、不并行、不合并，每步完成后核对版本进度表记录。
-2. **上下文隔离**：每个 Subagent 只接收其任务所需的材料，不传递无关信息。
-3. **交付物驱动**：步骤之间通过标准路径下的文档交付物衔接。
-4. **TDD 优先**：编码步骤严格遵循「测试先行」原则，测试不通过不得提交。
-5. **Subagent 之间不直接通信**，全部通过 PM Agent 编排调度。
-6. **所有输出使用简体中文**。
-7. 所有进度与状态以版本进度表 version_progress.md 与任务清单 task JSON 的记录为准，不口头声称完成。
+2. **轻量流程取舍**：敏捷冲刺跳过 URS/PRD/SAD/DBD/API/LLD 六份设计文档与任务级 context/cs/ws/testcase 文档，需求细节内嵌任务清单，用需求简报 + 汇总两份文档留痕，并维护 docs 根目录敏捷需求汇总主文档 docs/{缩写}-sprint.md（每次冲刺追加一节）；热修复仅维护 docs/{缩写}-hotfix.md 追加式记录。两者追求速度，正式归档按需补 /impm-docs 与 /impm-finish 对应步骤。
+3. **上下文隔离**：每个 Subagent 只接收其任务所需的材料，不传递无关信息。
+4. **交付物驱动**：步骤之间通过标准路径下的文档交付物衔接。
+5. **TDD 优先**：瀑布流程编码步骤严格遵循「测试先行」原则，测试不通过不得提交；轻量流程至少完成回归验证（有测试框架则补回归用例）。
+6. **Subagent 之间不直接通信**，全部通过 PM Agent 编排调度。
+7. **所有输出使用简体中文**。
+8. 所有进度与状态以版本进度表 version_progress.md 与任务清单 task JSON 的记录为准，不口头声称完成。
 
 <!-- SPDX-License-Identifier: Apache-2.0 / Copyright 2026 jenemy8023 <jenemy8023@163.com> -->

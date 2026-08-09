@@ -5,7 +5,7 @@
 **我是项目经理 —— AI 驱动的工程化全流程开发套件**
 
 <p>
-  <a href="#"><img src="https://img.shields.io/badge/version-0.4.2-2ea44f?style=flat-square" alt="version"></a>
+  <a href="#"><img src="https://img.shields.io/badge/version-0.4.3-2ea44f?style=flat-square" alt="version"></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square" alt="license"></a>
   <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/node->=%2018-339933?style=flat-square&logo=node.js&logoColor=white" alt="node"></a>
   <a href="https://opencode.ai/"><img src="https://img.shields.io/badge/OpenCode-必需-ff6b6b?style=flat-square" alt="opencode"></a>
@@ -42,7 +42,8 @@
 | 特性 | 说明 |
 |:---:|:---|
 | 🎭 | **AI 项目经理调度** — 统一编排 BA / SA / TL / DBA / TE / SCM / DW / CS / WS / FEE / BEE / SSE 共 13 个专业 Agent |
-| 📋 | **4 阶段 45 个技能** — 每阶段严格按序执行，不跳过、不乱序、不并行 |
+| 📋 | **4 阶段 51 个技能** — 每阶段严格按序执行，不跳过、不乱序、不并行 |
+| ⚡ | **两条轻量流程** — 敏捷冲刺 `/impm-sprint` 与热修复 `/impm-hotfix`，大幅减少环节与 token 消耗，保留合理文档留痕 |
 | 🧪 | **测试先行（TDD）** — 编码前先写测试用例，编码后执行测试，全部通过才提交 |
 | 📁 | **版本化管理** — 每个版本独立目录 `docs/{项目缩写}-v{版本号}/` + 独立 Git 分支 |
 | 📝 | **全程简体中文** — 文档、注释、汇报均使用简体中文，降低团队学习成本 |
@@ -91,6 +92,8 @@
 
 PM Agent 将自动引导完成全部四阶段开发任务。
 
+> ⚡ **轻量流程**：小批量迭代需求用 `/impm-sprint`（敏捷冲刺，6 环节）；线上 bug 用 `/impm-hotfix`（热修复，3 环节）。两者环节更少、token 消耗更低、速度更快，同时保留需求简报 / 修复记录文档供审核。
+
 ### 分阶段手动执行
 
 | 阶段 | 命令 | 说明 |
@@ -99,6 +102,8 @@ PM Agent 将自动引导完成全部四阶段开发任务。
 | 2 | `/impm-docs` | 确认版本需求、更新设计文档、创建任务清单 |
 | 3 | `/impm-coding` | 循环执行任务：上下文 → 编码 → 测试 → 提交 |
 | 4 | `/impm-finish` | 回归测试、代码审核、文档合并、合并主分支 |
+| ⚡ | `/impm-sprint` | 敏捷冲刺：需求简报 → 版本与任务 → 编码 → 测试 → 汇总留存 → 提交合并 |
+| ⚡ | `/impm-hotfix` | 热修复：定位分析 → 修复编码 → 留存提交（main 分支直接提交） |
 
 > 💡 **提示**：手动执行时可监控每步结果，必要时修改需求、回滚 Git 重新执行。每个项目有独立 Git 分支，阶段结束时自动提交。
 
@@ -193,6 +198,10 @@ flowchart LR
 | **2** | `/impm-docs` | 确认版本需求 → 创建版本分支 → 生成/更新 URS/PRD/SAD/DBD/API/LLD → 创建任务清单 |
 | **3** | `/impm-coding` | 按任务清单循环调度：收集上下文 → 代码查询 → 网络查询 → 数据库/API 设计 → 测试用例 → 编码 → 写测试 → 跑测试 → 提交 |
 | **4** | `/impm-finish` | 全量回归测试 → 补充注释 → 代码审核 → 更新项目地图 → 合并文档 → 更新 README/Agent/部署文档 → 合并主分支 |
+| **⚡敏捷** | `/impm-sprint` | 需求简报（1份代URS/PRD）→ 版本与任务（任务描述内嵌需求）→ 编码（跳过 context/cs/ws/testcase）→ 测试 → 汇总留存 → 提交合并 |
+| **⚡热修复** | `/impm-hotfix` | 定位分析（写修复记录）→ 修复编码（最小改动）→ 留存提交（main 分支，不建版本目录） |
+
+> **流程选择建议**：正式发版走 `/impm`（或分阶段命令）；小批量迭代走 `/impm-sprint`；紧急 bug 走 `/impm-hotfix`。敏捷冲刺的产物（需求简报、汇总）可直接作为下次正式版本 `/impm-docs` 的 URS 素材。
 
 ### 文档标准路径
 
@@ -202,6 +211,10 @@ flowchart LR
 | 系统架构设计 | `docs/sad.md` |
 | 版本目录 | `docs/{项目英文缩写}-v{版本号}/` |
 | 版本需求/设计文档 | `docs/{缩写}-v{版本}/{缩写}-{urs|prd|dbd|api|lld|testcase}-v{版本}.md` |
+| 敏捷需求简报 | `docs/{缩写}-v{版本}/{缩写}-urs-v{版本}.md`（复用 urs 路径，敏捷简报格式） |
+| 敏捷汇总 | `docs/{缩写}-v{版本}/{缩写}-review.md`（复用 review 路径，敏捷汇总格式） |
+| 敏捷需求汇总主文档 | `docs/{缩写}-sprint.md`（全部敏捷需求汇总，每次冲刺追加一节） |
+| 热修复记录 | `docs/{缩写}-hotfix.md`（追加式，每次修复追加一条） |
 | 数据库脚本 | `docs/{缩写}-v{版本}/{缩写}-dbd-v{版本}.sql` |
 | 任务清单 | `docs/{缩写}-v{版本}/{缩写}-task-v{版本}.json` |
 | 版本进度表 | `docs/{缩写}-v{版本}/version_progress.md` |
@@ -211,13 +224,15 @@ flowchart LR
 ### 完整命令清单
 
 <details>
-<summary>📋 点击展开 46 个命令（按阶段分组）</summary>
+<summary>📋 点击展开 48 个命令（按阶段分组）</summary>
 
 #### 总流程
 
 | 命令 | 说明 |
 |:-----|:-----|
 | `/impm` | 我是项目经理：编排四阶段全流程 |
+| `/impm-sprint` | 敏捷冲刺：轻量 6 环节完成一个小批量迭代（⚡ 敏捷流程） |
+| `/impm-hotfix` | 热修复：轻量 3 环节完成 bug 定位到修复（⚡ 热修复流程） |
 
 #### 阶段 1：初始化
 
@@ -284,6 +299,21 @@ flowchart LR
 | `/impm-deploy-update` | 更新编译部署方案（`deploy/build.md`、`deploy/deploy.md`） | DW |
 | `/impm-git-merge` | 合并版本分支到主分支 | SCM |
 
+#### ⚡ 轻量流程：敏捷冲刺
+
+| 命令 | 说明 | 执行 Agent |
+|:-----|:-----|:----------:|
+| `/impm-sprint` | 编排敏捷冲刺全部环节（需求简报/版本任务/编码/测试/汇总/提交） | PM |
+| `/impm-sprint-code` | 敏捷编码（跳过 context/cs/ws/testcase 前置，需求上下文由调度方传入） | SSE/FEE/BEE |
+| `/impm-sprint-test` | 敏捷测试（合并 writetest+runtest 为单一环节） | TE |
+
+#### ⚡ 轻量流程：热修复
+
+| 命令 | 说明 | 执行 Agent |
+|:-----|:-----|:----------:|
+| `/impm-hotfix` | 编排热修复全部环节（定位分析/修复编码/留存提交） | PM |
+| `/impm-hotfix-fix` | 热修复编码（最小改动 + 回归测试，根因与方案由调度方传入） | SSE/FEE/BEE |
+
 </details>
 
 ---
@@ -294,8 +324,8 @@ flowchart LR
 opencode-impm-cn/
 ├── 📁 assets/                   # 套件资源（安装时复制到 .opencode/）
 │   ├── 📁 agents/               # 13 个 AI Agent 定义（.md）
-│   ├── 📁 commands/             # 45 个命令（.md）
-│   └── 📁 skills/               # 45 个技能（每技能一个目录）+ template/ 模板
+│   ├── 📁 commands/             # 48 个命令（.md）
+│   └── 📁 skills/               # 51 个技能（每技能一个目录）+ template/ 14 个模板
 ├── 📁 src/                      # 插件源码（TypeScript）
 │   ├── 📁 tools/                # 14 个工具的实现（含 prompt-recorder）
 │   ├── 📁 utils/                # 路径 / 版本 / git / 项目信息工具
@@ -481,5 +511,27 @@ You may obtain a copy of the License at
 | 更新 README.md 和 agent.md | `impm-doc-update` | DW |
 | 更新编译部署文档 | `impm-deploy-update` | DW |
 | 当前版本分支合并到主分支 | `impm-git-merge` | SCM |
+
+</details>
+
+<details>
+<summary>⚡ 轻量流程：敏捷冲刺</summary>
+
+| 步骤说明 | 技能名 | 子代理 |
+|:---------|:-------|:------:|
+| 敏捷冲刺编排（需求简报/版本任务/汇总为 PM 直接执行） | `impm-sprint` | PM |
+| 敏捷编码（跳过 context/cs/ws/testcase 前置） | `impm-sprint-code` | SSE/FEE/BEE |
+| 敏捷测试（合并 writetest+runtest） | `impm-sprint-test` | TE |
+| 提交合并（复用瀑布合并逻辑） | `impm-git-merge` | SCM |
+
+</details>
+
+<details>
+<summary>⚡ 轻量流程：热修复</summary>
+
+| 步骤说明 | 技能名 | 子代理 |
+|:---------|:-------|:------:|
+| 热修复编排（定位分析/留存提交为 PM 直接执行） | `impm-hotfix` | PM |
+| 热修复编码（最小改动 + 回归测试） | `impm-hotfix-fix` | SSE/FEE/BEE |
 
 </details>
