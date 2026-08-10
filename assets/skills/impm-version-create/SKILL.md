@@ -47,7 +47,7 @@ b) 若均未提及版本号，调用 impm_version（action=current）获取 docs
 调用 impm_version（action=init）创建项目版本目录 docs/{项目英文缩写}-v{当前版本号}，记录返回的版本号并核对目录已创建。
 
 ### 步骤 4：初始化版本进度文件
-调用 impm_progress（action=init）创建版本进度文件 docs/{项目英文缩写}-v{当前版本号}/version_progress.md，文件内容为表格，3 列：步骤序号、步骤名称、步骤状态。写入首行：步骤序号 1，步骤名称 impm-version-create，步骤状态 已完成。
+调用 impm_progress（action=init）创建版本进度文件 docs/{项目英文缩写}-v{当前版本号}/version_progress.md，文件内容为表格，10 列：步骤序号、步骤名称、步骤状态、启动时间、总耗时(秒)、输入token、输出token、命中缓存、存入缓存、总token。写入首行：步骤序号 1，步骤名称 impm-version-create，步骤状态 已完成（启动时间自动记录为当前时间）。
 核对文件存在且首行内容正确。
 
 ### 步骤 5：返回当前版本号

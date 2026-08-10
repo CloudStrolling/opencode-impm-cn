@@ -46,7 +46,7 @@ description: 创建版本目录 docs/{项目英文缩写}-v0.0.1 与版本进度
 调用 impm_version(projectRoot, init, v0.0.1, {项目中文名称}) 创建版本目录 docs/{项目英文缩写}-v0.0.1，工具返回当前版本号；核对版本目录已创建、当前版本号为 0.0.1。
 
 ### 步骤 3：创建版本进度表并补录记录
-调用 impm_progress(projectRoot, {项目英文缩写}, {当前版本号}, init, null, null) 创建 version_progress.md（表头：步骤序号|步骤名称|步骤状态）；随后依次调用 impm_progress(projectRoot, {项目英文缩写}, {当前版本号}, add, 步骤名, 已完成) 补录初始化阶段已完成的步骤：impm-init-isinit、impm-init-git、impm-init-project、impm-init-version 均标记为已完成，后续步骤继续使用 add 追加新行（序号自动为当前最大序号+1）。
+调用 impm_progress(projectRoot, {项目英文缩写}, {当前版本号}, init, null, null) 创建 version_progress.md（10 列表头：步骤序号|步骤名称|步骤状态|启动时间|总耗时(秒)|输入token|输出token|命中缓存|存入缓存|总token）；随后依次调用 impm_progress(projectRoot, {项目英文缩写}, {当前版本号}, add, 步骤名, 已完成) 补录初始化阶段已完成的步骤：impm-init-isinit、impm-init-git、impm-init-project、impm-init-version 均标记为已完成，后续步骤继续使用 add 追加新行（序号自动为当前最大序号+1，启动时间自动记录为当前时间，上一行自动结算总耗时与 token）。
 
 ### 步骤 4：核对并记录
 核对版本目录 docs/{项目英文缩写}-v0.0.1/ 与 version_progress.md 均存在，进度表中已包含上述 4 条已完成记录；调用 impm_progress(projectRoot, {项目英文缩写}, {当前版本号}, add, impm-init-version, 已完成) 记录本步骤完成。

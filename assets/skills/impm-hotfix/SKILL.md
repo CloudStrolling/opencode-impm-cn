@@ -68,7 +68,8 @@ description: impm热修复编排技能，3环节轻量完成bug定位到修复�
 ### 步骤 4：留存提交（PM 直接执行）
 1. 用 read/write 工具更新 docs/{项目英文缩写}-hotfix.md 中对应记录：补充修复方案执行结果、改动文件清单、验证结果。
 2. 调用 impm_git（action=commit，message={项目英文缩写}-hotfix-{日期}-{简述}）将全部修改提交到 main 分支（不建分支、不建版本目录）。
-3. 向用户汇报：根因分析、修复方案、改动文件清单、验证结果、提交信息（commit 摘要），并提示后续如需正式归档可执行 /impm-finish 对应步骤。
+3. 退出前结算进度：调用 impm_version（action=current）获取 docs 下最新版本号；若该版本存在 version_progress.md，调用 impm_progress（action=finalize）结算进度表最后一行（最近一个步骤）的总耗时与 token；若不存在进度表则跳过（热修复不建版本目录，无需结算）。
+4. 向用户汇报：根因分析、修复方案、改动文件清单、验证结果、提交信息（commit 摘要），并提示后续如需正式归档可执行 /impm-finish 对应步骤。
 
 ## 交付物
 - docs/{项目英文缩写}-hotfix.md（追加式修复记录，含最新一条修复记录）

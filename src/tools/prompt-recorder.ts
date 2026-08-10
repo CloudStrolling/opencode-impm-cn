@@ -78,7 +78,7 @@ function escapeCell(text: string): string {
 }
 
 /** 计算默认 opencode 数据目录下的数据库路径 */
-function defaultDbPath(): string {
+export function defaultDbPath(): string {
     if (process.env.OPENCODE_DATA) {
         return join(process.env.OPENCODE_DATA, "opencode.db");
     }
@@ -129,7 +129,7 @@ interface TokenTotal {
 }
 
 /** 数据库操作句柄（兼容 node:sqlite 与 bun:sqlite） */
-interface SqliteHandle {
+export interface SqliteHandle {
     db: {
         prepare(sql: string): { all(...params: unknown[]): unknown[]; get(...params: unknown[]): unknown };
         close(): void;
@@ -141,7 +141,7 @@ interface SqliteHandle {
  * 打开只读数据库：优先 node:sqlite，失败回退 bun:sqlite
  * （兼容 Node ≥22.5 与 Bun 两种插件运行时）
  */
-async function openDb(dbPath: string): Promise<SqliteHandle> {
+export async function openDb(dbPath: string): Promise<SqliteHandle> {
     try {
         const { DatabaseSync } = await import("node:sqlite");
         const db = new DatabaseSync(dbPath, { readOnly: true });

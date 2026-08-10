@@ -120,7 +120,7 @@ description: 编排初始化阶段全部13个步骤（impm-init-isinit、impm-in
 完成后核对提交成功。
 
 ### 步骤 n：记录编排完成并汇报
-调用 impm_progress(projectRoot, {项目英文缩写}, {当前版本号}, add, impm-init, 已完成) 记录本编排技能完成；向用户汇报初始化阶段全部完成，汇报内容包括：初始化方式（空项目/存量项目）、产出文件清单、各步骤执行角色（PM/SCM/SA/BA/DBA/TL/TE）、版本进度表位置与下一步建议。
+调用 impm_progress(projectRoot, {项目英文缩写}, {当前版本号}, add, impm-init, 已完成) 记录本编排技能完成；随后调用 impm_progress(projectRoot, {项目英文缩写}, {当前版本号}, finalize, null, null) 在退出前结算进度表最后一行（impm-init，已完成）的总耗时与 token（含该步骤主会话与 subagent 子会话消耗）；向用户汇报初始化阶段全部完成，汇报内容包括：初始化方式（空项目/存量项目）、产出文件清单、各步骤执行角色（PM/SCM/SA/BA/DBA/TL/TE）、版本进度表位置与下一步建议。
 
 ## 交付物
 - 版本目录 docs/{项目英文缩写}-v0.0.1/ 及其全部初始化文档

@@ -95,8 +95,8 @@ description: 编排并执行需求分析整理阶段（阶段2）的全部9个�
 启动 SCM subagent，使用 Skill 工具加载并执行 impm-analysis-commit 技能，将需求分析整理阶段生成的所有文件和目录提交到 git。
 执行完成后，核对 version_progress.md 已记录 impm-analysis-commit 状态为"已完成"。
 
-### 步骤 11：向用户汇报
-汇总本阶段全部产出文件清单、各步骤完成状态，并向用户说明下一步建议（进入编码开发阶段，输入 /impm-coding）。
+### 步骤 11：结算最后步骤并汇报
+调用 impm_progress（action=finalize）在退出前结算进度表最后一行（impm-analysis-commit，已完成）的总耗时与 token（含该步骤主会话与 subagent 子会话消耗）；汇总本阶段全部产出文件清单、各步骤完成状态，并向用户说明下一步建议（进入编码开发阶段，输入 /impm-coding）。
 
 ## 交付物
 - docs/{项目英文缩写}-v{当前版本号}/version_progress.md（版本进度表，9 个步骤全部记录）

@@ -66,7 +66,7 @@ impm 瀑布式开发流程完成设计阶段（阶段2）、任务清单 docs/{�
 前一个任务完成所有编码步骤并提交后，回到步骤 3 获取下一个任务；重复循环，直到 impm_task_manager（action=next）不再返回任务，即所有任务均已完成。
 
 ### 步骤 5：记录编码阶段完成
-调用 impm_progress（action=add，projectName={项目英文名称}，version={当前版本号}，stepName=impm-coding，status=已完成），在 version_progress.md 中记录编码开发阶段完成。
+调用 impm_progress（action=add，projectName={项目英文名称}，version={当前版本号}，stepName=impm-coding，status=已完成），在 version_progress.md 中记录编码开发阶段完成；随后调用 impm_progress（action=finalize，projectName={项目英文名称}，version={当前版本号}）在退出前结算进度表最后一行（impm-coding，已完成）的总耗时与 token（含该步骤主会话与 subagent 子会话消耗）。
 
 ### 步骤 6：汇报编码阶段完成情况
 向用户汇报编码阶段完成情况：当前版本号、任务总数与完成数、每个任务的执行结果摘要、git 提交记录（{项目英文缩写}-v{当前版本号}-{任务编号}），并建议下一步进入测试阶段。

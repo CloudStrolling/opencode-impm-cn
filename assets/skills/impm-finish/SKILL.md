@@ -85,8 +85,9 @@ description: 编排回归测试和版本文档整理阶段（阶段4）的全部
 
 ### 步骤 9：记录进度并汇报
 1. 调用 impm_progress add（impm-finish，已完成），在 version_progress.md 中记录本技能完成状态。
-2. 核对 version_progress.md 中阶段4全部 8 个步骤均已记录为"已完成"。
-3. 向用户汇报：阶段4（回归测试和版本文档整理）全部步骤已按顺序完成，本版本开发全部完成。
+2. 调用 impm_progress（action=finalize）在退出前结算进度表最后一行（impm-finish，已完成）的总耗时与 token（含该步骤主会话与 subagent 子会话消耗）。
+3. 核对 version_progress.md 中阶段4全部 8 个步骤均已记录为"已完成"。
+4. 向用户汇报：阶段4（回归测试和版本文档整理）全部步骤已按顺序完成，本版本开发全部完成。
 
 ## 交付物
 - docs/{项目英文缩写}-v{当前版本号}/version_progress.md 中阶段4全部步骤的状态记录

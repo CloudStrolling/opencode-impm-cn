@@ -98,7 +98,7 @@ description: impm敏捷冲刺开发编排技能，6环节轻量完成一个冲�
 
 ### 步骤 7：提交合并（启动 scm，复用 impm-git-merge）
 1. 用 task 工具启动 scm subagent 执行 impm-git-merge 技能（提示词按「通用调度要求」携带上下文），将版本分支以 git merge --squash 方式合并到主分支并提交。
-2. 完成后核对主分支合并提交存在，调用 impm_progress（action=add，stepName=impm-sprint，status=已完成）记录本技能完成。
+2. 完成后核对主分支合并提交存在，调用 impm_progress（action=add，stepName=impm-sprint，status=已完成）记录本技能完成；随后调用 impm_progress（action=finalize）在退出前结算进度表最后一行（impm-sprint，已完成）的总耗时与 token。
 
 ### 步骤 8：向用户汇报
 向用户汇报本次冲刺完成情况：当前版本号、任务总数与完成数、产出文件清单、git 合并提交记录、文档留存位置（需求简报/汇总/测试结果/docs 根目录敏捷需求汇总主文档 docs/{项目英文缩写}-sprint.md），并提示遗留事项（如需补充正式设计文档，可手动执行 /impm-docs 的相应步骤）。

@@ -250,7 +250,7 @@ export default async function impmPlugin(context: ToolContext) {
                 args: {
                     projectRoot: createStringSchema("项目根目录的绝对路径"),
                     action: createStringSchema(
-                        "操作类型：init=创建进度表，add=插入新行，check=查询步骤状态与整体进度，list=列出全部记录",
+                        "操作类型：init=创建进度表，add=插入新行，finalize=结算最后一行耗时与token，check=查询步骤状态与整体进度，list=列出全部记录",
                     ),
                     stepName: createStringSchema(
                         "步骤名称（技能名，如 impm-init-urs；add/check 时必填）",
@@ -262,15 +262,19 @@ export default async function impmPlugin(context: ToolContext) {
                     projectName: createStringSchema(
                         "项目英文缩写（可选，不传时自动推断）",
                     ),
+                    dbPath: createStringSchema(
+                        "opencode 数据库路径（可选，默认 ~/.local/share/opencode/opencode.db）",
+                    ),
                 },
                 async execute(args: Record<string, unknown>) {
                     return progressExecute({
                         projectRoot: (args.projectRoot as string) || projectRoot,
-                        action: args.action as "init" | "add" | "check" | "list",
+                        action: args.action as "init" | "add" | "finalize" | "check" | "list",
                         stepName: args.stepName as string | undefined,
                         status: args.status as string | undefined,
                         version: args.version as string | undefined,
                         projectName: args.projectName as string | undefined,
+                        dbPath: args.dbPath as string | undefined,
                     });
                 },
             },
