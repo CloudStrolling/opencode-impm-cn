@@ -58,9 +58,11 @@ impm-task-coding 启动 DBA subagent 处理数据库设计，需要根据任务�
 
 ### 步骤 6：更新数据库设计文档与脚本
 如果需要修改：
-1. 先调用 impm_doc_writer（docType=dbd，target=version）修改版本数据库设计文档 docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-dbd-v{当前版本号}.md；
-2. 然后调用 impm_doc_writer（docType=sql，target=version）同步修改版本数据库脚本 docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-dbd-v{当前版本号}.sql；
-3. 核对两份文件内容一致、脚本可执行。
+1. 先调用 impm_doc_reader（docType=dbd，target=version）与（docType=sql，target=version）读取版本数据库设计文档与 SQL 脚本的**最新内容**（可能有其他并行任务已写入，必须基于最新内容合并）；
+2. 在最新内容基础上，合并本任务需要新增/修改的表、字段、索引等内容（SQL 按新增对象追加，不重写他人已建对象）；
+3. 调用 impm_doc_writer（docType=dbd，target=version）写回版本数据库设计文档 docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-dbd-v{当前版本号}.md；
+4. 然后调用 impm_doc_writer（docType=sql，target=version）写回版本数据库脚本 docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-dbd-v{当前版本号}.sql；
+5. 写回后立即回读两份文件，校验本任务内容已写入且他人内容未被破坏（版本目录写入冲突规避：多任务并行时禁止基于旧快照整体覆盖）；核对两份文件内容一致、脚本可执行。
 
 ### 步骤 7：记录完成
 调用 impm_progress（action=add，stepName=impm-task-coding-dbd，status={任务编号}-数据库设计已更新）。

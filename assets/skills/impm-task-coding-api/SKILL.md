@@ -57,7 +57,11 @@ description: 判断当前任务是否需要变更接口设计，如需变更则�
 - 如果不需要变更，调用 impm_progress（action=add，stepName=impm-task-coding-api，status={任务编号}-API设计无需修改），然后结束此步骤。
 
 ### 步骤 6：更新接口设计文档
-如果需要修改：调用 impm_doc_writer（docType=api，target=version）修改当前版本的接口设计文档 docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-api-v{当前版本号}.md，核对接口定义完整（路径、方法、请求/响应、错误码等）。
+如果需要修改：
+1. 先调用 impm_doc_reader（docType=api，target=version）读取版本接口设计文档的**最新内容**（可能有其他并行任务已写入，必须基于最新内容合并）；
+2. 在最新内容基础上，合并本任务需要新增/修改的接口定义（路径、方法、请求/响应、错误码等）；
+3. 调用 impm_doc_writer（docType=api，target=version）写回版本接口设计文档 docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-api-v{当前版本号}.md；
+4. 写回后立即回读校验本任务接口已写入且他人内容未被破坏（版本目录写入冲突规避：多任务并行时禁止基于旧快照整体覆盖）；核对接口定义完整。
 
 ### 步骤 7：记录完成
 调用 impm_progress（action=add，stepName=impm-task-coding-api，status={任务编号}-API设计已更新）。
