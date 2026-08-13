@@ -1,0 +1,103 @@
+{
+  "info": {
+    "name": "{项目中文名称} API 用例（v{当前版本号}）",
+    "_postman_id": "{生成唯一标识，如随机 UUID}",
+    "description": "由 impm-apifox 根据当前版本测试用例文档自动生成，导入 Apifox 后得到全部接口用例测试信息。",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "{接口路径} - {用例名称}（{用例ID}）",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:8080{接口路径}?{参数字符串}",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "{路径段1}",
+            "{路径段2}"
+          ],
+          "query": [
+            {
+              "key": "{参数名}",
+              "value": "{参数值}",
+              "description": "{参数说明}"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{JSON 请求体示例}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "description": "{用例描述：前置条件、测试步骤、预期结果}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// 断言：状态码",
+              "pm.test(\"状态码为 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "// 断言：返回 code=0",
+              "pm.test(\"业务码为 0\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.code).to.eql(0);",
+              "});",
+              "",
+              "// 断言：字段值",
+              "pm.test(\"字段值校验\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.data.{字段名}).to.eql({期望值});",
+              "});"
+            ]
+          }
+        }
+      ],
+      "response": [
+        {
+          "name": "{用例名称} 预期响应",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080{接口路径}"
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{JSON 响应体示例}",
+          "previewLanguage": "json"
+        }
+      ]
+    }
+  ]
+}

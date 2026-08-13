@@ -40,6 +40,8 @@ export type DocType =
     | "ui-test-record"
     | "regression-unit"
     | "regression-api"
+    | "apifox-openapi"
+    | "apifox-postman"
     | "readme"
     | "agent"
     | "deploy-build"
@@ -197,6 +199,16 @@ export function getDocPath(
             return join(versionDir(projectRoot, abbrev, version), "regression-unit-test.md");
         case "regression-api":
             return join(versionDir(projectRoot, abbrev, version), "regression-api-test.md");
+        case "apifox-openapi":
+            return join(
+                versionDir(projectRoot, abbrev, version),
+                `${abbrev}-apifox-openapi-v${normalizeVersion(version)}.json`,
+            );
+        case "apifox-postman":
+            return join(
+                versionDir(projectRoot, abbrev, version),
+                `${abbrev}-apifox-postman-v${normalizeVersion(version)}.json`,
+            );
         default:
             throw new Error(`未知文档类型: ${docType}`);
     }

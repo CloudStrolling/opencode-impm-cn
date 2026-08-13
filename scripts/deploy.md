@@ -134,9 +134,9 @@ npm publish --access public
 
 ```bash
 # 1) 确认目录结构
-#    .opencode/commands/  → 45 个命令
+#    .opencode/commands/  → 49 个命令
 #    .opencode/agents/    → 13 个 agent
-#    .opencode/skills/    → 45 个技能 + template/
+#    .opencode/skills/    → 52 个技能 + template/ 17 个模板（含 APIFOX 模板）
 #    .opencode/plugins/impm/ → 插件编译产物
 
 # 2) 确认 opencode.json 配置正确（自安装时无需注册 plugin）

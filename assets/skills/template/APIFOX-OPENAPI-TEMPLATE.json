@@ -1,0 +1,198 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "{项目中文名称} API 接口",
+    "description": "由 impm-apifox 根据当前版本 API 设计文档自动生成，导入 Apifox 后得到全部接口信息。",
+    "version": "{当前版本号}"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "本地开发环境"
+    }
+  ],
+  "tags": [
+    {
+      "name": "{模块一}",
+      "description": "{模块一功能说明}"
+    },
+    {
+      "name": "{模块二}",
+      "description": "{模块二功能说明}"
+    }
+  ],
+  "paths": {
+    "/api/{模块一路径}": {
+      "get": {
+        "tags": [
+          "{模块一}"
+        ],
+        "summary": "{接口名称}",
+        "description": "{接口功能描述}",
+        "operationId": "{接口唯一标识，如 getUserById}",
+        "parameters": [
+          {
+            "name": "{参数名}",
+            "in": "query",
+            "description": "{参数说明}",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "{路径参数名}",
+            "in": "path",
+            "description": "{路径参数说明}",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/{响应模型名}"
+                },
+                "example": {
+                  "code": 0,
+                  "message": "success",
+                  "data": {}
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "参数错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未认证",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "{模块一}"
+        ],
+        "summary": "{接口名称}",
+        "description": "{接口功能描述}",
+        "operationId": "{接口唯一标识，如 createUser}",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/{请求模型名}"
+              },
+              "example": {
+                "{字段}": "{示例值}"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/{响应模型名}"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "properties": {
+          "code": {
+            "type": "integer",
+            "description": "错误码"
+          },
+          "message": {
+            "type": "string",
+            "description": "错误信息"
+          }
+        }
+      },
+      "{响应模型名}": {
+        "type": "object",
+        "required": [
+          "code",
+          "message",
+          "data"
+        ],
+        "properties": {
+          "code": {
+            "type": "integer",
+            "description": "状态码，0 表示成功"
+          },
+          "message": {
+            "type": "string",
+            "description": "提示信息"
+          },
+          "data": {
+            "type": "object",
+            "description": "业务数据",
+            "properties": {
+              "{字段名}": {
+                "type": "string",
+                "description": "{字段说明}"
+              }
+            }
+          }
+        }
+      },
+      "{请求模型名}": {
+        "type": "object",
+        "required": [
+          "{必填字段}"
+        ],
+        "properties": {
+          "{字段名}": {
+            "type": "string",
+            "description": "{字段说明}"
+          }
+        }
+      }
+    }
+  }
+}

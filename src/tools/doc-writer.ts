@@ -39,7 +39,7 @@ import {
 
 export const docWriterDefinition = {
     description:
-        "写入项目管理文档：按标准路径将内容写入 docs 下的文档（project、sad、urs、prd、dbd、api、lld、testcase、task、sql、review、context、cs、ws 等），自动创建目录。docType 为 task 时校验 JSON 合法性。可选 expectedBase=写入前读取到的最新全文，用于并发冲突检测（文件已被其他任务修改时拒绝写入并返回冲突错误，避免覆盖他人内容）。",
+        "写入项目管理文档：按标准路径将内容写入 docs 下的文档（project、sad、urs、prd、dbd、api、lld、testcase、task、sql、review、context、cs、ws、ui-test-record、regression-unit、regression-api、apifox-openapi、apifox-postman 等），自动创建目录。docType 为 task 时校验 JSON 合法性。可选 expectedBase=写入前读取到的最新全文，用于并发冲突检测（文件已被其他任务修改时拒绝写入并返回冲突错误，避免覆盖他人内容）。",
 };
 
 export function docWriterExecute(args: {
