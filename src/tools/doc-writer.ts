@@ -18,11 +18,19 @@
  * impm_doc_writer 工具
  * 将文档内容写入标准路径，自动创建父目录。
  * docType 为 task 时自动校验 JSON 格式。
+ *
+ * 并发写入冲突检测（expectedBase）：
+ *   编码开发阶段 PM 按阶段波次并发派发子步骤 subagent，多个任务可能同时写同一份
+ *   版本目录共享文档（如 testcase/dbd/api/ui-test-record、api-test 脚本）。写入方在
+ *   读取到的最新全文基础上合并后写回，可传 expectedBase=读取到的最新全文；若写入时
+ *   发现文件已被其他任务修改（当前内容 ≠ expectedBase），则拒绝写入并返回冲突错误
+ *   （含当前最新内容），写入方据此重新读取合并后再写回，避免基于旧快照覆盖他人内容。
+ *   不传 expectedBase 时保持原有直接覆盖行为（任务私有文件不受影响）。
  */
 
-import { mkdirSync, writeFileSync } from "fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import { dirname } from "path";
-import { getDocPath, type DocType } from "../utils/paths.js";
+import { getDocPath, FIXED_PATH_DOC_TYPES, type DocType } from "../utils/paths.js";
 import {
     latestVersion,
     resolveAbbrev,
@@ -31,7 +39,7 @@ import {
 
 export const docWriterDefinition = {
     description:
-        "写入项目管理文档：按标准路径将内容写入 docs 下的文档（project、sad、urs、prd、dbd、api、lld、testcase、task、sql、review、context、cs、ws 等），自动创建目录。docType 为 task 时校验 JSON 合法性。",
+        "写入项目管理文档：按标准路径将内容写入 docs 下的文档（project、sad、urs、prd、dbd、api、lld、testcase、task、sql、review、context、cs、ws 等），自动创建目录。docType 为 task 时校验 JSON 合法性。可选 expectedBase=写入前读取到的最新全文，用于并发冲突检测（文件已被其他任务修改时拒绝写入并返回冲突错误，避免覆盖他人内容）。",
 };
 
 export function docWriterExecute(args: {
@@ -42,6 +50,7 @@ export function docWriterExecute(args: {
     version?: string;
     taskId?: string;
     target?: "version" | "main";
+    expectedBase?: string;
 }) {
     try {
         const docType = args.docType as DocType;
@@ -52,7 +61,7 @@ export function docWriterExecute(args: {
         const target = args.target === "main" ? "main" : "version";
 
         // 固定路径文档（project/sad/readme/agent/deploy）无需版本目录，其余文档需解析缩写与版本号
-        const needsVersion = !["project", "sad", "readme", "agent", "deploy-build", "deploy-deploy"].includes(docType);
+        const needsVersion = !FIXED_PATH_DOC_TYPES.includes(docType);
         let abbrev = "";
         let version = args.version;
         if (needsVersion) {
@@ -90,6 +99,25 @@ export function docWriterExecute(args: {
             taskId: args.taskId,
             target,
         });
+
+        // 并发写入冲突检测：expectedBase 存在且文件已存在时，若当前内容与写入方基于的旧快照不一致，
+        // 说明已被其他并行任务修改，拒绝写入并返回最新内容供重新合并（避免旧快照整体覆盖）
+        if (args.expectedBase !== undefined && existsSync(path)) {
+            const current = readFileSync(path, "utf8");
+            if (current !== args.expectedBase) {
+                return {
+                    success: false,
+                    conflict: true,
+                    error: `并发写入冲突：文档已被其他任务修改，基于旧快照的写入被拒绝。请重新读取该文档最新内容，合并本任务内容后再调用 impm_doc_writer 写回（expectedBase 传最新全文）。文档：${path}`,
+                    path,
+                    docType,
+                    abbrev,
+                    version,
+                    current,
+                };
+            }
+        }
+
         mkdirSync(dirname(path), { recursive: true });
         writeFileSync(path, content, "utf8");
 

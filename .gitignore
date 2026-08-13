@@ -41,3 +41,6 @@ coverage/
 # 依赖缓存
 .pnp
 .pnp.js
+
+# prompt-recorder 运行时产物（提问记录与对话导出，不入库）
+docs/prompts/

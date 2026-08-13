@@ -65,7 +65,7 @@ description: impm 总流程技能，自动执行瀑布式开发全部四个阶�
 
 ### 阶段三：编码开发（impm-coding）
 1. 使用 Skill 工具加载并执行 impm-coding 技能。
-2. 读取任务清单中所有状态不为"已完成"的任务，严格按上下游顺序，对每个任务执行 impm-task-coding（含 10 个子步骤）与 impm-task-coding-gitcommit。
+2. 读取任务清单中所有状态不为"已完成"的任务，按上下游依赖**并发调度**（最多 5 个并行，由 PM 按阶段波次直接派发子步骤 subagent 执行 impm-task-coding），全部任务编码完成后逐个**串行**执行 impm-task-coding-gitcommit 提交。
 3. 全部任务完成后，检查 version_progress.md 确认 impm-coding 状态已记录。
 
 ### 阶段四：回归测试和版本文档整理（impm-finish）

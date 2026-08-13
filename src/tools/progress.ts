@@ -36,8 +36,9 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import { dirname } from "path";
 import { progressFilePath, normalizeVersion } from "../utils/paths.js";
-import { resolveAbbrev } from "../utils/project.js";
+import { latestVersion, resolveAbbrev } from "../utils/project.js";
 import { defaultDbPath, openDb } from "./prompt-recorder.js";
+import { withFileLock } from "../utils/file-lock.js";
 
 /** 流程中全部已知步骤名（技能名），用于校验 add/check 的 stepName */
 export const KNOWN_STEP_NAMES: string[] = [
@@ -87,6 +88,12 @@ export const KNOWN_STEP_NAMES: string[] = [
     "impm-doc-update",
     "impm-deploy-update",
     "impm-git-merge",
+    "impm-sprint",
+    "impm-sprint-requirement",
+    "impm-sprint-version-task",
+    "impm-sprint-code",
+    "impm-sprint-test",
+    "impm-sprint-summary",
 ];
 
 /** 历史/别名步骤名 → 规范步骤名 */
@@ -343,9 +350,16 @@ export async function progressExecute(args: {
 }): Promise<Record<string, unknown>> {
     try {
         const abbrev = resolveAbbrev(args.projectRoot, args.projectName);
-        const version = args.version?.trim();
+        // 未显式传 version 时自动使用 docs 下最新版本目录（与 impm_doc_writer 行为一致）
+        let version = args.version?.trim() || "";
         if (!version) {
-            return { success: false, error: "缺少必填参数 version（版本号）。" };
+            version = latestVersion(args.projectRoot, abbrev) ?? "";
+            if (!version) {
+                return {
+                    success: false,
+                    error: "缺少必填参数 version（版本号），且未找到版本目录（docs/{缩写}-v{x.y.z}）。请先执行 /impm-init 或 /impm-version-create 创建版本目录。",
+                };
+            }
         }
         const file = progressFilePath(args.projectRoot, abbrev, version);
         const action = args.action;
@@ -354,35 +368,38 @@ export async function progressExecute(args: {
         const dbPath = (args.dbPath && args.dbPath.trim()) || defaultDbPath();
 
         if (action === "init") {
-            if (existsSync(file)) {
-                return {
-                    success: false,
-                    action,
-                    error: `version_progress.md 已存在：${file}。如需追加记录请使用 action=add。`,
-                };
-            }
-            const rows: ProgressRow[] = [];
-            if (stepName) {
-                if (!isKnownStep(stepName)) {
+            // 读-改-写加锁：并发初始化进度表时串行化
+            return await withFileLock(file, async () => {
+                if (existsSync(file)) {
                     return {
                         success: false,
                         action,
-                        error: `未知步骤名：${stepName}。已知步骤：${KNOWN_STEP_NAMES.join("、")}`,
+                        error: `version_progress.md 已存在：${file}。如需追加记录请使用 action=add。`,
                     };
                 }
-                rows.push({ seq: 1, stepName, status, startTime: formatTime(Date.now()) });
-            }
-            mkdirSync(dirname(file), { recursive: true });
-            writeFileSync(file, buildFile(abbrev, version, rows), "utf8");
-            return {
-                success: true,
-                action,
-                path: file,
-                rows,
-                message: rows.length
-                    ? `已创建进度表并写入首行（1 | ${stepName} | ${status} | 启动时间 ${rows[0].startTime}）。`
-                    : "已创建进度表（表头：步骤序号 | 步骤名称 | 步骤状态 | 启动时间 | 总耗时(秒) | 输入token | 输出token | 命中缓存 | 存入缓存 | 总token）。",
-            };
+                const rows: ProgressRow[] = [];
+                if (stepName) {
+                    if (!isKnownStep(stepName)) {
+                        return {
+                            success: false,
+                            action,
+                            error: `未知步骤名：${stepName}。已知步骤：${KNOWN_STEP_NAMES.join("、")}`,
+                        };
+                    }
+                    rows.push({ seq: 1, stepName, status, startTime: formatTime(Date.now()) });
+                }
+                mkdirSync(dirname(file), { recursive: true });
+                writeFileSync(file, buildFile(abbrev, version, rows), "utf8");
+                return {
+                    success: true,
+                    action,
+                    path: file,
+                    rows,
+                    message: rows.length
+                        ? `已创建进度表并写入首行（1 | ${stepName} | ${status} | 启动时间 ${rows[0].startTime}）。`
+                        : "已创建进度表（表头：步骤序号 | 步骤名称 | 步骤状态 | 启动时间 | 总耗时(秒) | 输入token | 输出token | 命中缓存 | 存入缓存 | 总token）。",
+                };
+            });
         }
 
         if (!existsSync(file)) {
@@ -439,83 +456,117 @@ export async function progressExecute(args: {
         if (action === "finalize") {
             // 结算当前最后一行（最近一个步骤）：以当前时间为结束时间
             // 计算总耗时并从 opencode 数据库查询该步骤窗口的 token 回填
-            if (rows.length === 0) {
+            // （读-改-写加锁并持锁内重读最新内容，防止并发任务写进度表丢行）
+            return await withFileLock(file, async () => {
+                const lockedRows = parseRows(readFileSync(file, "utf8"));
+                if (lockedRows.length === 0) {
+                    return {
+                        success: true,
+                        action,
+                        path: file,
+                        skipped: true,
+                        message: "进度表为空，无需结算。",
+                    };
+                }
+                const prev = lockedRows[0];
+                const settled = await finalizeRow(prev, dbPath, args.projectRoot, Date.now());
+                if (!settled) {
+                    return {
+                        success: true,
+                        action,
+                        path: file,
+                        skipped: true,
+                        seq: prev.seq,
+                        stepName: prev.stepName,
+                        message: `最后一行（${prev.stepName}）无需结算（无启动时间或已结算）。`,
+                    };
+                }
+                writeFileSync(file, buildFile(abbrev, version, lockedRows), "utf8");
+                let msg = `已结算最后一行（${prev.stepName} | 总耗时 ${settled.duration} 秒`;
+                msg += settled.tokens
+                    ? ` | 输入 ${settled.tokens.input} | 输出 ${settled.tokens.output} | 缓存命中 ${settled.tokens.cacheRead} | 缓存写入 ${settled.tokens.cacheWrite} | 总token ${settled.tokens.total}`
+                    : "，token 查询失败";
+                msg += "）。";
                 return {
                     success: true,
                     action,
                     path: file,
-                    skipped: true,
-                    message: "进度表为空，无需结算。",
-                };
-            }
-            const prev = rows[0];
-            const settled = await finalizeRow(prev, dbPath, args.projectRoot, Date.now());
-            if (!settled) {
-                return {
-                    success: true,
-                    action,
-                    path: file,
-                    skipped: true,
                     seq: prev.seq,
                     stepName: prev.stepName,
-                    message: `最后一行（${prev.stepName}）无需结算（无启动时间或已结算）。`,
+                    duration: settled.duration,
+                    tokens: settled.tokens,
+                    message: msg,
                 };
-            }
-            writeFileSync(file, buildFile(abbrev, version, rows), "utf8");
-            let msg = `已结算最后一行（${prev.stepName} | 总耗时 ${settled.duration} 秒`;
-            msg += settled.tokens
-                ? ` | 输入 ${settled.tokens.input} | 输出 ${settled.tokens.output} | 缓存命中 ${settled.tokens.cacheRead} | 缓存写入 ${settled.tokens.cacheWrite} | 总token ${settled.tokens.total}`
-                : "，token 查询失败";
-            msg += "）。";
-            return {
-                success: true,
-                action,
-                path: file,
-                seq: prev.seq,
-                stepName: prev.stepName,
-                duration: settled.duration,
-                tokens: settled.tokens,
-                message: msg,
-            };
+            });
         }
 
         if (action === "add") {
-            if (!stepName) {
-                return { success: false, action, error: "缺少必填参数 stepName（步骤名称）。" };
-            }
-            if (!isKnownStep(stepName)) {
-                return {
-                    success: false,
-                    action,
-                    error: `未知步骤名：${stepName}。已知步骤：${KNOWN_STEP_NAMES.join("、")}`,
-                };
-            }
-            const now = Date.now();
-            // 上一行（当前表格第一行）尚未结算时，以当前时间为结束时间结算
-            // 总耗时与 token（该步骤窗口内的主会话 + subagent 子会话消耗）
-            let finalized: {
-                seq: number;
-                stepName: string;
-                duration: number;
-                tokens: TokenStats | null;
-            } | null = null;
-            if (rows.length > 0) {
-                const prev = rows[0];
-                const settled = await finalizeRow(prev, dbPath, args.projectRoot, now);
-                if (settled) {
-                    finalized = {
-                        seq: prev.seq,
-                        stepName: prev.stepName,
-                        duration: settled.duration,
-                        tokens: settled.tokens,
+            // 读-改-写加锁并持锁内重读最新内容：并发任务/子步骤同时记录进度时串行化，避免丢行
+            return await withFileLock(file, async () => {
+                const lockedRows = parseRows(readFileSync(file, "utf8"));
+                if (!stepName) {
+                    return { success: false, action, error: "缺少必填参数 stepName（步骤名称）。" };
+                }
+                if (!isKnownStep(stepName)) {
+                    return {
+                        success: false,
+                        action,
+                        error: `未知步骤名：${stepName}。已知步骤：${KNOWN_STEP_NAMES.join("、")}`,
                     };
                 }
-            }
-            const duplicate = rows.some(
-                (r) => r.stepName === stepName && r.status === status,
-            );
-            if (duplicate) {
-                let msg = `已存在相同记录（${stepName} | ${status}），未重复插入。`;
+                const now = Date.now();
+                // 上一行（当前表格第一行）尚未结算时，以当前时间为结束时间结算
+                // 总耗时与 token（该步骤窗口内的主会话 + subagent 子会话消耗）
+                let finalized: {
+                    seq: number;
+                    stepName: string;
+                    duration: number;
+                    tokens: TokenStats | null;
+                } | null = null;
+                if (lockedRows.length > 0) {
+                    const prev = lockedRows[0];
+                    const settled = await finalizeRow(prev, dbPath, args.projectRoot, now);
+                    if (settled) {
+                        finalized = {
+                            seq: prev.seq,
+                            stepName: prev.stepName,
+                            duration: settled.duration,
+                            tokens: settled.tokens,
+                        };
+                    }
+                }
+                const duplicate = lockedRows.some(
+                    (r) => r.stepName === stepName && r.status === status,
+                );
+                if (duplicate) {
+                    let msg = `已存在相同记录（${stepName} | ${status}），未重复插入。`;
+                    if (finalized) {
+                        msg += `已结算上一行（${finalized.stepName} | 总耗时 ${finalized.duration} 秒`;
+                        msg += finalized.tokens
+                            ? ` | 输入 ${finalized.tokens.input} | 输出 ${finalized.tokens.output} | 缓存命中 ${finalized.tokens.cacheRead} | 缓存写入 ${finalized.tokens.cacheWrite} | 总token ${finalized.tokens.total}`
+                            : "，token 查询失败";
+                        msg += "）。";
+                    }
+                    return {
+                        success: true,
+                        action,
+                        path: file,
+                        duplicate: true,
+                        seq: lockedRows.find((r) => r.stepName === stepName && r.status === status)?.seq,
+                        finalized,
+                        message: msg,
+                    };
+                }
+                const maxSeq = lockedRows.reduce((m, r) => Math.max(m, r.seq), 0);
+                const newRow: ProgressRow = {
+                    seq: maxSeq + 1,
+                    stepName,
+                    status,
+                    startTime: formatTime(now),
+                };
+                const newRows = [newRow, ...lockedRows];
+                writeFileSync(file, buildFile(abbrev, version, newRows), "utf8");
+                let msg = `已插入新行（序号 ${newRow.seq}，${stepName} | ${status}，启动时间 ${newRow.startTime}）。`;
                 if (finalized) {
                     msg += `已结算上一行（${finalized.stepName} | 总耗时 ${finalized.duration} 秒`;
                     msg += finalized.tokens
@@ -527,40 +578,14 @@ export async function progressExecute(args: {
                     success: true,
                     action,
                     path: file,
-                    duplicate: true,
-                    seq: rows.find((r) => r.stepName === stepName && r.status === status)?.seq,
+                    seq: newRow.seq,
+                    stepName,
+                    status,
+                    startTime: newRow.startTime,
                     finalized,
                     message: msg,
                 };
-            }
-            const maxSeq = rows.reduce((m, r) => Math.max(m, r.seq), 0);
-            const newRow: ProgressRow = {
-                seq: maxSeq + 1,
-                stepName,
-                status,
-                startTime: formatTime(now),
-            };
-            const newRows = [newRow, ...rows];
-            writeFileSync(file, buildFile(abbrev, version, newRows), "utf8");
-            let msg = `已插入新行（序号 ${newRow.seq}，${stepName} | ${status}，启动时间 ${newRow.startTime}）。`;
-            if (finalized) {
-                msg += `已结算上一行（${finalized.stepName} | 总耗时 ${finalized.duration} 秒`;
-                msg += finalized.tokens
-                    ? ` | 输入 ${finalized.tokens.input} | 输出 ${finalized.tokens.output} | 缓存命中 ${finalized.tokens.cacheRead} | 缓存写入 ${finalized.tokens.cacheWrite} | 总token ${finalized.tokens.total}`
-                    : "，token 查询失败";
-                msg += "）。";
-            }
-            return {
-                success: true,
-                action,
-                path: file,
-                seq: newRow.seq,
-                stepName,
-                status,
-                startTime: newRow.startTime,
-                finalized,
-                message: msg,
-            };
+            });
         }
 
         return { success: false, error: `未知 action：${action}（应为 init/add/check/list）` };

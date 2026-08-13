@@ -45,18 +45,41 @@ export type DocType =
     | "deploy-build"
     | "deploy-deploy";
 
-/** 需要版本目录的文档类型 */
-export const VERSIONED_DOC_TYPES: DocType[] = [
-    "urs",
-    "prd",
-    "dbd",
-    "api",
-    "lld",
-    "testcase",
+/** 固定路径文档类型（无需版本目录，直接位于 docs/ 或项目根目录） */
+export const FIXED_PATH_DOC_TYPES: DocType[] = [
+    "project",
+    "sad",
+    "readme",
+    "agent",
+    "deploy-build",
+    "deploy-deploy",
 ];
 
-/** 任务目录内文档类型 */
-export const TASK_DOC_TYPES: DocType[] = ["context", "cs", "ws"];
+/** 扫描/判断空项目时排除的系统目录 */
+export const EXCLUDED_DIRS: string[] = [
+    "node_modules",
+    ".git",
+    "docs",
+    "dist",
+    "build",
+    "coverage",
+    ".opencode",
+    "assets",
+    "deploy",
+    ".idea",
+    ".vscode",
+    "__pycache__",
+    ".venv",
+    "venv",
+    "target",
+    "out",
+    "bin",
+    "obj",
+    ".next",
+    ".nuxt",
+    "vendor",
+    ".cache",
+];
 
 /** 统一版本号格式：去掉 v 前缀，保留 x.y.z */
 export function normalizeVersion(version: string): string {
@@ -203,16 +226,6 @@ export function scanVersionDirs(
         versions.push(m[2]);
     }
     return versions;
-}
-
-/** 判断目录是否为空（无任何文件） */
-export function isDirEmpty(dir: string): boolean {
-    if (!existsSync(dir)) {
-        return true;
-    }
-    // 忽略隐藏文件后无任何条目即视为空目录
-    const entries = readdirSync(dir).filter((n) => !n.startsWith("."));
-    return entries.length === 0;
 }
 
 /** 递归列出目录下所有文件（防御性：跳过非法条目，限制递归深度防止符号链接/交接点循环） */

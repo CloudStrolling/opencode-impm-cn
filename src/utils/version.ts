@@ -53,12 +53,6 @@ export function incrementPatch(version: string): string {
     return formatVersion(m, i, p + 1);
 }
 
-/** 从文件名提取版本号，如 impm-urs-v0.1.2.md → 0.1.2 */
-export function extractVersionFromFileName(fileName: string): string | null {
-    const m = /-v(\d+\.\d+\.\d+)/.exec(fileName);
-    return m ? m[1] : null;
-}
-
 /** 校验版本号格式 */
 export function isValidVersion(version: string): boolean {
     return /^\d+\.\d+\.\d+$/.test(version.replace(/^[vV]/, "").trim());

@@ -24,34 +24,8 @@
 
 import { existsSync } from "fs";
 import { join } from "path";
-import { listFilesRecursive } from "../utils/paths.js";
+import { EXCLUDED_DIRS, listFilesRecursive } from "../utils/paths.js";
 import { formatProjectInfo, readProjectInfo } from "../utils/project.js";
-
-/** 判定空项目时排除的系统目录 */
-const EXCLUDED_DIRS = new Set([
-    "node_modules",
-    ".git",
-    "docs",
-    "dist",
-    "build",
-    "coverage",
-    ".opencode",
-    "assets",
-    "deploy",
-    ".idea",
-    ".vscode",
-    "__pycache__",
-    ".venv",
-    "venv",
-    "target",
-    "out",
-    "bin",
-    "obj",
-    ".next",
-    ".nuxt",
-    "vendor",
-    ".cache",
-]);
 
 export const projectInfoDefinition = {
     description:
@@ -101,7 +75,7 @@ export function isInitExecute(args: { projectRoot: string }) {
                     return false;
                 }
                 const parts = f.split(/[\\/]/);
-                return !parts.some((p) => EXCLUDED_DIRS.has(p));
+                return !parts.some((p) => EXCLUDED_DIRS.includes(p));
             });
         } catch {
             files = [];

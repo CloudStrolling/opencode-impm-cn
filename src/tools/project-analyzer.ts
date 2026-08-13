@@ -22,33 +22,7 @@
 
 import { existsSync, readdirSync, readFileSync, statSync } from "fs";
 import { join, relative } from "path";
-import { listFilesRecursive } from "../utils/paths.js";
-
-/** 默认排除目录 */
-const DEFAULT_EXCLUDED = new Set([
-    "node_modules",
-    ".git",
-    "docs",
-    "dist",
-    "build",
-    "coverage",
-    ".opencode",
-    "assets",
-    "deploy",
-    ".idea",
-    ".vscode",
-    "__pycache__",
-    ".venv",
-    "venv",
-    "target",
-    "out",
-    "bin",
-    "obj",
-    ".next",
-    ".nuxt",
-    "vendor",
-    ".cache",
-]);
+import { EXCLUDED_DIRS, listFilesRecursive } from "../utils/paths.js";
 
 /** 代码文件扩展名 → 语言 */
 const EXT_LANG: Record<string, string> = {
@@ -155,7 +129,7 @@ export function projectAnalyzerExecute(args: {
         const extraExcluded = new Set(
             (args.excludeDirs ?? []).map((d) => d.trim()).filter(Boolean),
         );
-        const excluded = new Set([...DEFAULT_EXCLUDED, ...extraExcluded]);
+        const excluded = new Set([...EXCLUDED_DIRS, ...extraExcluded]);
 
         let rootDirs: string[];
         if (args.sourceDirs && args.sourceDirs.length > 0) {

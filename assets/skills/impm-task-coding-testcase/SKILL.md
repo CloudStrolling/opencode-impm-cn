@@ -66,7 +66,7 @@ description: 按 TESTCASE-TEMPLATE.MD 模板为当前任务编写覆盖单元/�
 ### 步骤 9：同步版本测试用例文档
 1. 先调用 impm_doc_reader（docType=testcase，target=version）读取版本测试用例文档的**最新内容**（可能有其他并行任务已写入，必须基于最新内容合并）；
 2. 根据当前任务的测试用例，在最新内容基础上追加/合并本任务测试用例，保留他人已存在的用例（版本目录写入冲突规避：多任务并行时禁止基于旧快照整体覆盖）；
-3. 调用 impm_doc_writer（docType=testcase，target=version）写回版本测试用例文档 docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-testcase-v{当前版本号}.md；
+3. 调用 impm_doc_writer（docType=testcase，target=version，expectedBase=第1步读取到的最新全文）写回版本测试用例文档 docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-testcase-v{当前版本号}.md；若返回并发冲突错误（文件已被其他任务修改），回到第1步重新读取最新内容合并后再写回；
 4. 写回后立即回读校验本任务用例已写入且他人内容未被破坏。
 
 ### 步骤 10：记录完成

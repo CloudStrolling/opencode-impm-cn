@@ -1,0 +1,53 @@
+# 更新日志
+
+本项目版本号遵循语义化版本（SemVer）：主版本.次版本.修订版本。
+
+## [0.5.3] - 2026-08-13
+
+### 修复
+- 版本进度表 `impm_progress` 已知步骤名缺失敏捷冲刺（impm-sprint）步骤，导致 `/impm-sprint` 流程进度记录失败
+- `impm_progress` 未显式传 version 时自动使用最新版本目录，与文档工具行为一致
+
+### 优化
+- 清理未使用代码（VERSIONED_DOC_TYPES、TASK_DOC_TYPES、isDirEmpty、extractVersionFromFileName）
+- 目录排除清单 EXCLUDED_DIRS 收敛到 utils/paths.ts 单点维护
+- readme 更新：版本徽章、技能/命令/模板计数、编码阶段并行调度说明
+- prompt-recorder 运行时产物（docs/prompts/）不再入库
+
+## [0.5.2] - 2026-08-13
+
+### 其他
+- 安装脚本（install.mjs / install.ps1）与 readme 更新
+
+## [0.6.0] - 2026-08-11
+
+### 新增
+- 编码开发阶段任务并行调度：按上下游依赖并发执行（最多 5 个任务并行），Git 提交串行
+- 任务清单新增 Task Manager（tm）代理编排单个任务编码流程
+
+## [0.5.1] - 2026-08-09
+
+### 优化
+- 版本进度表增加总耗时与 token 消耗统计（输入/输出/缓存命中/缓存写入/总 token）
+
+## [0.5.0] - 2026-08-05
+
+### 新增
+- 敏捷冲刺流程 `/impm-sprint`（需求简报、版本与任务、编码、测试、汇总留存、提交合并）
+- 热修复流程 `/impm-hotfix`（定位分析、修复编码、留存提交，main 分支直接提交）
+- prompt-recorder 内置功能：提问记录、token 回填、对话导出
+
+## [0.4.3] - 2026-08-01
+
+### 修复
+- readme 文档更新与安装脚本（install.mjs / install.ps1）稳定性修复
+
+## [0.4.2] - 2026-07-28
+
+### 新增
+- 代码注释技能 `/impm-coding-comment`：为版本更新代码补充中文注释
+
+## [0.4.1] - 2026-07-25
+
+### 其他
+- 全项目添加 Apache License 2.0 许可

@@ -187,6 +187,9 @@ export default async function impmPlugin(context: ToolContext) {
                     target: createStringSchema(
                         "写入位置：version=版本目录（默认），main=docs 根目录的合并版文档",
                     ),
+                    expectedBase: createStringSchema(
+                        "并发冲突检测基准：写入前读取到的最新全文（可选）。若写入时文件已被其他任务修改（当前内容 ≠ expectedBase），拒绝写入并返回冲突错误，需重新读取合并后再写回",
+                    ),
                     content: createStringSchema("文档内容（Markdown 或 JSON 文本）"),
                 },
                 async execute(args: Record<string, unknown>) {
@@ -197,6 +200,7 @@ export default async function impmPlugin(context: ToolContext) {
                         version: args.version as string | undefined,
                         taskId: args.taskId as string | undefined,
                         target: args.target as "version" | "main" | undefined,
+                        expectedBase: args.expectedBase as string | undefined,
                         content: args.content as string,
                     });
                 },
