@@ -49,11 +49,12 @@ node scripts/install.mjs
 
 安装脚本执行内容：
 
-1. 复制 `assets/commands` → 目标项目 `.opencode/commands`
-2. 复制 `assets/agents` → 目标项目 `.opencode/agents`
-3. 复制 `assets/skills` → 目标项目 `.opencode/skills`
-4. 复制 `dist/` + `package.json` → 目标项目 `.opencode/plugins/impm/`（OpenCode 启动时自动加载本地插件）
-5. 更新目标项目 `opencode.json`（非自安装场景追加 plugin 配置）
+1. 复制 `assets/commands` → 目标目录 `commands/`（项目安装为 `.opencode/commands`，全局安装为全局配置目录 `commands`）
+2. 复制 `assets/agents` → 目标目录 `agents/`（项目安装为 `.opencode/agents`，全局安装为全局配置目录 `agents`）
+3. 复制 `assets/skills` → 目标目录 `skills/`（项目安装为 `.opencode/skills`，全局安装为全局配置目录 `skills`）
+4. 复制 `dist/` + `package.json` → 目标目录 `plugins/impm/`（OpenCode 启动时自动加载本地插件）
+5. 更新目标 `opencode.json`（非自安装场景追加 plugin 配置）
+6. 同步每个 agent 的模型与思考深度到 `opencode.json` 的 `agent` 键（按角色分配 `opencode-go` 模型与 low/medium/high 思考深度）
 
 ### 3.2 部署到指定项目
 
@@ -67,15 +68,51 @@ Windows PowerShell：
 .\scripts\install.ps1 -Target D:\path\to\project
 ```
 
-### 3.3 作为 npm 依赖部署（消费方项目）
+### 3.3 全局安装
+
+将 agents/commands/skills/插件安装到 opencode 全局配置目录（`~/.config/opencode`），所有项目均可使用 `/impm`，并把每个 agent 的模型配置写入全局 `opencode.json`：
+
+```bash
+node scripts/install.mjs --global
+```
+
+Windows PowerShell：
+
+```powershell
+.\scripts\install.ps1 -Global
+```
+
+> 说明：全局安装会把 agents/commands/skills 直接放入 `~/.config/opencode/` 对应目录，并把每个 agent 的模型配置写入 `~/.config/opencode/opencode.json` 的 `agent` 键。
+
+### 3.4 作为 npm 依赖部署（消费方项目）
 
 ```bash
 npm install opencode-impm-cn
 ```
 
-安装到消费方项目后，postinstall 会自动把 assets 复制到消费方项目的 `.opencode/` 并注册插件。
+安装到消费方项目后，postinstall 会自动把 assets 复制到消费方项目的 `.opencode/` 并注册插件、同步各 agent 模型配置。
 
-### 3.4 发布到 npm（可选）
+### 3.5 Agent 模型配置参考
+
+安装时按角色为每个 agent 分配 `opencode-go` 模型与思考深度（综合成本与职责权衡，可在安装后的 `opencode.json` 中按需调整）：
+
+| Agent | 模型 | 思考深度 | 角色 |
+|:-----:|:-----|:--------:|:-----|
+| pm  | opencode-go/deepseek-v4-flash | high | 编排调度、决策判断 |
+| scm | opencode-go/deepseek-v4-flash | low | git/版本管理 |
+| ba  | opencode-go/glm-5.2 | high | 需求文档撰写 |
+| sa  | opencode-go/glm-5.2 | max | 系统架构设计 |
+| tl  | opencode-go/deepseek-v4-pro | max | 详细设计/API/代码审核 |
+| dba | opencode-go/deepseek-v4-flash | high | 数据库设计 |
+| te  | opencode-go/deepseek-v4-flash | high | 测试用例/测试代码 |
+| cs  | opencode-go/deepseek-v4-flash | high | 本地代码查询 |
+| ws  | opencode-go/deepseek-v4-flash | high | 网络资料查询 |
+| sse | opencode-go/deepseek-v4-flash | max | 复杂业务编码 |
+| fee | opencode-go/deepseek-v4-flash | max | 前端编码 |
+| bee | opencode-go/deepseek-v4-flash | max | 后端编码 |
+| dw  | opencode-go/deepseek-v4-flash | high | 文档编写 |
+
+### 3.6 发布到 npm（可选）
 
 ```bash
 # 1) 编译并检查产物

@@ -60,6 +60,23 @@ skills下有一个template目录，为模板目录，存放skills需要生成文
 ## Agents的存放地点
 1. 项目中，将上述一组Agent放入 assets/agents
 2. 安装时，将agents放入.opencode/agents中。如果项目安装，就放在项目目录下的.opencode/agents。如果是全局安装，就放在全局配置的目录下。
+3. 安装时，同时扫描assets/agents下定义的每个Agent，在对应的opencode.json（全局安装写全局配置的opencode.json，项目安装写项目的opencode.json）的agent键中，写入每个Agent的模型和思考深度。模型均从opencode-go中选择可用模型，思考深度为low/medium/high。默认分配见下表（综合成本与职责权衡，可安装后在opencode.json中调整）：
+
+| Agent | 模型 | 思考深度 |
+|:-----:|:-----|:--------:|
+| pm  | opencode-go/deepseek-v4-flash | high |
+| scm | opencode-go/deepseek-v4-flash | low |
+| ba  | opencode-go/glm-5.2 | high |
+| sa  | opencode-go/glm-5.2 | max |
+| tl  | opencode-go/deepseek-v4-pro | max |
+| dba | opencode-go/deepseek-v4-flash | high |
+| te  | opencode-go/deepseek-v4-flash | high |
+| cs  | opencode-go/deepseek-v4-flash | high |
+| ws  | opencode-go/deepseek-v4-flash | high |
+| sse | opencode-go/deepseek-v4-flash | max |
+| fee | opencode-go/deepseek-v4-flash | max |
+| bee | opencode-go/deepseek-v4-flash | max |
+| dw  | opencode-go/deepseek-v4-flash | high |
 
 
 # IMPM的核心工作流

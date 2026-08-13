@@ -141,9 +141,41 @@ node scripts/install.mjs --target /path/to/project
 npm install opencode-impm-cn
 ```
 
+### 方式三：全局安装（所有项目可用）
+
+```bash
+node scripts/install.mjs --global
+# Windows PowerShell 用户：
+# .\scripts\install.ps1 -Global
+```
+
+> 全局安装将 agents/commands/skills 放入全局配置目录（`~/.config/opencode`），并把每个 agent 的模型与思考深度写入全局 `opencode.json`。
+
 ### 验证安装
 
 安装完成后重启 OpenCode，输入 `/impm` 即可看到 PM Agent 的欢迎提示。
+
+### 模型配置同步
+
+安装脚本会自动扫描 `assets/agents/` 下定义的 Agent，并为每个 Agent 在对应的 `opencode.json` 的 `agent` 键写入按角色分配的模型与思考深度（全局安装写全局 `opencode.json`，项目安装写项目 `opencode.json`）：
+
+| Agent | 模型 | 思考深度 |
+|:-----:|:-----|:--------:|
+| pm  | opencode-go/deepseek-v4-flash | high |
+| scm | opencode-go/deepseek-v4-flash | low |
+| ba  | opencode-go/glm-5.2 | high |
+| sa  | opencode-go/glm-5.2 | max |
+| tl  | opencode-go/deepseek-v4-pro | max |
+| dba | opencode-go/deepseek-v4-flash | high |
+| te  | opencode-go/deepseek-v4-flash | high |
+| cs  | opencode-go/deepseek-v4-flash | high |
+| ws  | opencode-go/deepseek-v4-flash | high |
+| sse | opencode-go/deepseek-v4-flash | max |
+| fee | opencode-go/deepseek-v4-flash | max |
+| bee | opencode-go/deepseek-v4-flash | max |
+| dw  | opencode-go/deepseek-v4-flash | high |
+
+> 模型均来自 `opencode-go` provider，按角色职责与成本权衡分配；可在安装后的 `opencode.json` 中按需调整。
 
 ---
 
