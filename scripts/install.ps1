@@ -42,16 +42,16 @@ $defaultPlugins = @("opencode-impm-cn", "opencode-browser")
 $agentModelMap = @{
     "pm"  = @{ model = "opencode-go/deepseek-v4-flash"; reasoning_effort = "low" }  # 编排调度、决策判断
     "scm" = @{ model = "opencode-go/deepseek-v4-flash"; reasoning_effort = "low" }   # git/版本管理
-    "ba"  = @{ model = "opencode-go/glm-5.2";           reasoning_effort = "high" } # 需求文档撰写
-    "sa"  = @{ model = "opencode-go/glm-5.2";           reasoning_effort = "max" }  # 系统架构设计
-    "tl"  = @{ model = "opencode-go/deepseek-v4-pro";   reasoning_effort = "high" }  # 详细设计/API/代码审核
-    "dba" = @{ model = "opencode-go/glm-5.2"; reasoning_effort = "high" } # 数据库设计
+    "ba"  = @{ model = "opencode-go/deepseek-v4-pro"; reasoning_effort = "high" } # 需求文档撰写
+    "sa"  = @{ model = "opencode-go/deepseek-v4-pro"; reasoning_effort = "max" }  # 系统架构设计
+    "tl"  = @{ model = "opencode-go/deepseek-v4-pro"; reasoning_effort = "high" }  # 详细设计/API/代码审核
+    "dba" = @{ model = "opencode-go/deepseek-v4-flash"; reasoning_effort = "high" } # 数据库设计
     "te"  = @{ model = "opencode-go/deepseek-v4-flash"; reasoning_effort = "high" } # 测试用例/测试代码
     "cs"  = @{ model = "opencode-go/deepseek-v4-flash"; reasoning_effort = "low" } # 本地代码查询
     "ws"  = @{ model = "opencode-go/deepseek-v4-flash"; reasoning_effort = "low" } # 网络资料查询
-    "sse" = @{ model = "opencode-go/deepseek-v4-pro"; reasoning_effort = "max" }  # 复杂业务编码
+    "sse" = @{ model = "opencode-go/deepseek-v4-pro"; reasoning_effort = "high" }  # 复杂业务编码
     "fee" = @{ model = "opencode-go/deepseek-v4-flash"; reasoning_effort = "high" }  # 前端编码
-    "bee" = @{ model = "opencode-go/deepseek-v4-pro"; reasoning_effort = "high" }  # 后端编码
+    "bee" = @{ model = "opencode-go/deepseek-v4-flash"; reasoning_effort = "high" }  # 后端编码
     "dw"  = @{ model = "opencode-go/deepseek-v4-flash"; reasoning_effort = "high" } # 文档编写
 }
 
