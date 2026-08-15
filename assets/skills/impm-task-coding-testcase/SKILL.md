@@ -78,5 +78,5 @@ description: 按 TESTCASE-TEMPLATE.MD 模板为当前任务编写覆盖单元/�
 - version_progress.md 中的进度记录
 
 ## 完成后提示
-- 本步骤完成后，由调度方（impm-task-coding / impm-coding）按流程继续执行下一步骤。
+- 本技能全部操作完成后必须立即结束并返回调度方：产出文件路径清单与 version_progress.md 中本技能的进度状态；严禁自行继续执行后续阶段或后续任务、严禁等待后续指令，后续调度由调度方（PM）负责。
 <!-- SPDX-License-Identifier: Apache-2.0 / Copyright 2026 jenemy8023 <jenemy8023@163.com> -->

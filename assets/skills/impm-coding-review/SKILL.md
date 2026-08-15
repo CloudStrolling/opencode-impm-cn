@@ -84,7 +84,6 @@ description: 审核本次版本代码的安全漏洞、性能陷阱、代码质�
 - version_progress.md 进度记录
 
 ## 完成后提示
-- 如需继续执行下一步骤，请输入 /impm-project-update
-- 如需继续执行本阶段后续所有步骤，请输入 /impm-finish
+- 本技能全部操作完成后必须立即结束并返回调度方（产出清单与 version_progress.md 进度状态）；严禁自行继续执行后续技能，后续步骤请由调度方（PM）输入 /impm-project-update、/impm-finish 继续。
 
 <!-- SPDX-License-Identifier: Apache-2.0 / Copyright 2026 jenemy8023 <jenemy8023@163.com> -->
