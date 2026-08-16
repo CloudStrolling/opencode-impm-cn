@@ -52,9 +52,9 @@ node scripts/install.mjs
 1. 复制 `assets/commands` → 目标目录 `commands/`（项目安装为 `.opencode/commands`，全局安装为全局配置目录 `commands`）
 2. 复制 `assets/agents` → 目标目录 `agents/`（项目安装为 `.opencode/agents`，全局安装为全局配置目录 `agents`）
 3. 复制 `assets/skills` → 目标目录 `skills/`（项目安装为 `.opencode/skills`，全局安装为全局配置目录 `skills`）
-4. 复制 `dist/` + `package.json` → 目标目录 `plugins/impm/`（OpenCode 启动时自动加载本地插件）
+4. 复制 `dist/` + `package.json` → 目标目录 `plugins/impm/`（非自安装场景整体删除旧插件目录与入口后重装，避免历史产物残留；assets 亦按幂等覆盖写入）
 5. 更新目标 `opencode.json`（非自安装场景追加 plugin 配置）
-6. 同步每个 agent 的模型与思考深度到 `opencode.json` 的 `agent` 键（按角色分配 `opencode-go` 模型与 low/medium/high 思考深度）
+6. 依据 `--agent-type` 预设同步每个 impm 管理 agent 的模型与思考深度到 `opencode.json` 的 `agent` 键（详见 3.5）
 
 ### 3.2 部署到指定项目
 
@@ -94,25 +94,77 @@ npm install opencode-impm-cn
 
 ### 3.5 Agent 模型配置参考
 
-安装时按角色为每个 agent 分配 `opencode-go` 模型与思考深度（综合成本与职责权衡，可在安装后的 `opencode.json` 中按需调整）：
+安装脚本通过 `--agent-type` 指定一套预设（默认 `custom`，全部预设定义在 `scripts/agent-models.json`，改模型只改该文件）：
+
+| 预设 | 说明 |
+|:-----|:-----|
+| `opencode-zen-free` | 全部 agent 使用 opencode-zen/deepseek-v4-flash-free，极限省 token |
+| `opencode-go-lite` | 全部 agent 使用 opencode-go 低价模型，轻量低成本 |
+| `opencode-go-balance` | 综合成本与职责权衡分配（原固定配置，推荐） |
+| `opencode-go-optimize` | 重点 agent 分配更强模型，追求质量 |
+| `custom` | 按既有配置为准：已存在 model 的 agent 保持不动，缺失的按 balance 档补齐 |
+
+`custom` 预设语义：**安装/升级绝不覆盖用户手工改过的模型配置**，只补齐缺失 agent，避免升级覆盖个性化设置。
+
+```bash
+# 示例：按 balance 预设安装
+node scripts/install.mjs --agent-type opencode-go-balance
+node scripts/install.mjs --target /path/to/project --agent-type opencode-go-optimize
+# Windows PowerShell（兼容 -AgentType/--agent-type/--AgentType/--agent_type 等多种写法）
+.\scripts\install.ps1 -Target D:\path\to\project -AgentType opencode-go-lite
+.\scripts\install.ps1 -Target D:\path\to\project --agent-type opencode-go-lite
+```
+
+- 不传 `--agent-type`：只清理 impm 管理 agent 的 `model`/`reasoning_effort`（幂等，供升级时重装），不写入任何模型配置，**不动用户自定义 agent 与其他字段**。
+- 传未知值：报错退出（exit 1），不执行任何安装动作。
+- 13 个 impm 管理 agent（pm/scm/ba/sa/tl/dba/te/cs/ws/sse/fee/bee/dw）的默认角色分配参考 balance 档：
 
 | Agent | 模型 | 思考深度 | 角色 |
 |:-----:|:-----|:--------:|:-----|
-| pm  | opencode-go/deepseek-v4-flash | high | 编排调度、决策判断 |
+| pm  | opencode-go/deepseek-v4-flash | low | 编排调度、决策判断 |
 | scm | opencode-go/deepseek-v4-flash | low | git/版本管理 |
-| ba  | opencode-go/glm-5.2 | high | 需求文档撰写 |
-| sa  | opencode-go/glm-5.2 | max | 系统架构设计 |
-| tl  | opencode-go/deepseek-v4-pro | max | 详细设计/API/代码审核 |
-| dba | opencode-go/deepseek-v4-flash | high | 数据库设计 |
+| ba  | opencode-go/deepseek-v4-pro | high | 需求文档撰写 |
+| sa  | opencode-go/deepseek-v4-pro | max | 系统架构设计 |
+| tl  | opencode-go/deepseek-v4-pro | high | 详细设计/API/代码审核 |
+| dba | opencode-go/deepseek-v4-flash | max | 数据库设计 |
 | te  | opencode-go/deepseek-v4-flash | high | 测试用例/测试代码 |
-| cs  | opencode-go/deepseek-v4-flash | high | 本地代码查询 |
-| ws  | opencode-go/deepseek-v4-flash | high | 网络资料查询 |
-| sse | opencode-go/deepseek-v4-flash | max | 复杂业务编码 |
-| fee | opencode-go/deepseek-v4-flash | max | 前端编码 |
+| cs  | opencode-go/deepseek-v4-flash | low | 本地代码查询 |
+| ws  | opencode-go/deepseek-v4-flash | low | 网络资料查询 |
+| sse | opencode-go/deepseek-v4-pro | high | 复杂业务编码 |
+| fee | opencode-go/deepseek-v4-flash | high | 前端编码 |
 | bee | opencode-go/deepseek-v4-flash | max | 后端编码 |
 | dw  | opencode-go/deepseek-v4-flash | high | 文档编写 |
 
-### 3.6 发布到 npm（可选）
+> 上表为 `balance` 档具体值，其余预设及 custom 补齐值以 `scripts/agent-models.json` 为准。
+
+### 3.6 Agent 模型配置清理（不传 agent-type）
+
+不传 `--agent-type` 安装时，脚本对 impm 管理的 13 个 agent 只做模型配置清理（`model` 与 `reasoning_effort`），其余配置（自定义字段、用户自建 agent、opencode-browser 插件）一律保留，便于在改预设前先清除旧配置。
+
+### 3.7 卸载
+
+卸载只删除本插件相关内容，**保留用户自定义内容**（自建 agent、命令、技能、`opencode-browser` 插件、其他字段）：
+
+```bash
+# 直接卸载（node 版）
+node scripts/uninstall.mjs
+# 指定目标项目
+node scripts/uninstall.mjs --target /path/to/project
+# PowerShell 版
+.\scripts\uninstall.ps1 -Target D:\path\to\project
+# 通过 npm scripts 在当前项目卸载
+npm run uninstall:plugin
+```
+
+卸载内容：
+
+1. 删除 `plugins/impm/` 与插件入口 `plugins/impm.js`
+2. 删除 impm 归属的 `agents/`（13 个）、`commands/`（`impm*` 前缀，49 个）、`skills/`（`impm*` 与 `template`，53 个）
+3. 从 `opencode.json` 的 `plugin` 列表移除 `opencode-impm-cn`（保留其他插件）
+4. 清理 impm 管理的 13 个 agent 的 `model`/`reasoning_effort` 字段（agent 条目与自定义字段保留，用户自定义 agent 完全不动）
+5. 清理后同步更新 `.opencode/package.json`
+
+### 3.8 发布到 npm（可选）
 
 ```bash
 # 1) 编译并检查产物
@@ -126,7 +178,7 @@ npm pack
 npm publish --access public
 ```
 
-发布前确认 `package.json` 的 `files` 字段包含：`dist/`、`assets/`、`scripts/install.mjs`。
+发布前确认 `package.json` 的 `files` 字段包含：`dist/`、`assets/`、`scripts/install.mjs`、`scripts/uninstall.mjs`、`scripts/agent-models.json`。
 
 ## 4. 部署验证
 
@@ -149,7 +201,7 @@ npm publish --access public
 ### 升级
 
 ```bash
-# 重新编译并重新安装，安装脚本会覆盖 .opencode/ 下旧文件
+# 重新编译并重新安装，安装脚本会整体清理旧插件目录与入口后重装，并按 `--agent-type`（默认 custom）同步模型配置；custom 预设会保留用户已手工调整过的模型设置
 npm run build
 node scripts/install.mjs
 ```

@@ -14,18 +14,61 @@
 
 # opencode-impm-cn 安装脚本（Windows PowerShell 版）
 # 用法：
-#   .\scripts\install.ps1                    # 安装到当前目录
-#   .\scripts\install.ps1 -Target D:\myproj  # 安装到指定项目
-#   .\scripts\install.ps1 -Global            # 全局安装到 ~/.config/opencode
+#   .\scripts\install.ps1                          # 安装到当前目录
+#   .\scripts\install.ps1 -Target D:\myproj        # 安装到指定项目
+#   .\scripts\install.ps1 -Global                  # 全局安装到 ~/.config/opencode
+#   .\scripts\install.ps1 -AgentType opencode-go-balance  # 按预设写各 agent 模型配置
+#   参数兼容多种写法：-Target/--target、-Global/--global、-AgentType/--agent-type/--AgentType/--agent_type
 #
-# 模型配置同步：安装时会为 assets/agents 下定义的每个 agent，在对应的
-# opencode.json（全局安装写全局配置，非全局安装写项目配置）写入按角色分配的
-# opencode-go 模型与思考深度（见 $agentModelMap）。
+# 模型配置预设（-AgentType）：
+#   - 可选值：opencode-zen-free / opencode-go-lite / opencode-go-balance /
+#             opencode-go-optimize / custom
+#   - 每个预设对应一套 agent 的 model + reasoning_effort 设置，定义在 scripts/agent-models.json。
+#   - custom 预设为手工维护：安装时目标 opencode.json 已有该 agent 模型配置则保留，
+#     仅对缺失的 agent 按预设补齐（更新插件不影响 custom 手工设置）。
+#   - 不传 -AgentType：清理 opencode.json 中 impm 管理的 agent 模型配置，不写入任何设置。
 
-param(
-    [string]$Target = "",
-    [switch]$Global
-)
+# 手动解析命令行参数，兼容 -Target/--target、-Global/--global、
+# -AgentType/--agent-type/--AgentType/--agent_type 等写法。
+# （不采用 param() 绑定：原生绑定不识别 -- 双横线参数名，会导致值解析错误）
+$Target = ""
+$Global = $false
+$AgentType = ""
+
+$__i = 0
+$__rawArgs = @($args)
+while ($__i -lt $__rawArgs.Count) {
+    $__token = $__rawArgs[$__i]
+    if (-not $__token.StartsWith("-")) {
+        Write-Error "错误：无法识别的参数 `"$__token`"，可用参数：-Target、-Global、-AgentType"
+        exit 1
+    }
+    $__name = $__token.TrimStart("-") -replace "[_-]", ""
+    $__name = $__name.ToLower()
+    switch ($__name) {
+        "global" { $Global = $true; $__i++ }
+        "target" {
+            if ($__i + 1 -ge $__rawArgs.Count) {
+                Write-Error "错误：参数 `"$__token`" 缺少值"
+                exit 1
+            }
+            $Target = $__rawArgs[$__i + 1]
+            $__i += 2
+        }
+        "agenttype" {
+            if ($__i + 1 -ge $__rawArgs.Count) {
+                Write-Error "错误：参数 `"$__token`" 缺少值"
+                exit 1
+            }
+            $AgentType = $__rawArgs[$__i + 1]
+            $__i += 2
+        }
+        default {
+            Write-Error "错误：未知参数 `"$__token`"，可用参数：-Target、-Global、-AgentType"
+            exit 1
+        }
+    }
+}
 
 $ErrorActionPreference = "Stop"
 
@@ -33,26 +76,31 @@ $ErrorActionPreference = "Stop"
 $pluginRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
 $assetsDir = Join-Path $pluginRoot "assets"
 $distDir = Join-Path $pluginRoot "dist"
+$presetFile = Join-Path $PSScriptRoot "agent-models.json"
 $globalConfigDir = Join-Path $HOME ".config\opencode"
 
 # 安装时默认注册的插件（impm 套件 + 浏览器插件，供 UI/网络相关技能使用）
 $defaultPlugins = @("opencode-impm-cn", "opencode-browser")
 
-# 各 agent 的默认模型与思考深度（模型均来自 opencode-go provider，按角色职责与成本配置）
-$agentModelMap = @{
-    "pm"  = @{ model = "opencode-go/deepseek-v4-flash"; reasoning_effort = "low" }  # 编排调度、决策判断
-    "scm" = @{ model = "opencode-go/deepseek-v4-flash"; reasoning_effort = "low" }   # git/版本管理
-    "ba"  = @{ model = "opencode-go/deepseek-v4-pro"; reasoning_effort = "high" } # 需求文档撰写
-    "sa"  = @{ model = "opencode-go/deepseek-v4-pro"; reasoning_effort = "max" }  # 系统架构设计
-    "tl"  = @{ model = "opencode-go/deepseek-v4-pro"; reasoning_effort = "high" }  # 详细设计/API/代码审核
-    "dba" = @{ model = "opencode-go/deepseek-v4-flash"; reasoning_effort = "high" } # 数据库设计
-    "te"  = @{ model = "opencode-go/deepseek-v4-flash"; reasoning_effort = "high" } # 测试用例/测试代码
-    "cs"  = @{ model = "opencode-go/deepseek-v4-flash"; reasoning_effort = "low" } # 本地代码查询
-    "ws"  = @{ model = "opencode-go/deepseek-v4-flash"; reasoning_effort = "low" } # 网络资料查询
-    "sse" = @{ model = "opencode-go/deepseek-v4-pro"; reasoning_effort = "high" }  # 复杂业务编码
-    "fee" = @{ model = "opencode-go/deepseek-v4-flash"; reasoning_effort = "high" }  # 前端编码
-    "bee" = @{ model = "opencode-go/deepseek-v4-flash"; reasoning_effort = "high" }  # 后端编码
-    "dw"  = @{ model = "opencode-go/deepseek-v4-flash"; reasoning_effort = "high" } # 文档编写
+# --agent-type 可选值
+$agentTypes = @("opencode-zen-free", "opencode-go-lite", "opencode-go-balance", "opencode-go-optimize", "custom")
+
+# 将 PSCustomObject/IDictionary 统一转换为 Hashtable，便于按字符串键读写
+function ConvertTo-HashTable($obj) {
+    $h = @{}
+    if ($null -eq $obj) {
+        return $h
+    }
+    if ($obj -is [System.Collections.IDictionary]) {
+        foreach ($k in $obj.Keys) {
+            $h[$k] = $obj[$k]
+        }
+    } elseif ($obj -is [System.Management.Automation.PSCustomObject]) {
+        foreach ($p in $obj.PSObject.Properties) {
+            $h[$p.Name] = $p.Value
+        }
+    }
+    return $h
 }
 
 # 解析安装目标：-Global 优先，其次 -Target，其次 INIT_CWD（npm 依赖安装场景），最后回退到当前目录
@@ -75,10 +123,25 @@ Write-Host "目标项目: $targetRoot"
 if ($Global) {
     Write-Host "安装模式: 全局安装"
 }
+if ($AgentType) {
+    Write-Host "agent-type: $AgentType"
+} else {
+    Write-Host "agent-type: （未指定，将清理 impm 管理的 agent 模型配置）"
+}
 Write-Host ""
+
+# 校验 AgentType 取值
+if ($AgentType -and $agentTypes -notcontains $AgentType) {
+    Write-Error "错误：未知的 AgentType `"$AgentType`"，可选值：$($agentTypes -join ', ')"
+    exit 1
+}
 
 if (-not (Test-Path $assetsDir)) {
     Write-Error "错误：资源目录不存在：$assetsDir"
+    exit 1
+}
+if ($AgentType -and -not (Test-Path $presetFile)) {
+    Write-Error "错误：预设模型配置文件不存在：$presetFile"
     exit 1
 }
 
@@ -105,22 +168,24 @@ foreach ($dir in @("commands", "agents", "skills")) {
     Copy-Item -Path $srcDir -Destination $destDir -Recurse -Force
 }
 
+$pluginDest = Join-Path $opencodeDir "plugins\impm"
+$pluginEntry = Join-Path $opencodeDir "plugins\impm.js"
 if (Test-Path $distDir) {
-    $pluginDest = Join-Path $opencodeDir "plugins\impm"
     Write-Host "安装本地插件 -> .../plugins/impm/ ..."
+    # 整体删除旧的插件目录与入口文件，彻底清除历史废弃/残留的编译产物与文件
+    if (Test-Path $pluginDest) {
+        Remove-Item -Path $pluginDest -Recurse -Force
+    }
+    if (Test-Path $pluginEntry) {
+        Remove-Item -Path $pluginEntry -Force
+    }
     New-Item -ItemType Directory -Path $pluginDest -Force | Out-Null
     Copy-Item -Path (Join-Path $pluginRoot "package.json") -Destination $pluginDest -Force
-    # 先清空旧目标目录，再复制 dist 内容（而非目录本身），避免嵌套出 dist/dist（幂等安装）
-    $pluginDistDest = Join-Path $pluginDest "dist"
-    if (Test-Path $pluginDistDest) {
-        Remove-Item -Path $pluginDistDest -Recurse -Force
-    }
-    New-Item -ItemType Directory -Path $pluginDistDest -Force | Out-Null
-    Copy-Item -Path (Join-Path $distDir "*") -Destination $pluginDistDest -Recurse -Force
+    New-Item -ItemType Directory -Path (Join-Path $pluginDest "dist") -Force | Out-Null
+    Copy-Item -Path (Join-Path $distDir "*") -Destination (Join-Path $pluginDest "dist") -Recurse -Force
 
     # opencode 只自动发现 plugins/ 下直接 *.js/*.ts 文件（不递归子目录），
     # 因此必须在根目录生成入口文件指向 dist 编译产物
-    $pluginEntry = Join-Path $opencodeDir "plugins\impm.js"
     [System.IO.File]::WriteAllText($pluginEntry, 'export { default } from "./impm/dist/index.js";' + [Environment]::NewLine)
     Write-Host "生成插件入口文件 -> .../plugins/impm.js"
 } else {
@@ -169,41 +234,86 @@ if (-not $isSelfInstall) {
     Write-Host "本地自安装：跳过 config.plugin 注册（插件入口文件由 plugins/ 自动发现）"
 }
 
-# 同步每个 agent 的模型与思考深度到 opencode.json 的 agent 键（按角色分配 opencode-go 模型）
+# 应用 agent 模型配置预设 / 清理 impm 管理的 agent 模型配置
+$managedAgents = @()
+foreach ($agentFile in Get-ChildItem -Path (Join-Path $assetsDir "agents\*.md") -ErrorAction SilentlyContinue) {
+    $managedAgents += $agentFile.BaseName
+}
+
+# 归一化既有 agent 配置为 Hashtable
 $agentConfig = @{}
 if ($null -ne $config.agent) {
-    $existing = $config.agent
-    if ($existing -is [System.Collections.IDictionary]) {
-        foreach ($k in $existing.Keys) { $agentConfig[$k] = $existing[$k] }
-    } elseif ($existing -is [System.Management.Automation.PSCustomObject]) {
-        foreach ($p in $existing.PSObject.Properties) { $agentConfig[$p.Name] = $p.Value }
-    }
+    $agentConfig = ConvertTo-HashTable $config.agent
 }
-$syncedCount = 0
-foreach ($agentFile in Get-ChildItem -Path (Join-Path $assetsDir "agents\*.md") -ErrorAction SilentlyContinue) {
-    $name = $agentFile.BaseName
-    $setting = $agentModelMap[$name]
-    if (-not $setting) {
-        continue
-    }
-    # 将既有条目（可能是 PSCustomObject 或 Hashtable）归一为 Hashtable，便于按字符串键写入
-    $entry = @{}
-    if ($agentConfig.ContainsKey($name) -and $null -ne $agentConfig[$name]) {
-        $existingEntry = $agentConfig[$name]
-        if ($existingEntry -is [System.Collections.IDictionary]) {
-            foreach ($k in $existingEntry.Keys) { $entry[$k] = $existingEntry[$k] }
-        } elseif ($existingEntry -is [System.Management.Automation.PSCustomObject]) {
-            foreach ($p in $existingEntry.PSObject.Properties) { $entry[$p.Name] = $p.Value }
+
+if (-not $AgentType) {
+    # 未指定 AgentType：仅清理 impm 管理的 agent 模型配置（model/reasoning_effort），不写入
+    $cleaned = 0
+    foreach ($name in $managedAgents) {
+        if (-not $agentConfig.ContainsKey($name)) {
+            continue
+        }
+        $entry = ConvertTo-HashTable $agentConfig[$name]
+        $changed = $false
+        if ($entry.ContainsKey("model")) {
+            $entry.Remove("model")
+            $changed = $true
+        }
+        if ($entry.ContainsKey("reasoning_effort")) {
+            $entry.Remove("reasoning_effort")
+            $changed = $true
+        }
+        if ($changed) {
+            $cleaned++
+            if ($entry.Count -eq 0) {
+                $agentConfig.Remove($name)
+            } else {
+                $agentConfig[$name] = $entry
+            }
         }
     }
-    $entry["model"] = $setting["model"]
-    $entry["reasoning_effort"] = $setting["reasoning_effort"]
-    $agentConfig[$name] = $entry
-    $syncedCount++
-}
-$config | Add-Member -NotePropertyName agent -NotePropertyValue $agentConfig -Force
-if ($syncedCount -gt 0) {
-    Write-Host "已为 $syncedCount 个 agent 写入模型配置（按角色分配 opencode-go 模型）"
+    if ($agentConfig.Count -eq 0) {
+        $config.PSObject.Properties.Remove("agent")
+    } else {
+        $config | Add-Member -NotePropertyName agent -NotePropertyValue $agentConfig -Force
+    }
+    Write-Host "未指定 AgentType：已清理 $cleaned 个 impm 管理的 agent 模型配置（保留其他自定义 agent）"
+} else {
+    # 读取预设并写入各 agent 模型配置
+    $presets = Get-Content -Path $presetFile -Raw -Encoding UTF8 | ConvertFrom-Json
+    $preset = $presets."$AgentType"
+    if ($null -eq $preset -or $null -eq $preset.agents) {
+        Write-Error "错误：预设文件缺少 `"$AgentType`" 定义"
+        exit 1
+    }
+
+    $synced = 0
+    $preserved = 0
+    foreach ($name in $preset.agents.PSObject.Properties.Name) {
+        $setting = $preset.agents."$name"
+        $existing = $null
+        if ($agentConfig.ContainsKey($name)) {
+            $existing = ConvertTo-HashTable $agentConfig[$name]
+        }
+        # custom 预设：已存在的模型配置不覆盖（更新插件不影响手工维护的设置）
+        if ($AgentType -eq "custom" -and $null -ne $existing -and $existing.ContainsKey("model")) {
+            $preserved++
+            continue
+        }
+        if ($null -eq $existing) {
+            $existing = @{}
+        }
+        $existing["model"] = $setting.model
+        $existing["reasoning_effort"] = $setting.reasoning_effort
+        $agentConfig[$name] = $existing
+        $synced++
+    }
+    $config | Add-Member -NotePropertyName agent -NotePropertyValue $agentConfig -Force
+    $msg = "已按预设 $AgentType 为 $synced 个 agent 写入模型配置"
+    if ($preserved -gt 0) {
+        $msg += "，保留 $preserved 个既有 custom 配置"
+    }
+    Write-Host $msg
 }
 
 [System.IO.File]::WriteAllText($configPath, ($config | ConvertTo-Json -Depth 10))

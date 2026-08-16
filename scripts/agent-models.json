@@ -1,0 +1,92 @@
+{
+  "opencode-zen-free": {
+    "description": "opencode-zen 免费档：全部使用 opencode-zen provider 的免费模型（deepseek-v4-flash-free 等），适合零成本体验，配额受限时注意速率限制。",
+    "agents": {
+      "pm": { "model": "opencode-zen/deepseek-v4-flash-free", "reasoning_effort": "low" },
+      "scm": { "model": "opencode-zen/deepseek-v4-flash-free", "reasoning_effort": "low" },
+      "ba": { "model": "opencode-zen/deepseek-v4-flash-free", "reasoning_effort": "high" },
+      "sa": { "model": "opencode-zen/deepseek-v4-flash-free", "reasoning_effort": "max" },
+      "tl": { "model": "opencode-zen/deepseek-v4-flash-free", "reasoning_effort": "high" },
+      "dba": { "model": "opencode-zen/deepseek-v4-flash-free", "reasoning_effort": "max" },
+      "te": { "model": "opencode-zen/deepseek-v4-flash-free", "reasoning_effort": "high" },
+      "cs": { "model": "opencode-zen/deepseek-v4-flash-free", "reasoning_effort": "low" },
+      "ws": { "model": "opencode-zen/deepseek-v4-flash-free", "reasoning_effort": "low" },
+      "sse": { "model": "opencode-zen/deepseek-v4-flash-free", "reasoning_effort": "high" },
+      "fee": { "model": "opencode-zen/deepseek-v4-flash-free", "reasoning_effort": "high" },
+      "bee": { "model": "opencode-zen/deepseek-v4-flash-free", "reasoning_effort": "max" },
+      "dw": { "model": "opencode-zen/deepseek-v4-flash-free", "reasoning_effort": "high" }
+    }
+  },
+  "opencode-go-lite": {
+    "description": "opencode-go 精简档：全部使用最便宜的 opencode-go/deepseek-v4-flash，思考深度整体降档，追求最低成本与最快响应。",
+    "agents": {
+      "pm": { "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "low" },
+      "scm": { "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "low" },
+      "ba": { "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "high" },
+      "sa": { "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "max" },
+      "tl": { "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "high" },
+      "dba": { "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "max" },
+      "te": { "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "high" },
+      "cs": { "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "low" },
+      "ws": { "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "low" },
+      "sse": { "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "high" },
+      "fee": { "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "medium" },
+      "bee": { "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "medium" },
+      "dw": { "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "medium" }
+    }
+  },
+  "opencode-go-balance": {
+    "description": "opencode-go 均衡档（默认推荐）：高负载角色配 deepseek-v4-pro + 高思考，查询/轻量角色配 flash + 低思考，综合成本与质量。",
+    "agents": {
+      "pm": { "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "low" },
+      "scm": { "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "low" },
+      "ba": { "model": "opencode-go/deepseek-v4-pro", "reasoning_effort": "high" },
+      "sa": { "model": "opencode-go/deepseek-v4-pro", "reasoning_effort": "max" },
+      "tl": { "model": "opencode-go/deepseek-v4-pro", "reasoning_effort": "high" },
+      "dba": { "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "max" },
+      "te": { "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "high" },
+      "cs": { "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "low" },
+      "ws": { "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "low" },
+      "sse": { "model": "opencode-go/deepseek-v4-pro", "reasoning_effort": "high" },
+      "fee": { "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "high" },
+      "bee": { "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "max" },
+      "dw": { "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "high" }
+    }
+  },
+  "opencode-go-optimize": {
+    "description": "opencode-go 优化档：面向质量优先，编码/设计与文档角色尽可能上 deepseek-v4-pro，查询与编排仍用 flash。",
+    "agents": {
+      "pm": { "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "low" },
+      "scm": { "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "low" },
+      "ba": { "model": "opencode-go/deepseek-v4-pro", "reasoning_effort": "high" },
+      "sa": { "model": "opencode-go/deepseek-v4-pro", "reasoning_effort": "max" },
+      "tl": { "model": "opencode-go/deepseek-v4-pro", "reasoning_effort": "high" },
+      "dba": { "model": "opencode-go/deepseek-v4-pro", "reasoning_effort": "max" },
+      "te": { "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "high" },
+      "cs": { "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "low" },
+      "ws": { "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "low" },
+      "sse": { "model": "opencode-go/deepseek-v4-pro", "reasoning_effort": "high" },
+      "fee": { "model": "opencode-go/deepseek-v4-pro", "reasoning_effort": "high" },
+      "bee": { "model": "opencode-go/deepseek-v4-pro", "reasoning_effort": "max" },
+      "dw": { "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "high" }
+    }
+  },
+  "custom": {
+    "description": "自定义档：手动编辑本预设即可定制各 agent 的模型与思考深度。安装插件时若使用 custom，已存在的 agent 配置不会被覆盖（更新插件不影响你的手工设置）。",
+    "agents": {
+      "pm": { "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "low" },
+      "scm": { "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "low" },
+      "ba": { "model": "opencode-go/deepseek-v4-pro", "reasoning_effort": "high" },
+      "sa": { "model": "opencode-go/deepseek-v4-pro", "reasoning_effort": "max" },
+      "tl": { "model": "opencode-go/deepseek-v4-pro", "reasoning_effort": "high" },
+      "dba": { "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "max" },
+      "te": { "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "high" },
+      "cs": { "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "low" },
+      "ws": { "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "low" },
+      "sse": { "model": "opencode-go/deepseek-v4-pro", "reasoning_effort": "high" },
+      "fee": { "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "high" },
+      "bee": { "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "max" },
+      "dw": { "model": "opencode-go/deepseek-v4-flash", "reasoning_effort": "high" }
+    }
+  }
+}

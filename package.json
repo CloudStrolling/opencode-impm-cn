@@ -1,6 +1,6 @@
 {
   "name": "opencode-impm-cn",
-  "version": "0.5.3",
+  "version": "0.6.3",
   "description": "我是项目经理（AI项目经理）OpenCode 插件 - 中文版工程化全流程开发套件（agents + commands + skills + 工具）",
   "type": "module",
   "main": "dist/index.js",
@@ -9,6 +9,7 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "install:plugin": "node scripts/install.mjs",
+    "uninstall:plugin": "node scripts/uninstall.mjs",
     "postinstall": "node scripts/install.mjs"
   },
   "keywords": [
@@ -24,7 +25,9 @@
   "files": [
     "dist/",
     "assets/",
-    "scripts/install.mjs"
+    "scripts/install.mjs",
+    "scripts/uninstall.mjs",
+    "scripts/agent-models.json"
   ],
   "devDependencies": {
     "typescript": "^5.7.0",

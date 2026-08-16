@@ -32,11 +32,18 @@
  *   - 如果 INIT_CWD 环境变量存在且不等于当前包目录，安装到 INIT_CWD（npm 依赖安装场景）
  *   - 否则，安装到当前工作目录（本地开发安装场景）
  *
- * 模型配置同步：
- *   - 安装时会将 assets/agents 下定义的 agent 的模型与思考深度写入对应的
- *     opencode.json（全局安装写全局配置，非全局安装写项目配置）的 agent 键。
- *   - 每个 agent 按角色职责与成本综合配置（见 AGENT_MODEL_MAP），
- *     模型均来自 opencode-go provider，思考深度为 low/medium/high/max。
+ * 模型配置预设（--agent-type）：
+ *   - 可选值：opencode-zen-free / opencode-go-lite / opencode-go-balance /
+ *             opencode-go-optimize / custom
+ *   - 每个预设对应一套 agent 的 model + reasoning_effort 设置，定义在 scripts/agent-models.json。
+ *   - 传入数据不存在时报错退出。
+ *   - custom 预设为手工维护：安装时若目标 opencode.json 已有该 agent 的模型配置则保留，
+ *     仅对缺失的 agent 按预设补齐（更新插件不影响 custom 手工设置）。
+ *   - 不传 --agent-type：清理 opencode.json 中 impm 管理的 agent 模型配置，不写入任何设置。
+ *
+ * 幂等安装：
+ *   - assets 复制前会清空目标目录；
+ *   - 插件 dist 复制前会整体删除旧的 plugins/impm 目录与入口文件，避免残留废弃文件。
  */
 
 import {
@@ -68,30 +75,26 @@ const DEFAULT_PLUGINS = [PACKAGE_NAME, "opencode-browser"];
 /** 全局安装目标：opencode 全局配置目录 */
 const GLOBAL_CONFIG_DIR = join(homedir(), ".config", "opencode");
 
-/**
- * 各 agent 的默认模型与思考深度（模型均来自 opencode-go provider）。
- * 综合角色职责、执行频率与成本权衡：
- *   - 高负载角色（架构/设计/复杂编码）配较强模型 + high/max；
- *   - 文档/查询/轻量执行角色配低成本模型 + low/medium；
- *   - 编码工程师优先代码专项模型（kimi-k2.7-code）或性价比模型（deepseek-v4-pro）。
- */
-const AGENT_MODEL_MAP = {
-    pm:  { model: "opencode-go/deepseek-v4-flash", reasoning_effort: "low" },  // 编排调度、决策判断
-    scm: { model: "opencode-go/deepseek-v4-flash", reasoning_effort: "low" },    // git/版本管理，轻量执行
-    ba:  { model: "opencode-go/deepseek-v4-pro", reasoning_effort: "high" },  // 需求文档撰写
-    sa:  { model: "opencode-go/deepseek-v4-pro", reasoning_effort: "max" },    // 系统架构设计
-    tl:  { model: "opencode-go/deepseek-v4-pro", reasoning_effort: "high" },    // 详细设计/API/代码审核
-    dba: { model: "opencode-go/deepseek-v4-flash", reasoning_effort: "max" },  // 数据库设计
-    te:  { model: "opencode-go/deepseek-v4-flash", reasoning_effort: "high" },  // 测试用例/测试代码
-    cs:  { model: "opencode-go/deepseek-v4-flash", reasoning_effort: "low" },  // 本地代码查询
-    ws:  { model: "opencode-go/deepseek-v4-flash", reasoning_effort: "low" },  // 网络资料查询
-    sse: { model: "opencode-go/deepseek-v4-pro", reasoning_effort: "high" },    // 复杂业务编码
-    fee: { model: "opencode-go/deepseek-v4-flash", reasoning_effort: "high" },    // 前端编码
-    bee: { model: "opencode-go/deepseek-v4-flash", reasoning_effort: "max" },    // 后端编码
-    dw:  { model: "opencode-go/deepseek-v4-flash", reasoning_effort: "high" },  // 文档编写
-};
+/** --agent-type 可选值 */
+const AGENT_TYPES = [
+    "opencode-zen-free",
+    "opencode-go-lite",
+    "opencode-go-balance",
+    "opencode-go-optimize",
+    "custom",
+];
 
-/** 读取 assets/agents 下所有已定义的 agent 名 */
+/** 去除 UTF-8 BOM（Windows 编辑器常写入 BOM，直接 JSON.parse 会失败） */
+function stripBom(text) {
+    return text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
+}
+
+/** 读取 JSON 文件（自动去除 BOM） */
+function readJsonFile(filePath) {
+    return JSON.parse(stripBom(readFileSync(filePath, "utf-8")));
+}
+
+/** 读取 assets/agents 下所有已定义的 agent 名（impm 管理的 agent） */
 function collectAgents() {
     const agentsDir = join(ASSETS_DIR, "agents");
     if (!existsSync(agentsDir)) {
@@ -107,28 +110,109 @@ function collectAgents() {
     return agents;
 }
 
-/** 为每个 agent 在目标 opencode.json 的 agent 键写入对应模型与思考深度 */
-function syncAgentModels(config) {
-    const agents = collectAgents();
-    if (agents.length === 0) {
+/** 读取 scripts/agent-models.json 预设定义文件 */
+function loadAgentPresets() {
+    const presetsPath = join(__dirname, "agent-models.json");
+    if (!existsSync(presetsPath)) {
+        console.error(`错误：预设模型配置文件不存在 ${presetsPath}`);
+        process.exit(1);
+    }
+    try {
+        return readJsonFile(presetsPath);
+    } catch (err) {
+        console.error(`错误：预设模型配置文件解析失败 ${presetsPath}：${err.message}`);
+        process.exit(1);
+    }
+}
+
+/** 解析 --agent-type 参数（同时兼容 --agent_type 写法） */
+function resolveAgentType(args) {
+    for (const flag of ["--agent-type", "--agent_type"]) {
+        const idx = args.indexOf(flag);
+        if (idx !== -1 && idx + 1 < args.length) {
+            return args[idx + 1];
+        }
+    }
+    return "";
+}
+
+/**
+ * 应用 agent 模型配置到目标 opencode.json：
+ *   - 未指定 agent-type：清理 impm 管理的 agent 的模型配置（model/reasoning_effort），
+ *     其余字段与用户自定义 agent 保留；清理后 key 为空则整体删除该 agent。
+ *   - 指定 agent-type：按预设为各 agent 写入 model + reasoning_effort；
+ *     custom 预设跳过已存在的模型配置（保留手工设置）。
+ */
+function applyAgentConfig(config, agentType) {
+    const managedAgents = collectAgents();
+    if (managedAgents.length === 0) {
         return;
+    }
+
+    // 未指定 agent-type：仅清理 immp 管理的 agent 模型配置，不写入任何设置
+    if (!agentType) {
+        let cleaned = 0;
+        if (config.agent && typeof config.agent === "object") {
+            for (const name of managedAgents) {
+                const entry = config.agent[name];
+                if (!entry || typeof entry !== "object") {
+                    continue;
+                }
+                let changed = false;
+                if ("model" in entry) {
+                    delete entry.model;
+                    changed = true;
+                }
+                if ("reasoning_effort" in entry) {
+                    delete entry.reasoning_effort;
+                    changed = true;
+                }
+                if (changed && Object.keys(entry).length === 0) {
+                    delete config.agent[name];
+                }
+                if (changed) {
+                    cleaned++;
+                }
+            }
+            if (Object.keys(config.agent).length === 0) {
+                delete config.agent;
+            }
+        }
+        console.log(`  未指定 agent-type：已清理 ${cleaned} 个 impm 管理的 agent 模型配置（保留其他自定义 agent）`);
+        return;
+    }
+
+    // 指定 agent-type：加载预设并校验
+    const presets = loadAgentPresets();
+    const preset = presets[agentType];
+    if (!preset || !preset.agents) {
+        console.error(`错误：未知的 agent-type "${agentType}"，可选值：${AGENT_TYPES.join(", ")}`);
+        process.exit(1);
     }
 
     config.agent = config.agent || {};
     let synced = 0;
-    for (const name of agents) {
-        const setting = AGENT_MODEL_MAP[name];
-        if (!setting) {
+    let preserved = 0;
+    for (const [name, setting] of Object.entries(preset.agents)) {
+        const existing = config.agent[name];
+        // custom 预设：已存在的模型配置不覆盖（更新插件不影响手工维护的设置）
+        if (agentType === "custom" && existing && existing.model) {
+            preserved++;
             continue;
         }
         config.agent[name] = {
-            ...(config.agent[name] || {}),
+            ...(existing || {}),
             model: setting.model,
             reasoning_effort: setting.reasoning_effort,
         };
         synced++;
     }
-    console.log(`  已为 ${synced} 个 agent 写入模型配置（按角色分配 opencode-go 模型）`);
+
+    const msg = [`  已按预设 ${agentType} 为 ${synced} 个 agent 写入模型配置`];
+    if (preserved > 0) {
+        msg.push(`，保留 ${preserved} 个既有 custom 配置`);
+    }
+    console.log(msg.join(""));
 }
 
 /** 解析安装目标项目：--global 优先，其次 --target，其次 INIT_CWD（npm 依赖安装场景），最后回退到当前目录 */
@@ -193,7 +277,7 @@ function ensureOpenCodePackageJson(opencodeDir) {
     let pkg = {};
     if (existsSync(pkgPath)) {
         try {
-            pkg = JSON.parse(readFileSync(pkgPath, "utf-8"));
+            pkg = readJsonFile(pkgPath);
         } catch {
             console.warn(`  .opencode/package.json 解析失败，将重建`);
         }
@@ -205,14 +289,14 @@ function ensureOpenCodePackageJson(opencodeDir) {
     }
 }
 
-/** 更新目标 opencode.json：补 $schema、注册插件、同步各 agent 模型配置 */
-function updateOpenCodeConfig(projectRoot) {
+/** 更新目标 opencode.json：补 $schema、注册插件、应用 agent 模型预设 */
+function updateOpenCodeConfig(projectRoot, agentType) {
     const configPath = join(projectRoot, "opencode.json");
 
     let config = {};
     if (existsSync(configPath)) {
         try {
-            config = JSON.parse(readFileSync(configPath, "utf-8"));
+            config = readJsonFile(configPath);
         } catch {
             console.warn("  opencode.json 解析失败，将重新创建");
         }
@@ -223,6 +307,7 @@ function updateOpenCodeConfig(projectRoot) {
 
     const isSelfInstall = resolve(projectRoot) === PLUGIN_ROOT;
     if (!isSelfInstall) {
+        // 去重并保留既有插件（包含历史注册名），仅追加缺失的默认插件
         const plugins = Array.isArray(config.plugin) ? [...config.plugin] : [];
         for (const p of DEFAULT_PLUGINS) {
             if (!plugins.includes(p)) {
@@ -235,7 +320,7 @@ function updateOpenCodeConfig(projectRoot) {
         console.log("  本地自安装：跳过 config.plugin 注册（本地插件由 .opencode/plugins/ 自动加载）");
     }
 
-    syncAgentModels(config);
+    applyAgentConfig(config, agentType);
 
     writeFileSync(configPath, JSON.stringify(config, null, 2) + "\n", "utf-8");
 }
@@ -244,6 +329,7 @@ function updateOpenCodeConfig(projectRoot) {
 function main() {
     const args = process.argv.slice(2);
     const isGlobal = args.includes("--global");
+    const agentType = resolveAgentType(args);
     const targetRoot = resolveTargetProject(args);
 
     console.log("============================================");
@@ -252,6 +338,7 @@ function main() {
     console.log("");
     console.log(`插件目录: ${PLUGIN_ROOT}`);
     console.log(`目标项目: ${targetRoot}${isGlobal ? "（全局安装）" : ""}`);
+    console.log(`agent-type: ${agentType || "（未指定，将清理 impm 管理的 agent 模型配置）"}`);
     console.log("");
 
     if (!existsSync(ASSETS_DIR)) {
@@ -278,8 +365,17 @@ function main() {
     }
 
     const pluginDest = join(opencodeDir, "plugins", "impm");
+    const pluginEntry = join(opencodeDir, "plugins", "impm.js");
     if (existsSync(DIST_DIR)) {
         console.log("安装本地插件 -> .../plugins/impm/ ...");
+
+        // 整体删除旧的插件目录与入口文件，彻底清除历史废弃/残留的编译产物与文件
+        if (existsSync(pluginDest)) {
+            rmSync(pluginDest, { recursive: true, force: true });
+        }
+        if (existsSync(pluginEntry)) {
+            rmSync(pluginEntry, { force: true });
+        }
 
         const pluginDestDir = join(pluginDest, "dist");
         mkdirSync(pluginDestDir, { recursive: true });
@@ -294,7 +390,6 @@ function main() {
 
         // opencode 只自动发现 plugins/ 下直接 *.js/*.ts 文件（不递归子目录），
         // 因此必须在根目录生成入口文件指向 dist 编译产物
-        const pluginEntry = join(opencodeDir, "plugins", "impm.js");
         writeFileSync(pluginEntry, 'export { default } from "./impm/dist/index.js";\n', "utf-8");
         console.log("生成插件入口文件 -> .../plugins/impm.js");
     } else {
@@ -307,7 +402,7 @@ function main() {
     console.log("");
 
     console.log("更新 opencode.json 配置...");
-    updateOpenCodeConfig(targetRoot);
+    updateOpenCodeConfig(targetRoot, agentType);
 
     console.log("");
     console.log("============================================");
