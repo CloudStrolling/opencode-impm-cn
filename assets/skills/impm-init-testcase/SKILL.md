@@ -1,6 +1,6 @@
 ---
 name: impm-init-testcase
-description: 读取 TESTCASE-TEMPLATE.MD 模板，根据项目代码、文档及 PRD、LLD 确定测试用例，编写测试函数并生成自动化测试脚本（scripts/API-TEST/）。当初始化阶段需要编写测试用例时使用。
+description: 读取 TESTCASE-TEMPLATE.MD 模板，根据项目代码、文档及 PRD、LLD 确定测试用例，编写单元测试函数并生成 Postman Collection v2.1 接口测试用例（scripts/API-TEST/，配合 run_api_test.py 执行）。当初始化阶段需要编写测试用例时使用。
 ---
 
 # impm-init-testcase 技能
@@ -40,7 +40,7 @@ description: 读取 TESTCASE-TEMPLATE.MD 模板，根据项目代码、文档及
 
 ## 执行步骤
 ### 步骤 1：读取模板
-调用 impm_template_reader(projectRoot, TESTCASE-TEMPLATE.MD) 读取测试用例文档模板，明确模板章节结构与用例格式（用例编号、用例名称、前置条件、测试步骤、预期结果等）。
+调用 impm_template_reader(projectRoot, TESTCASE-TEMPLATE.MD) 读取测试用例文档模板，明确模板章节结构与用例格式（用例编号、用例名称、前置条件、测试步骤、预期结果等）。如涉及 API 接口测试，另调用 impm_template_reader(projectRoot, API-TEST-COLLECTION-TEMPLATE.json) 读取 Postman Collection v2.1 用例结构模板（重点：info/variable/item/request/expected），了解接口用例的字段与 expected 断言写法。
 
 ### 步骤 2：确定测试用例
 通过 impm_doc_reader 读取已有文档（重点是 PRD、LLD，以及 docs/{项目英文缩写}-api.md 接口定义），结合当前项目代码与文档，确定测试用例清单：
@@ -53,8 +53,15 @@ description: 读取 TESTCASE-TEMPLATE.MD 模板，根据项目代码、文档及
 ### 步骤 4：编写单元测试函数
 针对测试用例中的单元测试部分，编写单元测试函数：测试函数与用例一一对应，函数名、入参、断言与用例的测试步骤、预期结果保持一致。
 
-### 步骤 5：编写 API 测试脚本
-针对测试用例中的 API 接口测试，编写 API 测试脚本，统一放到 scripts/API-TEST/ 目录下；脚本应可直接执行并输出每个用例的通过/失败结果。
+### 步骤 5：编写 API 接口测试用例（Postman Collection v2.1）
+针对测试用例中的 API 接口测试，生成 Postman Collection v2.1 格式的 JSON 用例文件，放入 scripts/API-TEST/{项目英文缩写}-api-test-v0.0.1.postman_collection.json，并与接口测试执行程序配套使用：
+1. 确认 scripts/API-TEST/ 目录下已存在接口测试执行程序 run_api_test.py；若不存在，则从 assets/skills/template/API-TEST-RUNNER.py 模板复制到该路径（即创建 run_api_test.py）。
+2. 按 API-TEST-COLLECTION-TEMPLATE.json 模板结构，针对每个接口用例生成 item：
+   - item.name = 接口路径 + 用例名称 + 用例 ID；
+   - item.request.method/url/header/body 按用例所属接口与测试步骤填写（url.raw 使用 `{{base_url}}` 占位符，query 以数组填写，body 为 JSON 时 mode=raw）；
+   - item.event 中按用例预期结果生成 pm.test 断言脚本（状态码、业务码、字段值），便于在 Apifox 中调试；
+   - item.expected 按用例预期结果填写结构化断言（status 状态码、max_response_time 耗时上限、headers 响应头包含、assertions 响应体断言：type=json 用 path+equals/contains，type=body_contains 用 value）；该 expected 字段由 API-TEST-RUNNER.py 读取执行，必须与实际接口预期一致。
+3. 接口测试通过 `python scripts/API-TEST/run_api_test.py scripts/API-TEST/{项目英文缩写}-api-test-v0.0.1.postman_collection.json --report-dir scripts/API-TEST/report` 执行，由程序读取集合、逐个发送请求、对比 expected 预期结果并生成测试报告（控制台 + scripts/API-TEST/report/api-test-report.md、api-test-report.json）。
 
 ### 步骤 6：记录进度
 调用 impm_progress(projectRoot, {项目英文缩写}, {当前版本号}, add, impm-init-testcase, 已完成) 记录本步骤完成。
@@ -62,7 +69,8 @@ description: 读取 TESTCASE-TEMPLATE.MD 模板，根据项目代码、文档及
 ## 交付物
 - docs/{项目英文缩写}-v0.0.1/{项目英文缩写}-testcase-v0.0.1.md
 - docs/{项目英文缩写}-testcase.md
-- scripts/API-TEST/ 下的自动化测试脚本
+- scripts/API-TEST/{项目英文缩写}-api-test-v0.0.1.postman_collection.json（Postman Collection v2.1 接口测试用例）
+- scripts/API-TEST/run_api_test.py（接口测试执行程序，由模板复制）
 
 ## 完成后提示
 - 如需继续执行下一步骤，请输入 /impm-init-commit
