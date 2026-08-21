@@ -45,16 +45,27 @@ description: 执行当前任务全部测试并更新测试结果，全部通过�
 ### 步骤 2：读取测试用例
 调用 impm_doc_reader（docType=testcase，taskId={任务编号}），读取当前任务的测试用例。
 
-### 步骤 3：执行测试
-根据当前任务的测试用例，找到对应的测试函数和测试脚本，并执行测试脚本（单元测试、接口测试、功能/UI测试）。
+### 步骤 3：按测试类型执行测试
+根据当前任务的测试用例（docType=testcase，taskId={任务编号}），按测试类型分别执行：
+
+1. **单元测试**：找到本任务编写的单元测试函数，使用当前开发语言或构建环境中的单元测试工具（如 pytest / go test / mvn test / npm test / dotnet test 等）执行单元测试；执行完成后生成单元测试结果概览（通过/失败用例数与失败原因）。
+
+2. **功能与UI测试**：本步骤不执行、不生成 UI 自动化测试，忽略即可（UI 测试以 docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-ui-test-record-v{当前版本号}.md 中的人工/功能测试记录为准）。
+
+3. **接口测试**：
+   1. 判断目标项目 scripts/API-TEST/ 目录下是否已存在接口测试执行程序 run_api_test.py；若不存在，则调用 impm_template_reader 读取 assets/skills/template/API-TEST-RUNNER.py 模板内容，在 scripts/API-TEST/ 目录下创建 run_api_test.py（即把模板复制到该路径）；
+   2. 找到本任务在 scripts/API-TEST/{项目英文缩写}-api-test-v{当前版本号}.postman_collection.json 中生成的接口测试用例（Postman Collection v2.1 格式）；
+   3. 调用该 python 程序执行接口测试，并指定上述 Postman Collection JSON 文件与可选的基础地址（如 `--base-url http://localhost:端口`）：
+      `python scripts/API-TEST/run_api_test.py scripts/API-TEST/{项目英文缩写}-api-test-v{当前版本号}.postman_collection.json --report-dir scripts/API-TEST/report`
+   4. 程序会读取集合、逐个发送请求、对比 expected 预期结果、生成测试报告（控制台 + scripts/API-TEST/report/api-test-report.md、api-test-report.json）；根据报告中的 PASS/FAIL 汇总判断接口测试是否通过。
 
 ### 步骤 4：更新测试结果
-每一个测试完成后，更新当前任务的测试用例的测试通过情况（更新任务目录 testcase.md，标注通过/失败及失败原因）。
+每一个测试完成后，更新当前任务的测试用例的测试通过情况（更新任务目录 testcase.md，标注通过/失败及失败原因）；接口测试需结合步骤 3.3 生成的 api-test-report 报告，将每条用例的执行结果（HTTP 状态码、耗时、断言失败详情）回填到 testcase.md 对应用例的"测试结果"栏。
 
-### 步骤 5：处理失败
-全部测试完成后，如果其中有部分测试失败：
-1. 把报错信息加入上下文；
-2. 由调度方（impm-task-coding）回退到 impm-task-coding-context 重新收集信息并编码，再按流程重新执行；
+### 步骤 5：处理失败（单元测试与接口测试）
+全部测试完成后，如果单元测试或接口测试中有部分用例失败（UI 测试不计入失败判定）：
+1. 把报错信息/报告中的失败详情加入上下文；
+2. 由调度方（impm-task-coding）回退到 impm-task-coding-context 重新收集信息并编码，再按流程重新执行测试；
 3. 连续失败达上限（3次）则中止本任务并向用户报告。
 
 ### 步骤 6：确认全部通过

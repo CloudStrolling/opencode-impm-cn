@@ -83,7 +83,6 @@ export const KNOWN_STEP_NAMES: string[] = [
     "impm-regression-test",
     "impm-coding-comment",
     "impm-coding-review",
-    "impm-apifox",
     "impm-project-update",
     "impm-doc-merge",
     "impm-doc-update",

@@ -45,7 +45,12 @@ description: 按测试用例编写单元测试函数、接口测试 Python 脚�
 ### 步骤 2：读取测试用例并分类编写
 调用 impm_doc_reader（docType=testcase，taskId={任务编号}）读取当前任务的测试用例，按测试类型分别编写：
 1. 单元测试：按当前开发语言，直接按开发语言的习惯和常用的测试插件，编写单元测试函数；
-2. 接口测试：用 python 语言编写接口测试脚本，放入 scripts/API-TEST/{项目英文缩写}-api-test-v{当前版本号}.py，每个测试脚本用统一的入口。**版本目录写入冲突规避**：先调用 impm_doc_reader 或直接读取脚本最新内容（可能有其他并行任务已写入测试函数），在最新脚本基础上保留他人测试函数、仅新增本任务测试函数与入口注册后，以 expectedBase=读取到的全文调用 impm_doc_writer 写回；若返回并发冲突错误，重新读取合并后再写回；写回后回读校验；
+2. 接口测试：生成 Postman Collection v2.1 格式的 JSON 用例文件，放入 scripts/API-TEST/{项目英文缩写}-api-test-v{当前版本号}.postman_collection.json。先调用 impm_template_reader 读取 API-TEST-COLLECTION-TEMPLATE.json 模板了解结构（重点：info/variable/item/request/expected），再按本任务的接口类测试用例逐个生成 item：
+   - item.name = 接口路径 + 用例名称 + 用例 ID；
+   - item.request.method/url/header/body 按用例所属接口与测试步骤填写（url.raw 使用 `{{base_url}}` 占位符，query 以数组填写，body 为 JSON 时 mode=raw）；
+   - item.event 中按用例预期结果生成 pm.test 断言脚本（状态码、业务码、字段值），便于在 Apifox 中调试；
+   - item.expected 按用例预期结果填写结构化断言（status 状态码、max_response_time 耗时上限、headers 响应头包含、assertions 响应体断言：type=json 用 path+equals/contains，type=body_contains 用 value）；该 expected 字段由 API-TEST-RUNNER.py 读取执行，必须与实际接口预期一致。
+   **版本目录写入冲突规避**：先读取该 JSON 文件最新内容（可能有其他并行任务已写入 item），在最新 item 数组基础上保留他人 item、仅追加本任务 item 后整体写回（覆盖写该文件即可，因内容已合并）；若文件不存在则基于模板创建；写回后回读校验 item 数量是否正确。
 3. 功能与UI测试：在版本目录 docs/{项目英文缩写}-v{当前版本号}/ 下新增/更新 {项目英文缩写}-ui-test-record-v{当前版本号}.md，调用 impm_doc_writer（docType=ui-test-record）。**版本目录写入冲突规避**：先读取该文档最新内容，在最新内容后追加本任务测试记录段落后，以 expectedBase=读取到的全文调用 impm_doc_writer 写回；若返回并发冲突错误，重新读取合并后再写回；禁止基于旧快照整体覆盖。
 
 ### 步骤 3：回标测试用例
@@ -56,7 +61,7 @@ description: 按测试用例编写单元测试函数、接口测试 Python 脚�
 
 ## 交付物
 - 单元测试函数（随源码提交）
-- scripts/API-TEST/{项目英文缩写}-api-test-v{当前版本号}.py 接口测试脚本
+- scripts/API-TEST/{项目英文缩写}-api-test-v{当前版本号}.postman_collection.json 接口测试用例（Postman Collection v2.1）
 - docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-ui-test-record-v{当前版本号}.md 功能/UI测试记录文档
 - 任务目录 testcase.md（已回标测试位置）
 - version_progress.md 中的进度记录

@@ -69,7 +69,7 @@ description: impm 总流程技能，自动执行瀑布式开发全部四个阶�
 3. 全部任务完成后，检查 version_progress.md 确认 impm-coding 状态已记录。
 
 ### 阶段四：回归测试和版本文档整理（impm-finish）
-1. 使用 Skill 工具加载并执行 impm-finish 技能，依次执行：impm-regression-test → impm-coding-comment → impm-coding-review → impm-apifox → impm-project-update → impm-doc-merge → impm-doc-update → impm-deploy-update → impm-git-merge。
+1. 使用 Skill 工具加载并执行 impm-finish 技能，依次执行：impm-regression-test → impm-coding-comment → impm-coding-review → impm-project-update → impm-doc-merge → impm-doc-update → impm-deploy-update → impm-git-merge。
 2. 全部步骤完成后，调用 impm_progress（action=finalize）在退出前结算进度表最后一行（impm-finish，已完成）的总耗时与 token（幂等：impm-finish 已结算时自动跳过）。
 3. 向用户汇报本次版本开发的完整产出。
 

@@ -52,12 +52,13 @@ description: 执行版本回归测试，将测试用例合并到主测试用例�
 2. 调用 impm_doc_writer（docType=regression-unit）写入 docs/{项目英文缩写}-v{当前版本号}/regression-unit-test.md。
 3. 核对文件存在且内容正确。
 
-### 步骤 4：运行接口测试脚本并写入结果
-1. 列出 scripts/API-TEST/ 目录下的全部测试脚本（如 {项目英文缩写}-api-test-v{当前版本号}.py 等）。
-2. 依次运行全部测试脚本，记录每个脚本的执行结果（通过/失败、断言明细、错误信息）。
-3. 将结果整理为 Markdown 文档：脚本名称、执行命令、用例数、通过数、失败数、失败明细、结论。
-4. 调用 impm_doc_writer（docType=regression-api）写入 docs/{项目英文缩写}-v{当前版本号}/regression-api-test.md。
-5. 核对文件存在且内容正确。
+### 步骤 4：运行接口测试并写入结果
+1. 确认 scripts/API-TEST/ 目录下存在接口测试执行程序 run_api_test.py；若不存在，则从 assets/skills/template/API-TEST-RUNNER.py 模板复制到该路径。
+2. 列出 scripts/API-TEST/ 目录下的全部 Postman Collection v2.1 接口测试用例文件（如 {项目英文缩写}-api-test-v{当前版本号}.postman_collection.json）。
+3. 依次调用 run_api_test.py 运行每个集合（可加 `--base-url http://localhost:端口` 指定被测服务地址），读取其生成的 scripts/API-TEST/report/api-test-report.json 汇总结果，记录每个集合的执行结果（通过/失败、断言明细、错误信息）。
+4. 将结果整理为 Markdown 文档：集合名称、执行命令、用例数、通过数、失败数、失败明细、结论。
+5. 调用 impm_doc_writer（docType=regression-api）写入 docs/{项目英文缩写}-v{当前版本号}/regression-api-test.md。
+6. 核对文件存在且内容正确。
 
 ### 步骤 5：记录进度
 1. 调用 impm_progress add（impm-regression-test，已完成），在 version_progress.md 中记录本技能完成状态。

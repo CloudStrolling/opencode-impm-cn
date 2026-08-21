@@ -1,0 +1,57 @@
+{
+  "info": {
+    "name": "{项目中文名称} 接口测试 v{当前版本号}",
+    "description": "由 impm-task-coding-writetest 根据当前任务接口测试用例自动生成，符合 Postman Collection v2.1 规范，可供 API-TEST-RUNNER.py 执行接口测试，也可直接导入 Apifox 调试。",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8080" }
+  ],
+  "item": [
+    {
+      "name": "{接口路径} - {用例名称} ({用例ID})",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/example?id=1",
+          "host": ["{{base_url}}"],
+          "path": ["api", "example"],
+          "query": [
+            { "key": "id", "value": "1" }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"key\":\"value\"}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('状态码 200', function () { pm.response.to.have.status(200); });",
+              "pm.test('业务码 code=0', function () { pm.expect(pm.response.json().code).to.eql(0); });"
+            ]
+          }
+        }
+      ],
+      "expected": {
+        "status": 200,
+        "max_response_time": 2000,
+        "headers": [
+          { "name": "Content-Type", "contains": "application/json" }
+        ],
+        "assertions": [
+          { "type": "json", "path": "$.code", "equals": 0 },
+          { "type": "json", "path": "$.data.id", "contains": "预期子串" },
+          { "type": "body_contains", "value": "预期出现的文本" }
+        ]
+      }
+    }
+  ]
+}

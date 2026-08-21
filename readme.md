@@ -229,7 +229,7 @@ flowchart LR
 | **1** | `/impm-init` | 判定项目类型 → 创建版本目录与进度表 → 生成全部初始文档 → 提交 |
 | **2** | `/impm-docs` | 确认版本需求 → 创建版本分支 → 生成/更新 URS/PRD/SAD/DBD/API/LLD → 创建任务清单 |
 | **3** | `/impm-coding` | 按任务清单按波次调度（最多 5 任务并行，依赖上游先完成）：收集上下文 → 代码查询 → 网络查询 → 数据库/API 设计 → 测试用例 → 编码 → 写测试 → 跑测试 → 串行提交 |
-| **4** | `/impm-finish` | 全量回归测试 → 补充注释 → 代码审核 → 生成 Apifox 导入文件 → 更新项目地图 → 合并文档 → 更新 README/Agent/部署文档 → 合并主分支 |
+| **4** | `/impm-finish` | 全量回归测试 → 补充注释 → 代码审核 → 更新项目地图 → 合并文档 → 更新 README/Agent/部署文档 → 合并主分支 |
 | **⚡敏捷** | `/impm-sprint` | 需求简报（1份代URS/PRD）→ 版本与任务（任务描述内嵌需求）→ 编码（跳过 context/cs/ws/testcase）→ 测试 → 汇总留存 → 提交合并 |
 | **⚡热修复** | `/impm-hotfix` | 定位分析（写修复记录）→ 修复编码（最小改动）→ 留存提交（main 分支，不建版本目录） |
 
@@ -250,8 +250,9 @@ flowchart LR
 | 数据库脚本 | `docs/{缩写}-v{版本}/{缩写}-dbd-v{版本}.sql` |
 | 任务清单 | `docs/{缩写}-v{版本}/{缩写}-task-v{版本}.json` |
 | 版本进度表 | `docs/{缩写}-v{版本}/version_progress.md` |
-| Apifox 接口信息文件 | `docs/{缩写}-v{版本}/{缩写}-apifox-openapi-v{版本}.json`（Apifox 导入：OpenAPI (Swagger)） |
-| Apifox 用例测试信息文件 | `docs/{缩写}-v{版本}/{缩写}-apifox-postman-v{版本}.json`（Apifox 导入：Postman） |
+| 接口测试用例（Postman Collection v2.1） | `scripts/API-TEST/{缩写}-api-test-v{版本}.postman_collection.json` |
+| 接口测试执行器 | `scripts/API-TEST/run_api_test.py`（由 `assets/skills/template/API-TEST-RUNNER.py` 模板复制生成） |
+| 接口测试报告 | `scripts/API-TEST/report/api-test-report.md`、`api-test-report.json` |
 | 提问记录 | `docs/prompts/prompts.md` |
 | 编译/部署方案 | `deploy/build.md`、`deploy/deploy.md`（由 `/impm-deploy-update` 按需生成，项目尚无该目录时跳过） |
 
@@ -327,7 +328,6 @@ flowchart LR
 | `/impm-regression-test` | 回归测试（全量单元测试 + 接口测试） | TE |
 | `/impm-coding-comment` | 为版本代码补充中文注释 | DW |
 | `/impm-coding-review` | 代码审核（安全、性能、质量、合规、测试覆盖） | TL |
-| `/impm-apifox` | 生成 Apifox 可导入的接口信息文件与 API 用例测试信息文件 | DW |
 | `/impm-project-update` | 更新项目地图与 `docs/project.md` | SA |
 | `/impm-doc-merge` | 合并版本文档到主文档 | DW |
 | `/impm-doc-update` | 更新 `readme.md` 与 `agent.md` | DW |
@@ -541,7 +541,6 @@ You may obtain a copy of the License at
 | 回归测试 | `impm-regression-test` | TE |
 | 代码备注 | `impm-coding-comment` | DW |
 | 代码审核 | `impm-coding-review` | TL |
-| 生成 Apifox 导入文件 | `impm-apifox` | DW |
 | 项目地图更新 | `impm-project-update` | SA |
 | 版本文档合并到主文档 | `impm-doc-merge` | DW |
 | 更新 README.md 和 agent.md | `impm-doc-update` | DW |

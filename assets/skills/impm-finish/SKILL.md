@@ -9,7 +9,7 @@ description: 编排回归测试和版本文档整理阶段（阶段4）的全部
 /impm-finish、阶段4、回归测试、版本文档整理、版本收尾、完成本版本
 
 ## 何时使用
-阶段3编码开发全部完成、版本内所有任务均已提交后，需要执行回归测试和版本文档整理时使用。本技能是阶段4的编排入口，负责严格按顺序调度其余9个技能。
+阶段3编码开发全部完成、版本内所有任务均已提交后，需要执行回归测试和版本文档整理时使用。本技能是阶段4的编排入口，负责严格按顺序调度其余8个技能。
 
 ## 执行角色
 本技能由 项目经理（主控 Agent） 负责执行（编排），执行时使用 Skill 工具加载本技能。内部子步骤必须按下方「通用调度要求」派发对应 subagent 执行，PM 只调度、检查与决策。
@@ -28,12 +28,11 @@ description: 编排回归测试和版本文档整理阶段（阶段4）的全部
 | 1 | impm-regression-test | te |
 | 2 | impm-coding-comment | dw |
 | 3 | impm-coding-review | tl |
-| 4 | impm-apifox | dw |
-| 5 | impm-project-update | sa |
-| 6 | impm-doc-merge | dw |
-| 7 | impm-doc-update | dw |
-| 8 | impm-deploy-update | dw |
-| 9 | impm-git-merge | scm |
+| 4 | impm-project-update | sa |
+| 5 | impm-doc-merge | dw |
+| 6 | impm-doc-update | dw |
+| 7 | impm-deploy-update | dw |
+| 8 | impm-git-merge | scm |
 
 ## 关键变量定义与取值
 | 变量 | 说明 | 获取方式 |
@@ -64,34 +63,30 @@ description: 编排回归测试和版本文档整理阶段（阶段4）的全部
 1. 启动 TL subagent，通过 Skill 工具加载 impm-coding-review 技能，由 TL 对本次版本代码进行安全漏洞、性能陷阱、代码质量、架构合规性、测试覆盖审核，按模板输出审核报告。
 2. 执行完成后，核对 version_progress.md 中 impm-coding-review 步骤状态已记录为"已完成"，方可继续下一步。
 
-### 步骤 4：生成 Apifox 导入文件
-1. 启动 DW subagent，通过 Skill 工具加载 impm-apifox 技能，由 DW 根据当前版本 API 设计文档与测试用例文档，生成 Apifox 可导入的接口信息文件（OpenAPI 3.0 JSON）与 API 用例测试信息文件（Postman Collection v2.1 JSON），存入当前版本目录。
-2. 执行完成后，核对 version_progress.md 中 impm-apifox 步骤状态已记录为"已完成"，方可继续下一步。
-
-### 步骤 5：更新项目地图
+### 步骤 4：更新项目地图
 1. 启动 SA subagent，通过 Skill 工具加载 impm-project-update 技能，由 SA 扫描源代码目录生成项目地图，并更新 docs/project.md 的项目地图部分。
 2. 执行完成后，核对 version_progress.md 中 impm-project-update 步骤状态已记录为"已完成"，方可继续下一步。
 
-### 步骤 6：合并版本文档到主文档
+### 步骤 5：合并版本文档到主文档
 1. 启动 DW subagent，通过 Skill 工具加载 impm-doc-merge 技能，由 DW 将当前版本的 URS、PRD、API、DBD、DBD SQL、LLD 文档合并进 docs 下对应的主文档。
 2. 执行完成后，核对 version_progress.md 中 impm-doc-merge 步骤状态已记录为"已完成"，方可继续下一步。
 
-### 步骤 7：更新 readme.md 与 agent.md
+### 步骤 6：更新 readme.md 与 agent.md
 1. 启动 DW subagent，通过 Skill 工具加载 impm-doc-update 技能，由 DW 创建或更新项目根目录下的 readme.md 与 agent.md。
 2. 执行完成后，核对 version_progress.md 中 impm-doc-update 步骤状态已记录为"已完成"，方可继续下一步。
 
-### 步骤 8：更新编译部署方案
+### 步骤 7：更新编译部署方案
 1. 启动 DW subagent，通过 Skill 工具加载 impm-deploy-update 技能，由 DW 创建或更新 deploy/build.md、deploy/deploy.md，必要时在 deploy 目录下生成编译部署脚本。
 2. 执行完成后，核对 version_progress.md 中 impm-deploy-update 步骤状态已记录为"已完成"，方可继续下一步。
 
-### 步骤 9：合并主分支并提交
+### 步骤 8：合并主分支并提交
 1. 启动 SCM subagent，通过 Skill 工具加载 impm-git-merge 技能，由 SCM 将当前版本分支以 git merge --squash 方式合并到主分支（master 或 main）并提交。
 2. 执行完成后，核对 version_progress.md 中 impm-git-merge 步骤状态已记录为"已完成"，方可继续下一步。
 
-### 步骤 10：记录进度并汇报
+### 步骤 9：记录进度并汇报
 1. 调用 impm_progress add（impm-finish，已完成），在 version_progress.md 中记录本技能完成状态。
 2. 调用 impm_progress（action=finalize）在退出前结算进度表最后一行（impm-finish，已完成）的总耗时与 token（含该步骤主会话与 subagent 子会话消耗）。
-3. 核对 version_progress.md 中阶段4全部 9 个步骤均已记录为"已完成"。
+3. 核对 version_progress.md 中阶段4全部 8 个步骤均已记录为"已完成"。
 4. 向用户汇报：阶段4（回归测试和版本文档整理）全部步骤已按顺序完成，本版本开发全部完成。
 
 ## 交付物
