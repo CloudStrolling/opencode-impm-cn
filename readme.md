@@ -5,9 +5,9 @@
 **我是项目经理 —— AI 驱动的工程化全流程开发套件**
 
 <p>
-  <a href="#"><img src="https://img.shields.io/badge/version-0.5.3-2ea44f?style=flat-square" alt="version"></a>
+  <a href="#"><img src="https://img.shields.io/badge/version-0.7.1-2ea44f?style=flat-square" alt="version"></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square" alt="license"></a>
-  <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/node->=%2018-339933?style=flat-square&logo=node.js&logoColor=white" alt="node"></a>
+  <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/node->=%2022.5-339933?style=flat-square&logo=node.js&logoColor=white" alt="node"></a>
   <a href="https://opencode.ai/"><img src="https://img.shields.io/badge/OpenCode-必需-ff6b6b?style=flat-square" alt="opencode"></a>
 </p>
 
@@ -42,7 +42,7 @@
 | 特性 | 说明 |
 |:---:|:---|
 | 🎭 | **AI 项目经理调度** — 统一编排 BA / SA / TL / DBA / TE / SCM / DW / CS / WS / FEE / BEE / SSE 共 13 个专业 Agent |
-| 📋 | **4 阶段 52 个技能** — 阶段间严格按序执行、不跳过、不乱序；编码开发阶段任务间按上下游依赖并发执行（最多 5 个并行），Git 提交串行 |
+| 📋 | **4 阶段 51 个技能** — 阶段间严格按序执行、不跳过、不乱序；编码开发阶段任务间按上下游依赖并发执行（最多 5 个并行），Git 提交串行 |
 | ⚡ | **两条轻量流程** — 敏捷冲刺 `/impm-sprint` 与热修复 `/impm-hotfix`，大幅减少环节与 token 消耗，保留合理文档留痕 |
 | 🧪 | **测试先行（TDD）** — 编码前先写测试用例，编码后执行测试，全部通过才提交 |
 | 📁 | **版本化管理** — 每个版本独立目录 `docs/{项目缩写}-v{版本号}/` + 独立 Git 分支 |
@@ -113,7 +113,7 @@ PM Agent 将自动引导完成全部四阶段开发任务。
 
 ### 环境要求
 
-- [Node.js](https://nodejs.org/) >= 18
+- [Node.js](https://nodejs.org/) >= 22.5
 - [OpenCode](https://opencode.ai/)（支持插件、技能、命令的版本）
 
 ### 方式一：本地安装（⭐ 推荐，用于开发调试）
@@ -149,33 +149,41 @@ node scripts/install.mjs --global
 # .\scripts\install.ps1 -Global
 ```
 
-> 全局安装将 agents/commands/skills 放入全局配置目录（`~/.config/opencode`），并把每个 agent 的模型与思考深度写入全局 `opencode.json`。
+> 全局安装将 agents/commands/skills 放入全局配置目录（`~/.config/opencode`），插件入口写入全局 `opencode.json`。模型配置默认不清不写，可按需通过 `--agent-type` 应用预设。
 
 ### 验证安装
 
 安装完成后重启 OpenCode，输入 `/impm` 即可看到 PM Agent 的欢迎提示。
 
-### 模型配置同步
+### 模型配置
 
-安装脚本会自动扫描 `assets/agents/` 下定义的 Agent，并为每个 Agent 在对应的 `opencode.json` 的 `agent` 键写入按角色分配的模型与思考深度（全局安装写全局 `opencode.json`，项目安装写项目 `opencode.json`）：
+安装脚本默认**不修改** `opencode.json` 中 impm 各 Agent 的模型配置（仅清理上一次由 impm 写入的模型 / 思考深度，保留你的手工设置）。如需为各 Agent 应用预设的模型与思考深度，安装时用 `--agent-type` 指定预设（可选值详见 `scripts/agent-models.json`）：
+
+```bash
+node scripts/install.mjs --target /path/to/project --agent-type opencode-go-balance
+# Windows PowerShell 用户：
+# .\scripts\install.ps1 -Target D:\path\to\project -AgentType opencode-go-balance
+```
+
+各预设均来自 `opencode-go` / `opencode-zen` provider，按角色职责与成本权衡分配（`custom` 预设不会覆盖目标项目已手工设置的 model / reasoning_effort）。推荐「均衡档」`opencode-go-balance`：
 
 | Agent | 模型 | 思考深度 |
 |:-----:|:-----|:--------:|
-| pm  | opencode-go/deepseek-v4-flash | high |
+| pm  | opencode-go/deepseek-v4-flash | low |
 | scm | opencode-go/deepseek-v4-flash | low |
-| ba  | opencode-go/glm-5.2 | high |
-| sa  | opencode-go/glm-5.2 | max |
-| tl  | opencode-go/deepseek-v4-pro | max |
-| dba | opencode-go/deepseek-v4-flash | high |
+| ba  | opencode-go/deepseek-v4-pro | high |
+| sa  | opencode-go/deepseek-v4-pro | max |
+| tl  | opencode-go/deepseek-v4-pro | high |
+| dba | opencode-go/deepseek-v4-flash | max |
 | te  | opencode-go/deepseek-v4-flash | high |
-| cs  | opencode-go/deepseek-v4-flash | high |
-| ws  | opencode-go/deepseek-v4-flash | high |
-| sse | opencode-go/deepseek-v4-flash | max |
-| fee | opencode-go/deepseek-v4-flash | max |
+| cs  | opencode-go/deepseek-v4-flash | low |
+| ws  | opencode-go/deepseek-v4-flash | low |
+| sse | opencode-go/deepseek-v4-pro | high |
+| fee | opencode-go/deepseek-v4-flash | high |
 | bee | opencode-go/deepseek-v4-flash | max |
 | dw  | opencode-go/deepseek-v4-flash | high |
 
-> 模型均来自 `opencode-go` provider，按角色职责与成本权衡分配；可在安装后的 `opencode.json` 中按需调整。
+> 安装后可在各自项目的 `opencode.json` 中按需调整各 Agent 模型与思考深度。
 
 ---
 
@@ -187,8 +195,8 @@ node scripts/install.mjs --global
 项目根目录/
 ├── .opencode/
 │   ├── agents/              # 13 个 AI Agent 定义
-│   ├── commands/            # 49 个命令定义
-│   ├── skills/              # 52 个技能与 17 个模板
+│   ├── commands/            # 51 个命令定义
+│   ├── skills/              # 51 个技能与 17 个模板
 │   └── plugins/impm/        # 编译后的插件入口
 └── opencode.json            # OpenCode 配置文件
 ```
@@ -259,7 +267,7 @@ flowchart LR
 ### 完整命令清单
 
 <details>
-<summary>📋 点击展开 49 个命令（按阶段分组）</summary>
+<summary>📋 点击展开 51 个命令（按阶段分组）</summary>
 
 #### 总流程
 
@@ -359,8 +367,8 @@ flowchart LR
 opencode-impm-cn/
 ├── 📁 assets/                   # 套件资源（安装时复制到 .opencode/）
 │   ├── 📁 agents/               # 13 个 AI Agent 定义（.md）
-│   ├── 📁 commands/             # 49 个命令（.md）
-│   └── 📁 skills/               # 52 个技能（每技能一个目录）+ template/ 17 个模板
+│   ├── 📁 commands/             # 51 个命令（.md）
+│   └── 📁 skills/               # 51 个技能（每技能一个目录）+ template/ 17 个模板
 ├── 📁 src/                      # 插件源码（TypeScript）
 │   ├── 📁 tools/                # 14 个工具的实现（含 prompt-recorder）
 │   ├── 📁 utils/                # 路径 / 版本 / git / 项目信息工具

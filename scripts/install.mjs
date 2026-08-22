@@ -42,7 +42,9 @@
  *   - 不传 --agent-type：清理 opencode.json 中 impm 管理的 agent 模型配置，不写入任何设置。
  *
  * 幂等安装：
- *   - assets 复制前会清空目标目录；
+ *   - 维护累积安装清单 .opencode/impm-manifest.json（everInstalled 只增不减），
+ *     安装时按清单精确清理历史已移除/更名的残留（含 agents 等非 impm 前缀命名项）；
+ *   - 首次安装（无清单）时按启发式清理（commands/skills 按 impm* 前缀、各目录按与源同名）；
  *   - 插件 dist 复制前会整体删除旧的 plugins/impm 目录与入口文件，避免残留废弃文件。
  */
 
@@ -110,6 +112,99 @@ function collectAgents() {
     return agents;
 }
 
+/** 安装清单文件路径：{opencodeDir}/impm-manifest.json */
+function manifestPath(opencodeDir) {
+    return join(opencodeDir, "impm-manifest.json");
+}
+
+/** 读取安装清单；不存在或损坏返回 null */
+function loadManifest(opencodeDir) {
+    const file = manifestPath(opencodeDir);
+    if (!existsSync(file)) {
+        return null;
+    }
+    try {
+        const m = readJsonFile(file);
+        if (!m || typeof m !== "object") {
+            return null;
+        }
+        m.everInstalled = m.everInstalled || { agents: [], commands: [], skills: [] };
+        for (const key of Object.keys(m.everInstalled)) {
+            if (!Array.isArray(m.everInstalled[key])) {
+                m.everInstalled[key] = [];
+            }
+        }
+        m.pluginNames = Array.isArray(m.pluginNames) ? m.pluginNames : [];
+        m.pkgJsonTypeModule = !!m.pkgJsonTypeModule;
+        return m;
+    } catch {
+        return null;
+    }
+}
+
+/** 保存安装清单 */
+function saveManifest(opencodeDir, manifest) {
+    writeFileSync(
+        manifestPath(opencodeDir),
+        JSON.stringify(manifest, null, 2) + "\n",
+        "utf-8",
+    );
+}
+
+/** 将一批名称并入历史清单（只增不减，保证跨版本更名/移除仍可被清理） */
+function mergeEver(manifest, key, names) {
+    const set = new Set(manifest.everInstalled[key] || []);
+    for (const n of names) {
+        set.add(n);
+    }
+    manifest.everInstalled[key] = [...set];
+}
+
+/** 判断某目录条目是否 impm 归属，决定是否清理：commands/skills 含 impm* 前缀探测 */
+function isImpmOwned(dirType, name, srcNames, everSet) {
+    if (srcNames.has(name) || everSet.has(name)) {
+        return true;
+    }
+    // commands/skills 全部以 impm 或 impm- 命名，可用前缀兜底；
+    // agents 以角色名（ba/sa/...）命名，不做前缀探测，避免误删用户自建 agent
+    return (dirType === "commands" || dirType === "skills") && name.startsWith("impm");
+}
+
+/** 判断插件注册项是否为 impm 历史注册残留（兼容字符串名与对象 {name,entry} 形式） */
+function isStaleImpmPlugin(p) {
+    if (typeof p === "string") {
+        return p === PACKAGE_NAME || p.toLowerCase().includes("impm");
+    }
+    if (p && typeof p === "object") {
+        const n = String(p.name || p.entry || "");
+        return n.toLowerCase().includes("impm");
+    }
+    return false;
+}
+
+/** 同步单个资源目录：清理 impm 归属残留后复制（保留用户/其他插件非 impm 内容） */
+function syncAssetDir(dirType, srcDir, destDir, everList) {
+    if (!existsSync(srcDir)) {
+        console.warn(`  跳过：源目录不存在 ${srcDir}`);
+        return;
+    }
+    const srcNames = new Set(readdirSync(srcDir));
+    const everSet = new Set(everList || []);
+    if (existsSync(destDir)) {
+        for (const entry of readdirSync(destDir, { withFileTypes: true })) {
+            if (!isImpmOwned(dirType, entry.name, srcNames, everSet)) {
+                continue;
+            }
+            try {
+                rmSync(join(destDir, entry.name), { recursive: true, force: true });
+            } catch {
+                /* 忽略清理失败 */
+            }
+        }
+    }
+    copyDirRecursive(srcDir, destDir);
+}
+
 /** 读取 scripts/agent-models.json 预设定义文件 */
 function loadAgentPresets() {
     const presetsPath = join(__dirname, "agent-models.json");
@@ -142,18 +237,21 @@ function resolveAgentType(args) {
  *     其余字段与用户自定义 agent 保留；清理后 key 为空则整体删除该 agent。
  *   - 指定 agent-type：按预设为各 agent 写入 model + reasoning_effort；
  *     custom 预设跳过已存在的模型配置（保留手工设置）。
+ * @param extraManagedAgents 历史版本安装过、现已不在 assets 的 agent 名（来自累积清单），
+ *                          清理时一并处理，避免改名的模型配置残留
  */
-function applyAgentConfig(config, agentType) {
-    const managedAgents = collectAgents();
-    if (managedAgents.length === 0) {
+function applyAgentConfig(config, agentType, extraManagedAgents = []) {
+    const currentAgents = collectAgents();
+    if (currentAgents.length === 0) {
         return;
     }
+    const cleanAgents = [...new Set([...currentAgents, ...extraManagedAgents])].filter(Boolean);
 
     // 未指定 agent-type：仅清理 immp 管理的 agent 模型配置，不写入任何设置
     if (!agentType) {
         let cleaned = 0;
         if (config.agent && typeof config.agent === "object") {
-            for (const name of managedAgents) {
+            for (const name of cleanAgents) {
                 const entry = config.agent[name];
                 if (!entry || typeof entry !== "object") {
                     continue;
@@ -215,7 +313,16 @@ function applyAgentConfig(config, agentType) {
     console.log(msg.join(""));
 }
 
-/** 解析安装目标项目：--global 优先，其次 --target，其次 INIT_CWD（npm 依赖安装场景），最后回退到当前目录 */
+/** 解析后的路径是否相同：Windows（大小写不敏感文件系统）忽略大小写比较 */
+function sameResolvedPath(a, b) {
+    const pa = resolve(a);
+    const pb = resolve(b);
+    return process.platform === "win32"
+        ? pa.toLowerCase() === pb.toLowerCase()
+        : pa === pb;
+}
+
+/** 解析安装目标项目：--global 优先，其次 --target，其次 INIT_CWD（npm 依赖安装场景，排除插件自身目录），最后回退到当前目录 */
 function resolveTargetProject(args) {
     if (args.includes("--global")) {
         return GLOBAL_CONFIG_DIR;
@@ -229,7 +336,7 @@ function resolveTargetProject(args) {
 
     const initCwd = process.env.INIT_CWD;
     if (initCwd) {
-        if (resolve(initCwd) !== PLUGIN_ROOT) {
+        if (!sameResolvedPath(initCwd, PLUGIN_ROOT)) {
             return resolve(initCwd);
         }
     }
@@ -237,23 +344,11 @@ function resolveTargetProject(args) {
     return process.cwd();
 }
 
-/** 递归复制目录；clean=true 时先清空目标目录再复制（保证重复安装幂等、不残留旧文件） */
-function copyDirRecursive(src, dest, clean = false) {
+/** 递归复制目录（不含清理逻辑；清理由 syncAssetDir 负责） */
+function copyDirRecursive(src, dest) {
     if (!existsSync(src)) {
         console.warn(`  跳过：源目录不存在 ${src}`);
         return;
-    }
-
-    if (clean && existsSync(dest)) {
-        const entries = readdirSync(dest, { withFileTypes: true });
-        for (const entry of entries) {
-            const destPath = join(dest, entry.name);
-            if (entry.isDirectory()) {
-                rmSync(destPath, { recursive: true, force: true });
-            } else {
-                rmSync(destPath, { force: true });
-            }
-        }
     }
 
     mkdirSync(dest, { recursive: true });
@@ -271,7 +366,7 @@ function copyDirRecursive(src, dest, clean = false) {
     }
 }
 
-/** 确保 .opencode/package.json 声明 type: module（插件入口文件 impm.js 按 ESM 解析） */
+/** 确保 .opencode/package.json 声明 type: module（插件入口文件 impm.js 按 ESM 解析）；返回是否由本脚本写入 */
 function ensureOpenCodePackageJson(opencodeDir) {
     const pkgPath = join(opencodeDir, "package.json");
     let pkg = {};
@@ -286,12 +381,16 @@ function ensureOpenCodePackageJson(opencodeDir) {
         pkg.type = "module";
         writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n", "utf-8");
         console.log("更新 .opencode/package.json（type: module，保证插件入口按 ESM 解析）");
+        return true;
     }
+    return false;
 }
 
 /** 更新目标 opencode.json：补 $schema、注册插件、应用 agent 模型预设 */
-function updateOpenCodeConfig(projectRoot, agentType) {
+function updateOpenCodeConfig(projectRoot, agentType, manifest = null) {
     const configPath = join(projectRoot, "opencode.json");
+    // 目标目录可能尚未创建（--target 指向新目录），先确保存在以避免写入 ENOENT
+    mkdirSync(projectRoot, { recursive: true });
 
     let config = {};
     if (existsSync(configPath)) {
@@ -305,10 +404,12 @@ function updateOpenCodeConfig(projectRoot, agentType) {
     config["$schema"] =
         config["$schema"] || "https://opencode.ai/config.json";
 
-    const isSelfInstall = resolve(projectRoot) === PLUGIN_ROOT;
+    const isSelfInstall = sameResolvedPath(projectRoot, PLUGIN_ROOT);
     if (!isSelfInstall) {
-        // 去重并保留既有插件（包含历史注册名），仅追加缺失的默认插件
-        const plugins = Array.isArray(config.plugin) ? [...config.plugin] : [];
+        // 先移除 impm 的历史插件注册残留（不同版本注册名/对象 entry），再追加默认插件
+        const plugins = Array.isArray(config.plugin)
+            ? config.plugin.filter((p) => !isStaleImpmPlugin(p))
+            : [];
         for (const p of DEFAULT_PLUGINS) {
             if (!plugins.includes(p)) {
                 plugins.push(p);
@@ -320,7 +421,11 @@ function updateOpenCodeConfig(projectRoot, agentType) {
         console.log("  本地自安装：跳过 config.plugin 注册（本地插件由 .opencode/plugins/ 自动加载）");
     }
 
-    applyAgentConfig(config, agentType);
+    // 清理/写入 agent 模型配置时带上历史 agent 名（累积清单，文件名去 .md 转 agent 键），避免更名项残留
+    const extraAgents = manifest
+        ? manifest.everInstalled.agents.map((f) => f.replace(/\.md$/i, ""))
+        : [];
+    applyAgentConfig(config, agentType, extraAgents);
 
     writeFileSync(configPath, JSON.stringify(config, null, 2) + "\n", "utf-8");
 }
@@ -350,6 +455,9 @@ function main() {
     // 全局安装时资源直接放入全局配置目录（agents/commands/skills），非全局安装放入项目 .opencode/
     const opencodeDir = isGlobal ? targetRoot : join(targetRoot, ".opencode");
 
+    // 读取历史累积清单（无则视为首次安装）
+    let manifest = loadManifest(opencodeDir);
+
     for (const dir of ASSET_DIRS) {
         const srcDir = join(ASSETS_DIR, dir);
         const destDir = join(opencodeDir, dir);
@@ -360,8 +468,22 @@ function main() {
         }
 
         console.log(`复制 ${dir}/ -> ${destDir}/ ...`);
-        // clean=true：先清空目标目录再复制，避免重复安装残留旧文件（幂等安装）
-        copyDirRecursive(srcDir, destDir, true);
+        // 按累积清单（历史已装项）清理残留后复制；无清单（首次安装）时仅按 impm* 前缀/同名启发式清理
+        syncAssetDir(dir, srcDir, destDir, manifest ? manifest.everInstalled[dir] : null);
+    }
+
+    // 累积清单：无则按当前 assets 初始化（只记 impm 归属，不含用户文件），有则并入本次安装项（只增不减）
+    const everByDir = {};
+    for (const dir of ASSET_DIRS) {
+        const srcDir = join(ASSETS_DIR, dir);
+        everByDir[dir] = existsSync(srcDir) ? readdirSync(srcDir) : [];
+    }
+    if (!manifest) {
+        manifest = { everInstalled: everByDir, pluginNames: [], pkgJsonTypeModule: false };
+    } else {
+        for (const dir of ASSET_DIRS) {
+            mergeEver(manifest, dir, everByDir[dir]);
+        }
     }
 
     const pluginDest = join(opencodeDir, "plugins", "impm");
@@ -396,13 +518,25 @@ function main() {
         console.warn(`  跳过：dist 目录不存在（请先执行 npm run build）: ${DIST_DIR}`);
     }
 
-    // 确保 opencodeDir/package.json 声明 ESM（入口文件 impm.js 使用 export 语法）
-    ensureOpenCodePackageJson(opencodeDir);
+    // 确保 opencodeDir/package.json 声明 ESM（入口文件 impm.js 使用 export 语法）；
+    // 记录是否由本脚本写入 type:module，供卸载时精确回滚
+    const setTypeModule = ensureOpenCodePackageJson(opencodeDir);
+    if (setTypeModule) {
+        manifest.pkgJsonTypeModule = true;
+    }
 
     console.log("");
 
     console.log("更新 opencode.json 配置...");
-    updateOpenCodeConfig(targetRoot, agentType);
+    const isSelfInstall = sameResolvedPath(targetRoot, PLUGIN_ROOT);
+    if (!isSelfInstall && !manifest.pluginNames.includes(PACKAGE_NAME)) {
+        manifest.pluginNames.push(PACKAGE_NAME);
+    }
+    updateOpenCodeConfig(targetRoot, agentType, manifest);
+
+    // 保存累积清单（覆盖式全量写，供下次安装清理历史残留与卸载精确删除）
+    saveManifest(opencodeDir, manifest);
+    console.log(`安装清单已保存 -> ${manifestPath(opencodeDir)}`);
 
     console.log("");
     console.log("============================================");

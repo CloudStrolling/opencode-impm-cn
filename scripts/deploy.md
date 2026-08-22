@@ -94,7 +94,7 @@ npm install opencode-impm-cn
 
 ### 3.5 Agent 模型配置参考
 
-安装脚本通过 `--agent-type` 指定一套预设（默认 `custom`，全部预设定义在 `scripts/agent-models.json`，改模型只改该文件）：
+安装脚本通过 `--agent-type` 指定一套预设（全部预设定义在 `scripts/agent-models.json`，改模型只改该文件；默认不传 `--agent-type` 时只清理不写入，不会自动套用某预设）：
 
 | 预设 | 说明 |
 |:-----|:-----|
@@ -141,6 +141,14 @@ node scripts/install.mjs --target /path/to/project --agent-type opencode-go-opti
 
 不传 `--agent-type` 安装时，脚本对 impm 管理的 13 个 agent 只做模型配置清理（`model` 与 `reasoning_effort`），其余配置（自定义字段、用户自建 agent、opencode-browser 插件）一律保留，便于在改预设前先清除旧配置。
 
+### 3.6.1 历史版本残留清理（安装清单 impm-manifest.json）
+
+安装脚本维护累积安装清单 `.opencode/impm-manifest.json`（`everInstalled` 历史并集，**只增不减**），解决「历史版本已改名/移出但安装副本残留」的清理问题（尤其 agents 以角色名命名、不满足 impm 前缀规则）：
+
+- **安装时**：有清单则按 `everInstalled` 精确删除「历史已装、当前已不存在」的残留（含更名/移除的 agent、命令、技能及历史插件注册、历史 agent 模型配置键），再复制当前资源；无清单（首次安装）按启发式清理（commands/skills 按 `impm*` 前缀 + 同名，agents 按同名）。
+- **卸载时**（uninstall.mjs / uninstall.ps1）：按清单精确删除本次与历史上所有 impm 归属项，不依赖 `impm*` 前缀、也不依赖包内 assets 是否存在（先删包再卸载也能清干净）；同时回滚 `.opencode/package.json` 中由 install 写入的 `type:module`，最后删除清单文件本身。
+- 用户自建 / 其他插件的非 impm 内容（`myuser.md`、`zzz-*.md` 等）在安装与卸载中均被保留。
+
 ### 3.7 卸载
 
 卸载只删除本插件相关内容，**保留用户自定义内容**（自建 agent、命令、技能、`opencode-browser` 插件、其他字段）：
@@ -159,10 +167,11 @@ npm run uninstall:plugin
 卸载内容：
 
 1. 删除 `plugins/impm/` 与插件入口 `plugins/impm.js`
-2. 删除 impm 归属的 `agents/`（13 个）、`commands/`（`impm*` 前缀，49 个）、`skills/`（`impm*` 与 `template`，53 个）
-3. 从 `opencode.json` 的 `plugin` 列表移除 `opencode-impm-cn`（保留其他插件）
-4. 清理 impm 管理的 13 个 agent 的 `model`/`reasoning_effort` 字段（agent 条目与自定义字段保留，用户自定义 agent 完全不动）
-5. 清理后同步更新 `.opencode/package.json`
+2. 按安装清单精确删除 impm 归属的 `agents/`（13 个）、`commands/`（51 个）、`skills/`（51 个 + template）；无清单时回退启发式（`impm*` 前缀 / 当前 assets 集合）
+3. 从 `opencode.json` 移除 impm 历史插件注册（保留其他插件）
+4. 清理 impm 管理的 agent（当前 assets ∪ 清单历史）的 `model`/`reasoning_effort` 字段（用户自定义 agent 完全不动）
+5. 若清单记录 install 曾写入 `type:module`，回滚 `.opencode/package.json`
+6. 删除安装清单文件 `impm-manifest.json`
 
 ### 3.8 发布到 npm（可选）
 
@@ -178,7 +187,7 @@ npm pack
 npm publish --access public
 ```
 
-发布前确认 `package.json` 的 `files` 字段包含：`dist/`、`assets/`、`scripts/install.mjs`、`scripts/uninstall.mjs`、`scripts/agent-models.json`。
+发布前确认 `package.json` 的 `files` 字段包含：`dist/`、`assets/`、`scripts/install.mjs`、`scripts/uninstall.mjs`、`scripts/install.ps1`、`scripts/uninstall.ps1`、`scripts/agent-models.json`。
 
 ## 4. 部署验证
 
@@ -186,9 +195,10 @@ npm publish --access public
 
 ```bash
 # 1) 确认目录结构
-#    .opencode/commands/  → 49 个命令
+#    .opencode/commands/  → 51 个命令
 #    .opencode/agents/    → 13 个 agent
-#    .opencode/skills/    → 51 个技能 + template/ 16 个模板
+#    .opencode/skills/    → 51 个技能 + template/ 17 个模板
+#    .opencode/impm-manifest.json → 累积安装清单（历史残留清理依据）
 #    .opencode/plugins/impm/ → 插件编译产物
 
 # 2) 确认 opencode.json 配置正确（自安装时无需注册 plugin）
@@ -201,7 +211,7 @@ npm publish --access public
 ### 升级
 
 ```bash
-# 重新编译并重新安装，安装脚本会整体清理旧插件目录与入口后重装，并按 `--agent-type`（默认 custom）同步模型配置；custom 预设会保留用户已手工调整过的模型设置
+# 重新编译并重新安装，安装脚本会按累积清单清理历史残留、整体重建插件目录与入口，并按 `--agent-type` 同步模型配置（默认不传：只清理不写入；custom 预设会保留用户已手工调整过的模型设置）
 npm run build
 node scripts/install.mjs
 ```

@@ -588,7 +588,7 @@ export async function progressExecute(args: {
             });
         }
 
-        return { success: false, error: `未知 action：${action}（应为 init/add/check/list）` };
+        return { success: false, error: `未知 action：${action}（应为 init/add/finalize/check/list）` };
     } catch (err) {
         return {
             success: false,

@@ -26,17 +26,20 @@
  * 锁实现：
  *   - 锁文件：{file}.lock 目录，mkdir 原子性保证同一时刻仅一个持有者；
  *   - 等待：被占用时按间隔重试，直到超时（默认 60s）；
+ *   - 心跳：持锁期间周期性刷新锁目录 mtime，避免长临界区被误判为过期锁；
  *   - 过期锁：mtime 超过 STALE_LOCK_MS（默认 30s）视为进程异常退出残留，自动清理后重试；
  *   - 释放：fn 执行完毕（无论成败）后删除锁目录。
  */
 
-import { mkdirSync, rmSync, statSync } from "fs";
+import { mkdirSync, rmSync, statSync, utimesSync } from "fs";
 import { dirname } from "path";
 
 /** 锁等待总超时（毫秒） */
 const DEFAULT_TIMEOUT_MS = 60_000;
 /** 过期锁判定阈值（毫秒）：超过该时长视为进程异常退出残留 */
 const STALE_LOCK_MS = 30_000;
+/** 锁心跳间隔（毫秒）：持锁期间刷新锁目录 mtime，须小于 STALE_LOCK_MS */
+const HEARTBEAT_INTERVAL_MS = 10_000;
 /** 锁重试间隔（毫秒） */
 const RETRY_INTERVAL_MS = 120;
 
@@ -97,9 +100,24 @@ export async function withFileLock<T>(
             await sleep(RETRY_INTERVAL_MS);
         }
     }
+    // 持锁期间周期刷新锁目录 mtime（心跳）
+    // 防止临界区执行超过 STALE_LOCK_MS 时，被其他进程当过期锁清理，破坏互斥。
+    // 进程崩溃时心跳随之停止，锁 mtime 停止刷新，30s 后仍会被正确清理。
+    let heartbeat: ReturnType<typeof setInterval> | undefined;
     try {
+        heartbeat = setInterval(() => {
+            const now = new Date();
+            try {
+                utimesSync(lockDir, now, now);
+            } catch {
+                // 锁目录可能已被清理或不可写，忽略，交由过期清理逻辑处理
+            }
+        }, HEARTBEAT_INTERVAL_MS);
         return await fn();
     } finally {
+        if (heartbeat) {
+            clearInterval(heartbeat);
+        }
         try {
             rmSync(lockDir, { recursive: true, force: true });
         } catch {

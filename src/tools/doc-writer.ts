@@ -36,13 +36,14 @@ import {
     resolveAbbrev,
     resolveAbbrevSafe,
 } from "../utils/project.js";
+import { withFileLock } from "../utils/file-lock.js";
 
 export const docWriterDefinition = {
     description:
         "写入项目管理文档：按标准路径将内容写入 docs 下的文档（project、sad、urs、prd、dbd、api、lld、testcase、task、sql、review、context、cs、ws、ui-test-record、regression-unit、regression-api、apifox-openapi、apifox-postman 等），自动创建目录。docType 为 task 时校验 JSON 合法性。可选 expectedBase=写入前读取到的最新全文，用于并发冲突检测（文件已被其他任务修改时拒绝写入并返回冲突错误，避免覆盖他人内容）。",
 };
 
-export function docWriterExecute(args: {
+export async function docWriterExecute(args: {
     projectRoot: string;
     docType: string;
     content: string;
@@ -100,35 +101,39 @@ export function docWriterExecute(args: {
             target,
         });
 
-        // 并发写入冲突检测：expectedBase 存在且文件已存在时，若当前内容与写入方基于的旧快照不一致，
-        // 说明已被其他并行任务修改，拒绝写入并返回最新内容供重新合并（避免旧快照整体覆盖）
-        if (args.expectedBase !== undefined && existsSync(path)) {
-            const current = readFileSync(path, "utf8");
-            if (current !== args.expectedBase) {
-                return {
-                    success: false,
-                    conflict: true,
-                    error: `并发写入冲突：文档已被其他任务修改，基于旧快照的写入被拒绝。请重新读取该文档最新内容，合并本任务内容后再调用 impm_doc_writer 写回（expectedBase 传最新全文）。文档：${path}`,
-                    path,
-                    docType,
-                    abbrev,
-                    version,
-                    current,
-                };
+        // 并发写入冲突检测 + 写入整体包在文件锁内执行，保证「读-比较-写」原子性，
+        // 消除 TOCTOU 窗口：两个写入者在锁定后依序进入，后者才能看到前者的修改。
+        return await withFileLock(path, () => {
+            // expectedBase 存在且文件已存在时，若当前内容与写入方基于的旧快照不一致，
+            // 说明已被其他并行任务修改，拒绝写入并返回最新内容供重新合并（避免旧快照整体覆盖）
+            if (args.expectedBase !== undefined && existsSync(path)) {
+                const current = readFileSync(path, "utf8");
+                if (current !== args.expectedBase) {
+                    return {
+                        success: false,
+                        conflict: true,
+                        error: `并发写入冲突：文档已被其他任务修改，基于旧快照的写入被拒绝。请重新读取该文档最新内容，合并本任务内容后再调用 impm_doc_writer 写回（expectedBase 传最新全文）。文档：${path}`,
+                        path,
+                        docType,
+                        abbrev,
+                        version,
+                        current,
+                    };
+                }
             }
-        }
 
-        mkdirSync(dirname(path), { recursive: true });
-        writeFileSync(path, content, "utf8");
+            mkdirSync(dirname(path), { recursive: true });
+            writeFileSync(path, content, "utf8");
 
-        return {
-            success: true,
-            path,
-            docType,
-            abbrev,
-            version,
-            bytes: Buffer.byteLength(content, "utf8"),
-        };
+            return {
+                success: true,
+                path,
+                docType,
+                abbrev,
+                version,
+                bytes: Buffer.byteLength(content, "utf8"),
+            };
+        });
     } catch (err) {
         return {
             success: false,

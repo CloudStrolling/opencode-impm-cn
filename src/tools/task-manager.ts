@@ -139,6 +139,14 @@ export async function taskManagerExecute(args: {
         if (action === "init") {
             // 读-改-写加锁：防止并发初始化任务清单时互相覆盖
             return await withFileLock(file, async () => {
+                // 防误覆盖：任务清单已存在时不支持重跑 init 覆盖，避免丢失已更新的任务状态
+                if (existsSync(file)) {
+                    return {
+                        success: false,
+                        action,
+                        error: `任务清单已存在：${file}。如需重建请先在版本目录中确认并手动处理，避免覆盖已更新的任务状态。`,
+                    };
+                }
                 const raw = args.taskListJson ?? "";
                 let data: unknown;
                 try {
@@ -230,8 +238,9 @@ export async function taskManagerExecute(args: {
         }
 
         if (action === "next") {
+            // 排除「执行中」任务：避免并发调度时同一任务被重复派发给多个执行者
             const candidate = tasks.find(
-                (t) => t.status !== "已完成" && upstreamDone(t, tasks),
+                (t) => t.status !== "已完成" && t.status !== "执行中" && upstreamDone(t, tasks),
             );
             if (!candidate) {
                 return {

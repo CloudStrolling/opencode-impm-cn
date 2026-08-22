@@ -88,7 +88,8 @@ export function inferAbbrevFromDirs(projectRoot: string): string | null {
         return null;
     }
     for (const name of readdirSync(docs)) {
-        const m = /^([a-z0-9_-]+)-v\d+\.\d+\.\d+$/.exec(name);
+        // 缩写大小写不敏感，与 resolveAbbrev 允许的字符集对齐
+        const m = /^([a-z0-9_-]+)-v\d+\.\d+\.\d+$/i.exec(name);
         if (m) {
             return m[1];
         }

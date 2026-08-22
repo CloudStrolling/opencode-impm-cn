@@ -24,6 +24,11 @@ import { existsSync, readFileSync } from "fs";
 import { getDocPath } from "../utils/paths.js";
 import { latestVersion, resolveAbbrev } from "../utils/project.js";
 
+/** 转义正则特殊字符，用于字面量匹配 */
+function escapeRegExp(text: string): string {
+    return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 export const contextBuilderDefinition = {
     description:
         "构建任务编码上下文：按 taskId 汇总任务信息、对应用户故事（从 PRD 提取）、项目信息（project.md）与系统架构相关章节（sad.md），生成精简上下文 Markdown，供编码阶段使用。",
@@ -36,13 +41,17 @@ function extractUserStory(prdContent: string, userStoryId?: string): string {
     }
     const lines = prdContent.split(/\r?\n/);
     const idToken = userStoryId.trim().toLowerCase();
+    // 单词边界精确匹配：避免 US-1 误命中 US-10 / US-12 等章节
+    const idPattern = new RegExp(
+        `(^|[^a-z0-9])${escapeRegExp(idToken)}([^a-z0-9]|$)`,
+    );
     let start = -1;
     let startLevel = 0;
     for (let i = 0; i < lines.length; i++) {
         const m = /^(#{1,6})\s+(.*)$/.exec(lines[i].trim());
         if (m) {
             const heading = m[2].toLowerCase();
-            if (start < 0 && heading.includes(idToken)) {
+            if (start < 0 && idPattern.test(heading)) {
                 start = i;
                 startLevel = m[1].length;
                 break;

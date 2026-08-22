@@ -66,7 +66,7 @@ PM → BA / SA / TL / DBA / TE / SCM / DW / CS / WS / FEE / BEE / SSE
 
 **文件：** `assets/agents/sa.md`
 
-**执行技能：** `impm-init-project`、`impm-init-sad`、`impm-sad-update`、`impm-project-update`
+**执行技能：** `impm-init-project`、`impm-init-version`、`impm-init-api`、`impm-init-sad`、`impm-sad-update`、`impm-project-update`
 
 **职责：**
 - 生成/维护项目基本信息 docs/project.md（项目信息、编码规范、项目地图）
@@ -83,7 +83,7 @@ PM → BA / SA / TL / DBA / TE / SCM / DW / CS / WS / FEE / BEE / SSE
 
 **文件：** `assets/agents/tl.md`
 
-**执行技能：** `impm-init-api`、`impm-init-lld`、`impm-init-task`、`impm-api-create`、`impm-lld-create`、`impm-task-create`、`impm-task-coding-context`、`impm-task-coding-api`、`impm-coding-review`
+**执行技能：** `impm-init-lld`、`impm-init-task`、`impm-api-create`、`impm-lld-create`、`impm-task-create`、`impm-task-coding-context`、`impm-task-coding-api`、`impm-coding-review`
 
 **职责：**
 - 编写 API 接口设计文档与详细设计文档（LLD，聚焦整体业务逻辑设计，接口细节由 API 文档负责）
@@ -140,7 +140,7 @@ PM → BA / SA / TL / DBA / TE / SCM / DW / CS / WS / FEE / BEE / SSE
 
 **文件：** `assets/agents/scm.md`
 
-**执行技能：** `impm-init-git`、`impm-init-version`、`impm-init-commit`、`impm-version-create`、`impm-analysis-commit`、`impm-task-coding-gitcommit`、`impm-git-merge`
+**执行技能：** `impm-init-git`、`impm-init-commit`、`impm-version-create`、`impm-analysis-commit`、`impm-task-coding-gitcommit`、`impm-git-merge`
 
 **职责：**
 - 初始化 git 仓库，创建版本分支 `{缩写}-v{版本号}`

@@ -200,7 +200,7 @@ skills下有一个template目录，为模板目录，存放skills需要生成文
   4、版本进度文件：docs/{项目英文缩写}-v{当前版本号}/version_progress.md。增加第一行：步骤序号：前一序号+1，步骤名称：impm-urs-create，步骤状态：已完成。
 
 ### c) 生成PRD需求文档
-- Skill：impm-urs-create
+- Skill：impm-prd-create
 - agent：BA
 - 处理内容：
   1、从模板目录下读取PRD-TEMPLATE.MD模板文件
@@ -216,9 +216,9 @@ skills下有一个template目录，为模板目录，存放skills需要生成文
   2、查看 docs/{项目英文缩写}-sad.md是否是空文件：
   3、如果是空文件，则根据本次对话内容和本次对话涉及到的参考文件，套用SAD模版格式，完成系统架构设计的初稿。覆盖 docs/{项目英文缩写}-sad.md。
   4、如果不是空文件，则判断在当前版本的需求（URS和PRD）下，系统架构设计是否需要修改。
-  5、如果无需修改，版本进度文件：docs/{项目英文缩写}-v{当前版本号}/version_progress.md。增加第一行：步骤序号：前一序号+1，步骤名称：impm-sad-create，步骤状态：无需修改。然后退出当前步骤，继续后续步骤。
+  5、如果无需修改，版本进度文件：docs/{项目英文缩写}-v{当前版本号}/version_progress.md。增加第一行：步骤序号：前一序号+1，步骤名称：impm-sad-update，步骤状态：无需修改。然后退出当前步骤，继续后续步骤。
   6、如果需要修改，直接修改在docs/{项目英文缩写}-sad.md上。
-  7、版本进度文件：docs/{项目英文缩写}-v{当前版本号}/version_progress.md。增加第一行：步骤序号：前一序号+1，步骤名称：impm-sad-create，步骤状态：已完成。
+  7、版本进度文件：docs/{项目英文缩写}-v{当前版本号}/version_progress.md。增加第一行：步骤序号：前一序号+1，步骤名称：impm-sad-update，步骤状态：已完成。
 
 ### e) 生成DBD数据库设计
 - Skill：impm-dbd-create
@@ -282,9 +282,9 @@ skills下有一个template目录，为模板目录，存放skills需要生成文
 3. 启动CS subagent执行impm-task-coding-cs技能，查询现有代码
 4. 启动WS subagent执行impm-task-coding-ws技能，查询网络资料
 5. 启动DBA subagent执行impm-task-coding-dbd技能，编写数据库设计
-6. 判断是否为分前后端项目且为后端任务，如是则启动BE subagent执行impm-task-coding-api技能设计接口；否则跳过
+6. 判断是否为分前后端项目且为后端任务，如是则启动BEE subagent执行impm-task-coding-api技能设计接口；否则跳过
 7. 启动TE subagent执行impm-task-coding-testcase技能，编写测试用例
-8. 根据任务类型启动FE/BE/DE subagent执行impm-task-coding-code技能
+8. 根据任务类型启动FEE/BEE/SSE subagent执行impm-task-coding-code技能
 
 9. 启动TE subagent执行impm-task-coding-writetest技能，执行单元测试和接口测试自动化脚本的编写。
 10. 启动TE subagent执行impm-task-coding-runtest技能，执行测试。如测试失败，回退到第一步重新收集信息并编码；连续失败达上限则中止
@@ -462,7 +462,7 @@ c) 功能与UI测试；在docs/{项目英文缩写}-v{当前版本号}/ 目录�
 
 ### b）代码备注
 - Skill：impm-coding-comment
-- agent：TW
+- agent：DW
 - 处理内容：
 1. 本次版本更新的所有代码（通过当前分支的所有git修改记录综合判断），添加备注。
 2. 版本进度文件：docs/{项目英文缩写}-v{当前版本号}/version_progress.md。增加第一行：步骤序号：前一序号+1，步骤名称：impm-coding-comment，步骤状态：已完成。
@@ -491,7 +491,7 @@ c) 功能与UI测试；在docs/{项目英文缩写}-v{当前版本号}/ 目录�
    
 ### d）将当前版本的所有文档合并到项目主文档
 - Skill：impm-doc-merge
-- agent：TW
+- agent：DW
 - 处理内容：
 1.   docs/{项目英文缩写}-v{当前版本号}/ {项目英文缩写}-urs-v{当前版本号}.md合并到docs/{项目英文缩写}-urs.md，如果目标文件不存在，就先创建。
 2.   docs/{项目英文缩写}-v{当前版本号}/ {项目英文缩写}-prd-v{当前版本号}.md合并到docs/{项目英文缩写}-prd.md，如果目标文件不存在，就先创建。
@@ -503,14 +503,14 @@ c) 功能与UI测试；在docs/{项目英文缩写}-v{当前版本号}/ 目录�
 
 ### e）更新readme.md,agent.md
 - Skill：impm-doc-update
-- agent：TW
+- agent：DW
 - 处理内容：
 1.   在根目录下创建和更新：readme.md，agent.md。
 2.   版本进度文件：docs/{项目英文缩写}-v{当前版本号}/version_progress.md。增加第一行：步骤序号：前一序号+1，步骤名称：impm-doc-update，步骤状态：已完成。
   
 ### f）更新编译部署方案
 - Skill：impm-deploy-update
-- agent：TW
+- agent：DW
 - 处理内容：
   1. 创建或者更新：deploy/build.md
   2. 创建或者更新：deploy/deploy.md
@@ -519,7 +519,7 @@ c) 功能与UI测试；在docs/{项目英文缩写}-v{当前版本号}/ 目录�
 
 ### g）合并主分支并提交。
 - Skill：impm-git-merge
-- agent：VCA
+- agent：SCM
 - - 处理内容：
 切换到主分支
 1. git merge --squash {当前分支名称}

@@ -77,6 +77,11 @@ function escapeCell(text: string): string {
     return String(text).replace(/\|/g, "\\|").replace(/\r?\n/g, "<br>");
 }
 
+/** 将表格行去掉首尾 | 后的主体拆分为单元格；转义 pipe（\|）不被拆开 */
+function splitCells(body: string): string[] {
+    return body.split(/(?<!\\)\|/).map((c) => c.trim());
+}
+
 /** 计算默认 opencode 数据目录下的数据库路径 */
 export function defaultDbPath(): string {
     if (process.env.OPENCODE_DATA) {
@@ -212,28 +217,6 @@ function querySessionTree(db: SqliteHandle["db"], rootId: string): SessionRow[] 
     return result;
 }
 
-/**
- * 聚合某会话及其全部子孙会话的累计 token（SQLite session 表直读，
- * 即"整个 session 消耗"，用于导出文件开头的统计）
- */
-async function collectSessionTokens(dbPath: string, sessionId: string): Promise<TokenTotal> {
-    const opened = await openDb(dbPath);
-    try {
-        const sessions = querySessionTree(opened.db, sessionId);
-        const total: TokenTotal = { input: 0, output: 0, reasoning: 0, cacheRead: 0, cacheWrite: 0 };
-        for (const r of sessions) {
-            total.input += Number(r.tokens_input) || 0;
-            total.output += Number(r.tokens_output) || 0;
-            total.reasoning += Number(r.tokens_reasoning) || 0;
-            total.cacheRead += Number(r.tokens_cache_read) || 0;
-            total.cacheWrite += Number(r.tokens_cache_write) || 0;
-        }
-        return total;
-    } finally {
-        opened.close();
-    }
-}
-
 /** 解析 prompts.md 已有数据行（跳过表头），返回原始行与 7 列二维数组 */
 function parsePromptRows(text: string): Array<{ raw: string; cols: string[] }> {
     const rows: Array<{ raw: string; cols: string[] }> = [];
@@ -242,11 +225,11 @@ function parsePromptRows(text: string): Array<{ raw: string; cols: string[] }> {
         if (!trimmed.startsWith("|") || !trimmed.endsWith("|")) {
             continue;
         }
-        const parts = trimmed.slice(1, -1).split("|").map((c) => c.trim());
+        const parts = splitCells(trimmed.slice(1, -1));
         if (parts.length < 7 || parts[0] === "session_id") {
             continue;
         }
-        // 提示词内容（第 3 列）可能含转义 \| 被拆开，从右取 4 列 token，其余合并回左侧
+        // 提示词内容（第 3 列）可能含转义 \|（splitCells 已保留不被拆开），从右取 4 列 token，其余合并回左侧
         const left = parts.slice(0, parts.length - 4);
         rows.push({
             raw: trimmed,
@@ -490,7 +473,7 @@ async function finalizeTokens(
                 out.push(line);
                 continue;
             }
-            const parts = trimmed.slice(1, -1).split("|").map((c) => c.trim());
+            const parts = splitCells(trimmed.slice(1, -1));
             if (parts.length < 7 || parts[0] === "session_id") {
                 out.push(line);
                 continue;
@@ -520,9 +503,10 @@ async function finalizeTokens(
                 continue;
             }
             const w = windows[bestIdx];
-            const left = parts.slice(0, parts.length - 4).map((s) => s.trim()).join(" | ");
+            // 保留 id/time/prompt 三列原样（prompt 可能含转义 \|，splitCells 已保证不被拆开），
+            // 仅回填后 4 列 token，避免管道符导致列错位
             out.push(
-                `| ${left} | ${w.input} | ${w.output + w.reasoning} | ${w.cacheRead} | ${w.cacheWrite} |`,
+                `| ${parts[0]} | ${parts[1]} | ${parts[2]} | ${w.input} | ${w.output + w.reasoning} | ${w.cacheRead} | ${w.cacheWrite} |`,
             );
             updated += 1;
         }
@@ -820,7 +804,7 @@ export async function createPromptRecorder(projectRoot: string) {
                     const root = (args.projectRoot as string) || projectRoot;
                     const sessionId = String(args.sessionID || "");
                     if (!sessionId) {
-                        return "未指定 sessionID";
+                        return "未指定会话 ID（sessionID），该参数为必填。";
                     }
                     // 从 SQLite message/part 表提取该会话的用户提问并补录
                     let recorded = 0;

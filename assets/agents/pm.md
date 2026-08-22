@@ -71,15 +71,15 @@ permission:
 | 成员 | 角色 | 主要技能 |
 |-----|-----|-----|
 | BA | 业务分析师 | impm-init-urs / impm-init-prd / impm-urs-create / impm-prd-create |
-| SA | 系统架构师 | impm-init-project / impm-init-sad / impm-init-api / impm-sad-update / impm-project-update |
+| SA | 系统架构师 | impm-init-project / impm-init-version / impm-init-sad / impm-init-api / impm-sad-update / impm-project-update |
 | TL | 技术负责人 | impm-init-lld / impm-lld-create / impm-api-create / impm-task-create / impm-task-coding-context / impm-task-coding-api / impm-coding-review |
 | DBA | 数据库架构设计师 | impm-init-dbd / impm-dbd-create / impm-task-coding-dbd |
-| TE | 测试工程师 | impm-init-testcase / impm-task-coding-testcase / impm-task-coding-writetest / impm-task-coding-runtest / impm-regression-test |
+| TE | 测试工程师 | impm-init-testcase / impm-task-coding-testcase / impm-task-coding-writetest / impm-task-coding-runtest / impm-regression-test / impm-sprint-test |
 | SCM | 软件配置工程师 | impm-init-git / impm-init-commit / impm-version-create / impm-analysis-commit / impm-task-coding-gitcommit / impm-git-merge |
 | DW | 文档编写 | impm-coding-comment / impm-doc-merge / impm-doc-update / impm-deploy-update |
 | CS | 本地代码查询 | impm-task-coding-cs |
 | WS | 网络查询 | impm-task-coding-ws |
-| SSE/FEE/BEE | 高级/前端/后端工程师 | impm-task-coding-code |
+| SSE/FEE/BEE | 高级/前端/后端工程师 | impm-task-coding-code / impm-sprint-code / impm-hotfix-fix |
 
 ## 输入输出
 - 输入：用户的需求描述、版本号提示、/impm 系列命令。

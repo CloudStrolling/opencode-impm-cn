@@ -27,6 +27,11 @@
 #   - custom 预设为手工维护：安装时目标 opencode.json 已有该 agent 模型配置则保留，
 #     仅对缺失的 agent 按预设补齐（更新插件不影响 custom 手工设置）。
 #   - 不传 -AgentType：清理 opencode.json 中 impm 管理的 agent 模型配置，不写入任何设置。
+#
+# 历史残留清理：维护累积安装清单 .opencode/impm-manifest.json（everInstalled 只增不减），
+# 安装时按清单精确清理历史已改名/移除的残留（含 agents 等非 impm 前缀命名项）；
+# 首次安装（无清单）时按启发式清理（commands/skills 按 impm* 前缀、各目录按与源同名）。
+# 用户自建 / 其他插件的非 impm 内容始终保留。
 
 # 手动解析命令行参数，兼容 -Target/--target、-Global/--global、
 # -AgentType/--agent-type/--AgentType/--agent_type 等写法。
@@ -103,12 +108,83 @@ function ConvertTo-HashTable($obj) {
     return $h
 }
 
+# 安装清单文件路径：{opencodeDir}/impm-manifest.json
+function Get-ManifestPath($opencodeDir) {
+    return Join-Path $opencodeDir "impm-manifest.json"
+}
+
+# 读取安装清单；不存在或损坏返回 $null
+function Read-Manifest($opencodeDir) {
+    $file = Get-ManifestPath $opencodeDir
+    if (-not (Test-Path $file)) {
+        return $null
+    }
+    try {
+        $m = Get-Content -Path $file -Raw -Encoding UTF8 | ConvertFrom-Json
+        if ($null -eq $m -or $m -isnot [System.Management.Automation.PSCustomObject]) {
+            return $null
+        }
+        return $m
+    } catch {
+        return $null
+    }
+}
+
+# 保存安装清单
+function Write-Manifest($opencodeDir, $manifest) {
+    [System.IO.File]::WriteAllText((Get-ManifestPath $opencodeDir), ($manifest | ConvertTo-Json -Depth 10))
+}
+
+# 判断目录条目是否 impm 归属：同名 / 历史清单内 /（commands/skills 额外按 impm* 前缀兜底）
+function Test-ImpmOwned($dirType, $name, $srcSet, $everSet) {
+    if ($srcSet.Contains($name) -or $everSet.Contains($name)) {
+        return $true
+    }
+    if (($dirType -eq "commands" -or $dirType -eq "skills") -and $name.StartsWith("impm")) {
+        return $true
+    }
+    return $false
+}
+
+# 判断插件注册项是否为 impm 历史注册残留（兼容字符串名与对象 {name,entry}）
+function Test-StaleImpmPlugin($p) {
+    if ($p -is [string]) {
+        return ($p -eq "opencode-impm-cn") -or $p.ToLower().Contains("impm")
+    }
+    if ($null -ne $p -and $p -is [System.Management.Automation.PSCustomObject]) {
+        $n = [string]($p.name)
+        if (-not $n) { $n = [string]($p.entry) }
+        return $n.ToLower().Contains("impm")
+    }
+    return $false
+}
+
+# 求字符串数组去重并集
+function Merge-Unique {
+    param([string[]]$a, [string[]]$b)
+    $set = [System.Collections.Generic.HashSet[string]]::new()
+    foreach ($x in $a) { [void]$set.Add([string]$x) }
+    foreach ($x in $b) { [void]$set.Add([string]$x) }
+    return @($set)
+}
+
+# 列出目录条目名并归一化为纯 [string] 数组
+# （PS 5.1 的 ConvertTo-Json 对 Get-ChildItem -Name 返回的 PSObject 包装字符串会病态挂起，
+#   必须经 [string] 显式解包后再序列化）
+function Get-PlainNames($path) {
+    $out = [System.Collections.Generic.List[string]]::new()
+    foreach ($x in (Get-ChildItem -Path $path -Name -ErrorAction SilentlyContinue)) {
+        $out.Add([string]$x)
+    }
+    return $out
+}
+
 # 解析安装目标：-Global 优先，其次 -Target，其次 INIT_CWD（npm 依赖安装场景），最后回退到当前目录
 if ($Global) {
     $targetRoot = $globalConfigDir
 } elseif ($Target -ne "") {
     $targetRoot = $Target
-} elseif ($env:INIT_CWD -and ((Resolve-Path $env:INIT_CWD) -ne $pluginRoot)) {
+} elseif ($env:INIT_CWD -and ((Resolve-Path $env:INIT_CWD).Path -ne $pluginRoot.Path)) {
     $targetRoot = $env:INIT_CWD
 } else {
     $targetRoot = Get-Location
@@ -152,7 +228,12 @@ if ($Global) {
     $opencodeDir = Join-Path $targetRoot ".opencode"
 }
 
+# 读取历史累积清单（无则视为首次安装）
+$manifest = Read-Manifest $opencodeDir
+
 # 复制 agents/commands/skills 资源到目标目录（逐个目录处理，缺失则跳过）
+# 清理策略：按累积清单（历史已装项）+ impm* 前缀（仅 commands/skills）删除 impm 归属残留，
+# 保留用户自建 / 其他插件的非 impm 内容；首次安装（无清单）时按同名 + impm* 前缀启发式清理
 foreach ($dir in @("commands", "agents", "skills")) {
     $srcDir = Join-Path $assetsDir $dir
     $destDir = Join-Path $opencodeDir $dir
@@ -161,11 +242,54 @@ foreach ($dir in @("commands", "agents", "skills")) {
         continue
     }
     Write-Host "复制 $dir/ -> $destDir/ ..."
-    # 先删除已存在的目标目录，避免 Copy-Item 把源目录嵌套复制进已有目录（重复安装）
-    if (Test-Path $destDir) {
-        Remove-Item -Path $destDir -Recurse -Force
+    $srcNames = @(Get-PlainNames $srcDir)
+    $everNames = @()
+    if ($null -ne $manifest -and $manifest.everInstalled) {
+        $everNames = @($manifest.everInstalled."$dir")
     }
-    Copy-Item -Path $srcDir -Destination $destDir -Recurse -Force
+    $srcSet = [System.Collections.Generic.HashSet[string]]::new()
+    foreach ($n in $srcNames) { [void]$srcSet.Add([string]$n) }
+    $everSet = [System.Collections.Generic.HashSet[string]]::new()
+    foreach ($n in $everNames) { [void]$everSet.Add([string]$n) }
+    if (Test-Path $destDir) {
+        Get-ChildItem -Path $destDir -Force | ForEach-Object {
+            if (Test-ImpmOwned $dir $_.Name $srcSet $everSet) {
+                Remove-Item -Path $_.FullName -Recurse -Force
+            }
+        }
+    }
+    # 先确保目标目录存在，再按源目录「内容」逐个复制。
+    # 注意：不能 Copy-Item $srcDir -> $destDir，否则目标已存在时会嵌套生成 dest/agents/agents
+    New-Item -ItemType Directory -Path $destDir -Force | Out-Null
+    Get-ChildItem -Path $srcDir -Force | ForEach-Object {
+        Copy-Item -Path $_.FullName -Destination $destDir -Recurse -Force
+    }
+}
+
+# 累积清单：无则按当前 assets 初始化（只记 impm 归属），有则并入本次安装项（只增不减）
+$everInstalled = @{}
+foreach ($dir in @("commands", "agents", "skills")) {
+    $srcDir = Join-Path $assetsDir $dir
+    $everInstalled[$dir] = @(Get-PlainNames $srcDir)
+}
+if ($null -eq $manifest) {
+    $manifest = @{
+        everInstalled    = $everInstalled
+        pluginNames      = @()
+        pkgJsonTypeModule = $false
+    }
+} else {
+    $merged = @{}
+    foreach ($dir in @("commands", "agents", "skills")) {
+        $prev = @()
+        if ($manifest.everInstalled) { $prev = @($manifest.everInstalled."$dir") }
+        $merged[$dir] = @(Merge-Unique $prev $everInstalled[$dir])
+    }
+    $manifest = @{
+        everInstalled    = $merged
+        pluginNames      = @()
+        pkgJsonTypeModule = $manifest.pkgJsonTypeModule
+    }
 }
 
 $pluginDest = Join-Path $opencodeDir "plugins\impm"
@@ -194,16 +318,22 @@ if (Test-Path $distDir) {
 
 # 确保 opencodeDir/package.json 声明 ESM（入口文件 impm.js 使用 export 语法）
 $opencodePkgPath = Join-Path $opencodeDir "package.json"
+$pkgTypeModuleWritten = $false
 if (Test-Path $opencodePkgPath) {
     $pkgJson = Get-Content -Path $opencodePkgPath -Raw -Encoding UTF8 | ConvertFrom-Json
     if ($pkgJson.type -ne "module") {
         $pkgJson | Add-Member -NotePropertyName type -NotePropertyValue "module" -Force
         [System.IO.File]::WriteAllText($opencodePkgPath, ($pkgJson | ConvertTo-Json -Depth 10))
         Write-Host "更新 $opencodeDir/package.json（type: module）"
+        $pkgTypeModuleWritten = $true
     }
 } else {
     [System.IO.File]::WriteAllText($opencodePkgPath, '{"type": "module"}')
     Write-Host "生成 $opencodeDir/package.json（type: module）"
+    $pkgTypeModuleWritten = $true
+}
+if ($pkgTypeModuleWritten) {
+    $manifest.pkgJsonTypeModule = $true
 }
 
 # 更新 opencode.json 配置（npm 安装模式注册插件名；本地自安装模式由入口文件自动发现）
@@ -217,11 +347,11 @@ if (-not $config.'$schema') {
     $config | Add-Member -NotePropertyName '$schema' -NotePropertyValue "https://opencode.ai/config.json" -Force
 }
 $resolvedTarget = (Resolve-Path $targetRoot).Path
-$isSelfInstall = ($resolvedTarget -eq $pluginRoot.Path)
+$isSelfInstall = [System.String]::Equals($resolvedTarget, $pluginRoot.Path, [System.StringComparison]::OrdinalIgnoreCase)
 if (-not $isSelfInstall) {
     $plugins = @()
     if ($config.plugin) {
-        $plugins = @($config.plugin)
+        $plugins = @($config.plugin | Where-Object { -not (Test-StaleImpmPlugin $_) })
     }
     foreach ($p in $defaultPlugins) {
         if ($plugins -notcontains $p) {
@@ -229,6 +359,9 @@ if (-not $isSelfInstall) {
         }
     }
     $config | Add-Member -NotePropertyName plugin -NotePropertyValue $plugins -Force
+    if ($manifest.pluginNames -notcontains "opencode-impm-cn") {
+        $manifest.pluginNames = @($manifest.pluginNames + "opencode-impm-cn")
+    }
     Write-Host "配置文件已更新: $configPath（plugin: $($defaultPlugins -join ', ')）"
 } else {
     Write-Host "本地自安装：跳过 config.plugin 注册（插件入口文件由 plugins/ 自动发现）"
@@ -240,6 +373,15 @@ foreach ($agentFile in Get-ChildItem -Path (Join-Path $assetsDir "agents\*.md") 
     $managedAgents += $agentFile.BaseName
 }
 
+# 并入累积清单中的历史 agent 键（文件名去 .md），避免改名/移除项残留
+$historicalAgentKeys = @()
+if ($null -ne $manifest -and $manifest.everInstalled -and $manifest.everInstalled.agents) {
+    foreach ($f in @($manifest.everInstalled.agents)) {
+        $historicalAgentKeys += ([string]$f -replace '\.md$', '')
+    }
+}
+$cleanAgents = @(Merge-Unique $managedAgents $historicalAgentKeys)
+
 # 归一化既有 agent 配置为 Hashtable
 $agentConfig = @{}
 if ($null -ne $config.agent) {
@@ -249,7 +391,7 @@ if ($null -ne $config.agent) {
 if (-not $AgentType) {
     # 未指定 AgentType：仅清理 impm 管理的 agent 模型配置（model/reasoning_effort），不写入
     $cleaned = 0
-    foreach ($name in $managedAgents) {
+    foreach ($name in $cleanAgents) {
         if (-not $agentConfig.ContainsKey($name)) {
             continue
         }
@@ -317,6 +459,10 @@ if (-not $AgentType) {
 }
 
 [System.IO.File]::WriteAllText($configPath, ($config | ConvertTo-Json -Depth 10))
+
+# 保存累积清单（覆盖式全量写，供下次安装清理历史残留与卸载精确删除）
+Write-Manifest $opencodeDir $manifest
+Write-Host "安装清单已保存 -> $(Get-ManifestPath $opencodeDir)"
 
 Write-Host ""
 Write-Host "============================================"

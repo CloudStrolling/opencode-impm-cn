@@ -140,7 +140,7 @@ export default async function impmPlugin(context: ToolContext) {
                 args: {
                     projectRoot: createStringSchema("项目根目录的绝对路径"),
                     docType: createStringSchema(
-                        "文档类型：project | sad | urs | prd | dbd | api | lld | testcase | task | sql | review | context | cs | ws | ui-test-record | regression-unit | regression-api | readme | agent | deploy-build | deploy-deploy",
+                        "文档类型：project | sad | urs | prd | dbd | api | lld | testcase | task | sql | review | context | cs | ws | ui-test-record | regression-unit | regression-api | apifox-openapi | apifox-postman | readme | agent | deploy-build | deploy-deploy",
                     ),
                     projectName: createStringSchema(
                         "项目英文缩写（可选，不传时自动从 docs/project.md 或版本目录推断）",
@@ -173,7 +173,7 @@ export default async function impmPlugin(context: ToolContext) {
                 args: {
                     projectRoot: createStringSchema("项目根目录的绝对路径"),
                     docType: createStringSchema(
-                        "文档类型：project | sad | urs | prd | dbd | api | lld | testcase | task | sql | review | context | cs | ws | ui-test-record | regression-unit | regression-api | readme | agent | deploy-build | deploy-deploy",
+                        "文档类型：project | sad | urs | prd | dbd | api | lld | testcase | task | sql | review | context | cs | ws | ui-test-record | regression-unit | regression-api | apifox-openapi | apifox-postman | readme | agent | deploy-build | deploy-deploy",
                     ),
                     projectName: createStringSchema(
                         "项目英文缩写（可选，不传时自动从 docs/project.md 或版本目录推断）",

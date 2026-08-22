@@ -15,82 +15,71 @@
  */
 
 /**
- * git 命令封装：统一通过 execSync 执行，错误信息中文友好。
+ * git 命令封装：统一通过 execFileSync 执行（参数数组，避免 shell 命令注入），错误信息中文友好。
  */
 
-import { execSync } from "child_process";
+import { execFileSync } from "child_process";
 
 /** 执行 git 命令并返回去空白后的输出；失败时抛出含命令信息的中文错误 */
-function gitExec(cwd: string, command: string): string {
+function gitExec(cwd: string, args: string[]): string {
     try {
-        return execSync(`git ${command}`, {
+        return execFileSync("git", args, {
             cwd,
             encoding: "utf8",
             stdio: ["pipe", "pipe", "pipe"],
         }).trim();
     } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
-        throw new Error(`git 命令执行失败: ${command}\n${message}`);
-    }
-}
-
-/** 是否在 git 仓库内 */
-export function isGitRepo(cwd: string): boolean {
-    try {
-        gitExec(cwd, "rev-parse --is-inside-work-tree");
-        return true;
-    } catch {
-        return false;
+        throw new Error(`git 命令执行失败: git ${args.join(" ")}\n${message}`);
     }
 }
 
 /** git init */
 export function gitInit(cwd: string): string {
-    return gitExec(cwd, "init");
+    return gitExec(cwd, ["init"]);
 }
 
 /** 创建并切换到分支 */
 export function createBranch(cwd: string, branchName: string): string {
-    return gitExec(cwd, `checkout -b ${branchName}`);
+    return gitExec(cwd, ["checkout", "-b", branchName]);
 }
 
 /** 切换到已存在的分支 */
 export function switchBranch(cwd: string, branchName: string): string {
-    return gitExec(cwd, `checkout ${branchName}`);
+    return gitExec(cwd, ["checkout", branchName]);
 }
 
 /** 当前分支名 */
 export function getCurrentBranch(cwd: string): string {
-    return gitExec(cwd, "rev-parse --abbrev-ref HEAD");
+    return gitExec(cwd, ["rev-parse", "--abbrev-ref", "HEAD"]);
 }
 
 /** 拉取最新代码 */
 export function pull(cwd: string): string {
-    return gitExec(cwd, "pull");
+    return gitExec(cwd, ["pull"]);
 }
 
 /** 添加文件（默认全部） */
 export function addFiles(cwd: string, files: string[] = ["-A"]): void {
-    gitExec(cwd, `add ${files.join(" ")}`);
+    gitExec(cwd, ["add", ...files]);
 }
 
 /** 提交 */
 export function commit(cwd: string, message: string): string {
-    const safe = message.replace(/"/g, "'");
-    return gitExec(cwd, `commit -m "${safe}"`);
+    return gitExec(cwd, ["commit", "-m", message]);
 }
 
 /** 合并分支（squash） */
 export function mergeBranch(cwd: string, branchName: string): string {
-    return gitExec(cwd, `merge --squash ${branchName}`);
+    return gitExec(cwd, ["merge", "--squash", branchName]);
 }
 
 /** 工作区状态（短格式） */
 export function getStatus(cwd: string): string {
-    return gitExec(cwd, "status --short");
+    return gitExec(cwd, ["status", "--short"]);
 }
 
 /** 提交记录 */
 export function getLog(cwd: string, count = 30): string {
-    return gitExec(cwd, `log --oneline -${count}`);
+    return gitExec(cwd, ["log", "--oneline", `-${count}`]);
 }

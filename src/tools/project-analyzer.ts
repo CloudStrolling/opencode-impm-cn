@@ -65,7 +65,7 @@ function extractSymbols(content: string, ext: string): string[] {
         case ".jsx":
             add(/^\s*(?:export\s+)?(?:default\s+)?(?:async\s+)?function\s+([A-Za-z_$][\w$]*)/gm);
             add(/^\s*(?:export\s+)?(?:default\s+)?class\s+([A-Za-z_$][\w$]*)/gm);
-            add(/^\s*(?:export\s+)?const\s+([A-Za-z_$][\w$]*)\s*=\s*(?:async\s*)?\([^)]*\)\s*=>/gm);
+            add(/^\s*(?:export\s+)?const\s+([A-Za-z_$][\w$]*)\s*=\s*(?:async\s*)?(?:\([^)]*\)|[A-Za-z_$][\w$]*)\s*=>/gm);
             break;
         case ".py":
             add(/^\s*(?:async\s+)?def\s+([A-Za-z_]\w*)/gm);
@@ -104,11 +104,14 @@ function extractSymbols(content: string, ext: string): string[] {
     return [...new Set(symbols)];
 }
 
-/** 提取文件首个注释行作为描述 */
+/** 提取文件首个注释行作为描述（跳过 shebang 行，Shebang 不是注释） */
 function firstComment(content: string, ext: string): string {
     const line = content
         .split(/\r?\n/)
-        .find((l) => /^\s*(\/\/|\*|#|--|;)/.test(l.trim()));
+        .find((l) => {
+            const t = l.trim();
+            return !/^#!/.test(t) && /^\s*(\/\/|\*|#|--|;)/.test(t);
+        });
     if (!line) {
         return "";
     }
@@ -156,7 +159,9 @@ export function projectAnalyzerExecute(args: {
                 if (parts.some((p) => excluded.has(p))) {
                     continue;
                 }
-                const ext = parts[parts.length - 1].slice(parts[parts.length - 1].lastIndexOf(".")).toLowerCase();
+                const finalName = parts[parts.length - 1];
+                const dot = finalName.lastIndexOf(".");
+                const ext = dot > 0 ? finalName.slice(dot).toLowerCase() : "";
                 if (EXT_LANG[ext] || /\.(md|json|ya?ml|toml|ini|cfg|txt)$/i.test(f)) {
                     files.push({ path: f, lang: EXT_LANG[ext] ?? "config" });
                 }
