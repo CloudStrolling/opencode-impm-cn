@@ -48,7 +48,13 @@ impm-sprint 编排技能（环节4）全部编码任务完成后，需要对本�
 3. 功能与UI测试：在版本目录 docs/{项目英文缩写}-v{当前版本号}/ 下新增 {项目英文缩写}-ui-test-record-v{当前版本号}.md，调用 impm_doc_writer（docType=ui-test-record），列清楚功能与UI测试的步骤和记录。
 
 ### 步骤 3：运行测试
-全量运行单元测试与接口测试脚本；若有失败，定位失败原因并修复（测试代码问题直接修复，产品代码问题记录后返回给调度方安排修复后重测），重跑直至全部通过。
+全量运行单元测试与接口测试脚本；接口测试脚本运行前先**检测 Python 环境**（运行 .py 接口测试程序依赖 python 环境）：
+1. 直接检测 shell 能否访问 python：执行 `python --version`；若失败再试 `python3 --version`（Windows 还可试 `py -3 --version`），任一成功即以成功的那条命令作为 python 运行命令；
+2. 若无直接可用的 python，检测 conda 环境：执行 `conda env list` 列出环境，任选其一（如 base）执行 `conda run -n <环境名> python --version` 验证，成功则后续用 `conda run -n <环境名> python` 作为 python 运行命令；
+3. 若也无 conda，检测 uv 托管的 python 环境：执行 `uv python list` 或 `uv run python --version`，成功则后续用 `uv run python`（或 `uv run --python <版本> python`）作为 python 运行命令；
+4. 以上均不可用时，判定当前环境缺少 python，接口测试无法执行，如实向调度方报告并提示先安装 python（官方安装包 / conda / uv 安装均可）。
+
+确认可用 python 后，用其替换接口测试脚本命令中的 `python` 前缀再执行；若有失败，定位失败原因并修复（测试代码问题直接修复，产品代码问题记录后返回给调度方安排修复后重测），重跑直至全部通过。
 
 ### 步骤 4：记录测试结果
 将测试结果（通过数/总数、失败详情）写入 docs/{项目英文缩写}-v{当前版本号}/regression-api-test.md，调用 impm_doc_writer（docType=regression-api）写入。

@@ -53,14 +53,20 @@ description: 执行当前任务全部测试并更新测试结果，全部通过�
 2. **功能与UI测试**：本步骤不执行、不生成 UI 自动化测试，忽略即可（UI 测试以 docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-ui-test-record-v{当前版本号}.md 中的人工/功能测试记录为准）。
 
 3. **接口测试**：
-   1. 判断目标项目 scripts/API-TEST/ 目录下是否已存在接口测试执行程序 run_api_test.py；若不存在，则调用 impm_template_reader 读取 assets/skills/template/API-TEST-RUNNER.py 模板内容，在 scripts/API-TEST/ 目录下创建 run_api_test.py（即把模板复制到该路径）；
-   2. 找到本任务在 scripts/API-TEST/{项目英文缩写}-api-test-v{当前版本号}.postman_collection.json 中生成的接口测试用例（Postman Collection v2.1 格式）；
-   3. 调用该 python 程序执行接口测试，并指定上述 Postman Collection JSON 文件与可选的基础地址（如 `--base-url http://localhost:端口`）：
-      `python scripts/API-TEST/run_api_test.py scripts/API-TEST/{项目英文缩写}-api-test-v{当前版本号}.postman_collection.json --report-dir scripts/API-TEST/report`
-   4. 程序会读取集合、逐个发送请求、对比 expected 预期结果、生成测试报告（控制台 + scripts/API-TEST/report/api-test-report.md、api-test-report.json）；根据报告中的 PASS/FAIL 汇总判断接口测试是否通过。
+   1. **检测 Python 环境**（运行 .py 接口测试程序依赖 python 环境，执行前必须先确认是否存在可用的 python）：
+      按以下顺序检测并确定可用的 python 运行命令：
+      a. 直接检测 shell 能否访问 python：执行 `python --version`；若失败再试 `python3 --version`（Windows 还可试 `py -3 --version`），任一成功即以成功的那条命令作为 python 运行命令；
+      b. 若无直接可用的 python，检测 conda 环境：执行 `conda env list` 列出环境，任选其一（如 base）执行 `conda run -n <环境名> python --version` 验证，成功则后续用 `conda run -n <环境名> python` 作为 python 运行命令；
+      c. 若也无 conda，检测 uv 托管的 python 环境：执行 `uv python list` 或 `uv run python --version`，成功则后续用 `uv run python`（或 `uv run --python <版本> python`）作为 python 运行命令；
+      d. 以上均不可用时，判定当前环境缺少 python，接口测试无法执行，如实向调度方报告并提示先安装 python（官方安装包 / conda / uv 安装均可）。
+   2. 判断目标项目 scripts/API-TEST/ 目录下是否已存在接口测试执行程序 run_api_test.py；若不存在，则调用 impm_template_reader 读取 assets/skills/template/API-TEST-RUNNER.py 模板内容，在 scripts/API-TEST/ 目录下创建 run_api_test.py（即把模板复制到该路径）；
+   3. 找到本任务在 scripts/API-TEST/{项目英文缩写}-api-test-v{当前版本号}.postman_collection.json 中生成的接口测试用例（Postman Collection v2.1 格式）；
+   4. 用步骤 3.1 确定的 python 运行命令调用该程序执行接口测试，并指定上述 Postman Collection JSON 文件与可选的基础地址（如 `--base-url http://localhost:端口`）：
+      `<python运行命令> scripts/API-TEST/run_api_test.py scripts/API-TEST/{项目英文缩写}-api-test-v{当前版本号}.postman_collection.json --report-dir scripts/API-TEST/report`
+   5. 程序会读取集合、逐个发送请求、对比 expected 预期结果、生成测试报告（控制台 + scripts/API-TEST/report/api-test-report.md、api-test-report.json）；根据报告中的 PASS/FAIL 汇总判断接口测试是否通过。
 
 ### 步骤 4：更新测试结果
-每一个测试完成后，更新当前任务的测试用例的测试通过情况（更新任务目录 testcase.md，标注通过/失败及失败原因）；接口测试需结合步骤 3.3 生成的 api-test-report 报告，将每条用例的执行结果（HTTP 状态码、耗时、断言失败详情）回填到 testcase.md 对应用例的"测试结果"栏。
+每一个测试完成后，更新当前任务的测试用例的测试通过情况（更新任务目录 testcase.md，标注通过/失败及失败原因）；接口测试需结合步骤 3.5 生成的 api-test-report 报告，将每条用例的执行结果（HTTP 状态码、耗时、断言失败详情）回填到 testcase.md 对应用例的"测试结果"栏。
 
 ### 步骤 5：处理失败（单元测试与接口测试）
 全部测试完成后，如果单元测试或接口测试中有部分用例失败（UI 测试不计入失败判定）：

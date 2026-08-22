@@ -53,9 +53,15 @@ description: 执行版本回归测试，将测试用例合并到主测试用例�
 3. 核对文件存在且内容正确。
 
 ### 步骤 4：运行接口测试并写入结果
+0. **检测 Python 环境**（运行 .py 接口测试程序依赖 python 环境，执行前必须先确认是否存在可用的 python）：
+   按以下顺序检测并确定可用的 python 运行命令：
+   a. 直接检测 shell 能否访问 python：执行 `python --version`；若失败再试 `python3 --version`（Windows 还可试 `py -3 --version`），任一成功即以成功的那条命令作为 python 运行命令；
+   b. 若无直接可用的 python，检测 conda 环境：执行 `conda env list` 列出环境，任选其一（如 base）执行 `conda run -n <环境名> python --version` 验证，成功则后续用 `conda run -n <环境名> python` 作为 python 运行命令；
+   c. 若也无 conda，检测 uv 托管的 python 环境：执行 `uv python list` 或 `uv run python --version`，成功则后续用 `uv run python`（或 `uv run --python <版本> python`）作为 python 运行命令；
+   d. 以上均不可用时，判定当前环境缺少 python，接口测试无法执行，如实向调度方报告并提示先安装 python（官方安装包 / conda / uv 安装均可）。
 1. 确认 scripts/API-TEST/ 目录下存在接口测试执行程序 run_api_test.py；若不存在，则从 assets/skills/template/API-TEST-RUNNER.py 模板复制到该路径。
 2. 列出 scripts/API-TEST/ 目录下的全部 Postman Collection v2.1 接口测试用例文件（如 {项目英文缩写}-api-test-v{当前版本号}.postman_collection.json）。
-3. 依次调用 run_api_test.py 运行每个集合（可加 `--base-url http://localhost:端口` 指定被测服务地址），读取其生成的 scripts/API-TEST/report/api-test-report.json 汇总结果，记录每个集合的执行结果（通过/失败、断言明细、错误信息）。
+3. 用步骤 4.0 确定的 python 运行命令依次调用 run_api_test.py 运行每个集合（可加 `--base-url http://localhost:端口` 指定被测服务地址），读取其生成的 scripts/API-TEST/report/api-test-report.json 汇总结果，记录每个集合的执行结果（通过/失败、断言明细、错误信息）。
 4. 将结果整理为 Markdown 文档：集合名称、执行命令、用例数、通过数、失败数、失败明细、结论。
 5. 调用 impm_doc_writer（docType=regression-api）写入 docs/{项目英文缩写}-v{当前版本号}/regression-api-test.md。
 6. 核对文件存在且内容正确。

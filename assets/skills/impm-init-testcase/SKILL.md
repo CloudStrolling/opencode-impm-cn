@@ -61,7 +61,11 @@ description: 读取 TESTCASE-TEMPLATE.MD 模板，根据项目代码、文档及
    - item.request.method/url/header/body 按用例所属接口与测试步骤填写（url.raw 使用 `{{base_url}}` 占位符，query 以数组填写，body 为 JSON 时 mode=raw）；
    - item.event 中按用例预期结果生成 pm.test 断言脚本（状态码、业务码、字段值），便于在 Apifox 中调试；
    - item.expected 按用例预期结果填写结构化断言（status 状态码、max_response_time 耗时上限、headers 响应头包含、assertions 响应体断言：type=json 用 path+equals/contains，type=body_contains 用 value）；该 expected 字段由 API-TEST-RUNNER.py 读取执行，必须与实际接口预期一致。
-3. 接口测试通过 `python scripts/API-TEST/run_api_test.py scripts/API-TEST/{项目英文缩写}-api-test-v0.0.1.postman_collection.json --report-dir scripts/API-TEST/report` 执行，由程序读取集合、逐个发送请求、对比 expected 预期结果并生成测试报告（控制台 + scripts/API-TEST/report/api-test-report.md、api-test-report.json）。
+3. 接口测试通过 `python scripts/API-TEST/run_api_test.py scripts/API-TEST/{项目英文缩写}-api-test-v0.0.1.postman_collection.json --report-dir scripts/API-TEST/report` 执行，由程序读取集合、逐个发送请求、对比 expected 预期结果并生成测试报告（控制台 + scripts/API-TEST/report/api-test-report.md、api-test-report.json）。**运行前先检测 Python 环境**（运行 .py 接口测试程序依赖 python 环境）：
+   a. 直接检测 shell 能否访问 python：执行 `python --version`；若失败再试 `python3 --version`（Windows 还可试 `py -3 --version`），任一成功即以成功的那条命令作为 python 运行命令；
+   b. 若无直接可用的 python，检测 conda 环境：执行 `conda env list` 列出环境，任选其一（如 base）执行 `conda run -n <环境名> python --version` 验证，成功则后续用 `conda run -n <环境名> python` 作为 python 运行命令；
+   c. 若也无 conda，检测 uv 托管的 python 环境：执行 `uv python list` 或 `uv run python --version`，成功则后续用 `uv run python`（或 `uv run --python <版本> python`）作为 python 运行命令；
+   d. 以上均不可用时，判定当前环境缺少 python，接口测试无法执行，如实向调度方报告并提示先安装 python（官方安装包 / conda / uv 安装均可）。若检测到可用 python，则将上方执行命令中的 `python` 替换为检测确定的 python 运行命令后执行。
 
 ### 步骤 6：记录进度
 调用 impm_progress(projectRoot, {项目英文缩写}, {当前版本号}, add, impm-init-testcase, 已完成) 记录本步骤完成。
