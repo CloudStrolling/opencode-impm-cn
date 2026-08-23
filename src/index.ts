@@ -18,9 +18,10 @@
  * opencode-impm 插件入口
  *
  * 这是"我是项目经理"（AI项目经理）OpenCode插件的入口文件。
- * 插件注册了 14 个自定义工具：项目信息、初始化判定、文档读写、模板读取、
+ * 插件注册了 15 个自定义工具：项目信息、初始化判定、文档读写、模板读取、
  * 版本管理、进度管理、任务调度、上下文构建、项目分析、git 操作，
- * 以及 prompt-recorder 内置功能的 3 个工具（提问记录、token 回填、对话导出）。
+ * 以及 prompt-recorder 内置功能的 3 个工具（提问记录、token 回填、对话导出）
+ * 与 heartbeat 内置功能的 1 个工具（subagent 心跳检测与卡死重启）。
  *
  * 使用方式：
  * 1. npm 包模式：在 opencode.json 中配置 "plugin": ["opencode-impm"]
@@ -39,6 +40,7 @@ import { contextBuilderDefinition, contextBuilderExecute } from "./tools/context
 import { projectAnalyzerDefinition, projectAnalyzerExecute } from "./tools/project-analyzer.js";
 import { gitHelperDefinition, gitHelperExecute } from "./tools/git-helper.js";
 import { createPromptRecorder } from "./tools/prompt-recorder.js";
+import { createHeartbeatMonitor } from "./tools/heartbeat.js";
 
 /**
  * 创建 OpenCode 工具参数的 schema
@@ -94,6 +96,15 @@ function wrapToolResult(def: {
 interface ToolContext {
     project: { path: string };
     directory: string;
+    /**
+     * OpenCode SDK 客户端（新版插件上下文注入，旧版可能缺失）。
+     * 心跳检测用它中止卡死的 subagent 子会话（client.session.abort）。
+     */
+    client?: {
+        session?: {
+            abort?: (arg: unknown) => Promise<unknown>;
+        };
+    };
 }
 
 /**
@@ -106,6 +117,14 @@ export default async function impmPlugin(context: ToolContext) {
 
     // 内置功能：prompt-recorder（提问记录 + 对话导出，含钩子与 3 个手动工具）
     const promptRecorder = await createPromptRecorder(projectRoot);
+
+    // 内置功能：heartbeat（subagent 心跳检测与自动重启，含钩子与 1 个手动工具）
+    const heartbeat = await createHeartbeatMonitor(projectRoot, context.client);
+
+    /** 合并多个 event 钩子处理器：任一失败不影响其他（各钩子内部已自行捕获） */
+    const combinedEvent = async (input: { event: unknown }): Promise<void> => {
+        await Promise.all([promptRecorder.event(input), heartbeat.event(input)]);
+    };
 
     const tools = {
             /** 项目信息读取工具 — 从 docs/project.md 解析项目基本信息 */
@@ -396,13 +415,15 @@ export default async function impmPlugin(context: ToolContext) {
             impm_prompt_finalize: promptRecorder.tool.impm_prompt_finalize,
             /** 提问记录工具（prompt-recorder 内置功能）— 导出对话快照 */
             impm_prompt_export: promptRecorder.tool.impm_prompt_export,
+            /** 心跳检测工具（heartbeat 内置功能）— 查看状态/立即扫描/查看告警 */
+            impm_heartbeat: heartbeat.tool.impm_heartbeat,
         };
 
     return {
         /** chat.message 钩子：用户提问时自动记录到 prompts.md */
         "chat.message": promptRecorder.chatMessage,
-        /** 事件钩子：主会话回合结束时自动回填 token、导出对话 */
-        event: promptRecorder.event,
+        /** 事件钩子：主会话回合结束时回填 token、导出对话；subagent 心跳检测与卡死自动重启 */
+        event: combinedEvent,
         tool: Object.fromEntries(
             Object.entries(tools).map(([id, def]) => [id, wrapToolResult(def)]),
         ),

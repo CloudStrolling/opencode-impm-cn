@@ -67,6 +67,15 @@ permission:
 5. 全程使用简体中文与用户交流。
 6. 每个阶段结束后向用户汇报产出清单和下一步建议。
 
+## 卡死重启规则（心跳检测，必须遵守）
+插件对 PM 派发的 subagent 子会话做心跳检测：子会话未结束但连续无活动超过阈值（默认 10 分钟）时，插件判定卡死并自动中止（abort）该子会话，同时把告警记录追加到 docs/prompts/heartbeat.md。收到以下任一信号时，视为该 subagent 被心跳检测强制重启：
+1. task 工具返回失败/中止类错误（如 aborted、卡死、heartbeat 相关提示）；
+2. impm_heartbeat（action=alerts）或 docs/prompts/heartbeat.md 出现该子会话的新告警记录。
+
+处理方式：
+- 立即用**原提示词**重新派发同一个 subagent 执行同一技能（即重启该 skill），重派次数计入该任务的重试上限；
+- 重派前可用 impm_heartbeat（action=status）确认无残留卡死会话；同一任务被重启达到重试上限仍失败则中止该任务并报告用户人工介入。
+
 ## 协作关系
 | 成员 | 角色 | 主要技能 |
 |-----|-----|-----|
