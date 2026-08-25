@@ -158,7 +158,7 @@ node scripts/install.mjs --global
 
 ### 模型配置
 
-安装脚本默认**不修改** `opencode.json` 中 impm 各 Agent 的模型配置（仅清理上一次由 impm 写入的模型 / 思考深度，保留你的手工设置）。如需为各 Agent 应用预设的模型与思考深度，安装时用 `--agent-type` 指定预设（可选值详见 `scripts/agent-models.json`）：
+安装脚本默认**完全不调整** `opencode.json` 中 impm 各 Agent 的模型配置（保留你的手工设置）。如需为各 Agent 应用预设的模型与思考深度，安装时用 `--agent-type` 指定预设（可选值详见 `scripts/agent-models.json`）；传 `clear` 可清理上一次由 impm 写入的模型 / 思考深度：
 
 ```bash
 node scripts/install.mjs --target /path/to/project --agent-type opencode-go-balance

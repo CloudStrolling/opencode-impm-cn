@@ -1,20 +1,20 @@
 {
   "opencode-zen-free": {
-    "description": "opencode-zen 免费档：全部使用 opencode-zen provider 的免费模型（deepseek-v4-flash-free 等），适合零成本体验，配额受限时注意速率限制。",
+    "description": "opencode-zen 免费档：全部使用 opencode-zen provider 的免费模型（big-pickle 等），适合零成本体验，配额受限时注意速率限制。",
     "agents": {
-      "pm": { "model": "opencode-zen/deepseek-v4-flash-free", "reasoning_effort": "low" },
-      "scm": { "model": "opencode-zen/deepseek-v4-flash-free", "reasoning_effort": "low" },
-      "ba": { "model": "opencode-zen/deepseek-v4-flash-free", "reasoning_effort": "high" },
-      "sa": { "model": "opencode-zen/deepseek-v4-flash-free", "reasoning_effort": "max" },
-      "tl": { "model": "opencode-zen/deepseek-v4-flash-free", "reasoning_effort": "high" },
-      "dba": { "model": "opencode-zen/deepseek-v4-flash-free", "reasoning_effort": "max" },
-      "te": { "model": "opencode-zen/deepseek-v4-flash-free", "reasoning_effort": "high" },
-      "cs": { "model": "opencode-zen/deepseek-v4-flash-free", "reasoning_effort": "low" },
-      "ws": { "model": "opencode-zen/deepseek-v4-flash-free", "reasoning_effort": "low" },
-      "sse": { "model": "opencode-zen/deepseek-v4-flash-free", "reasoning_effort": "high" },
-      "fee": { "model": "opencode-zen/deepseek-v4-flash-free", "reasoning_effort": "high" },
-      "bee": { "model": "opencode-zen/deepseek-v4-flash-free", "reasoning_effort": "max" },
-      "dw": { "model": "opencode-zen/deepseek-v4-flash-free", "reasoning_effort": "high" }
+      "pm": { "model": "opencode-zen/big-pickle", "reasoning_effort": "low" },
+      "scm": { "model": "opencode-zen/big-pickle", "reasoning_effort": "low" },
+      "ba": { "model": "opencode-zen/big-pickle", "reasoning_effort": "high" },
+      "sa": { "model": "opencode-zen/big-pickle", "reasoning_effort": "max" },
+      "tl": { "model": "opencode-zen/big-pickle", "reasoning_effort": "high" },
+      "dba": { "model": "opencode-zen/big-pickle", "reasoning_effort": "max" },
+      "te": { "model": "opencode-zen/big-pickle", "reasoning_effort": "high" },
+      "cs": { "model": "opencode-zen/big-pickle", "reasoning_effort": "low" },
+      "ws": { "model": "opencode-zen/big-pickle", "reasoning_effort": "low" },
+      "sse": { "model": "opencode-zen/big-pickle", "reasoning_effort": "high" },
+      "fee": { "model": "opencode-zen/big-pickle", "reasoning_effort": "high" },
+      "bee": { "model": "opencode-zen/big-pickle", "reasoning_effort": "max" },
+      "dw": { "model": "opencode-zen/big-pickle", "reasoning_effort": "high" }
     }
   },
   "opencode-go-lite": {

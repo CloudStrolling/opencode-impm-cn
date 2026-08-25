@@ -94,11 +94,11 @@ npm install opencode-impm-cn
 
 ### 3.5 Agent 模型配置参考
 
-安装脚本通过 `--agent-type` 指定一套预设（全部预设定义在 `scripts/agent-models.json`，改模型只改该文件；默认不传 `--agent-type` 时只清理不写入，不会自动套用某预设）：
+安装脚本通过 `--agent-type` 指定一套预设（全部预设定义在 `scripts/agent-models.json`，改模型只改该文件；默认不传 `--agent-type` 时不调整 opencode.json 中 agent 的设置，不会自动套用某预设）：
 
 | 预设 | 说明 |
 |:-----|:-----|
-| `opencode-zen-free` | 全部 agent 使用 opencode-zen/deepseek-v4-flash-free，极限省 token |
+| `opencode-zen-free` | 全部 agent 使用 opencode-zen/big-pickle，极限省 token |
 | `opencode-go-lite` | 全部 agent 使用 opencode-go 低价模型，轻量低成本 |
 | `opencode-go-balance` | 综合成本与职责权衡分配（原固定配置，推荐） |
 | `opencode-go-optimize` | 重点 agent 分配更强模型，追求质量 |
@@ -115,7 +115,8 @@ node scripts/install.mjs --target /path/to/project --agent-type opencode-go-opti
 .\scripts\install.ps1 -Target D:\path\to\project --agent-type opencode-go-lite
 ```
 
-- 不传 `--agent-type`：只清理 impm 管理 agent 的 `model`/`reasoning_effort`（幂等，供升级时重装），不写入任何模型配置，**不动用户自定义 agent 与其他字段**。
+- 不传 `--agent-type`：完全不调整 `opencode.json` 中 agent 的设置（保留既有模型配置与手工设置）。
+- `--agent-type clear`：清理 impm 管理 agent 的 `model`/`reasoning_effort`（幂等，供升级时重装），不写入任何模型配置，**不动用户自定义 agent 与其他字段**。
 - 传未知值：报错退出（exit 1），不执行任何安装动作。
 - 13 个 impm 管理 agent（pm/scm/ba/sa/tl/dba/te/cs/ws/sse/fee/bee/dw）的默认角色分配参考 balance 档：
 
@@ -137,9 +138,9 @@ node scripts/install.mjs --target /path/to/project --agent-type opencode-go-opti
 
 > 上表为 `balance` 档具体值，其余预设及 custom 补齐值以 `scripts/agent-models.json` 为准。
 
-### 3.6 Agent 模型配置清理（不传 agent-type）
+### 3.6 Agent 模型配置清理（--agent-type clear）
 
-不传 `--agent-type` 安装时，脚本对 impm 管理的 13 个 agent 只做模型配置清理（`model` 与 `reasoning_effort`），其余配置（自定义字段、用户自建 agent、opencode-browser 插件）一律保留，便于在改预设前先清除旧配置。
+传 `--agent-type clear` 安装时，脚本对 impm 管理的 13 个 agent 只做模型配置清理（`model` 与 `reasoning_effort`），其余配置（自定义字段、用户自建 agent、opencode-browser 插件）一律保留，便于在改预设前先清除旧配置。不传 `--agent-type` 时完全不调整 agent 配置。
 
 ### 3.6.1 历史版本残留清理（安装清单 impm-manifest.json）
 
@@ -211,7 +212,7 @@ npm publish --access public
 ### 升级
 
 ```bash
-# 重新编译并重新安装，安装脚本会按累积清单清理历史残留、整体重建插件目录与入口，并按 `--agent-type` 同步模型配置（默认不传：只清理不写入；custom 预设会保留用户已手工调整过的模型设置）
+# 重新编译并重新安装，安装脚本会按累积清单清理历史残留、整体重建插件目录与入口，并按 `--agent-type` 同步模型配置（默认不传：不调整 agent 配置；clear 清理既有模型配置；custom 预设会保留用户已手工调整过的模型设置）
 npm run build
 node scripts/install.mjs
 ```

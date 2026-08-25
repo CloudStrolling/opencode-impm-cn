@@ -34,12 +34,13 @@
  *
  * 模型配置预设（--agent-type）：
  *   - 可选值：opencode-zen-free / opencode-go-lite / opencode-go-balance /
- *             opencode-go-optimize / custom
+ *             opencode-go-optimize / custom / clear
  *   - 每个预设对应一套 agent 的 model + reasoning_effort 设置，定义在 scripts/agent-models.json。
  *   - 传入数据不存在时报错退出。
  *   - custom 预设为手工维护：安装时若目标 opencode.json 已有该 agent 的模型配置则保留，
  *     仅对缺失的 agent 按预设补齐（更新插件不影响 custom 手工设置）。
- *   - 不传 --agent-type：清理 opencode.json 中 impm 管理的 agent 模型配置，不写入任何设置。
+ *   - clear 为特殊值：清理 opencode.json 中 impm 管理的 agent 模型配置，不写入任何设置。
+ *   - 不传 --agent-type：完全不调整 opencode.json 中 agent 的设置。
  *
  * 幂等安装：
  *   - 维护累积安装清单 .opencode/impm-manifest.json（everInstalled 只增不减），
@@ -84,6 +85,7 @@ const AGENT_TYPES = [
     "opencode-go-balance",
     "opencode-go-optimize",
     "custom",
+    "clear",
 ];
 
 /** 去除 UTF-8 BOM（Windows 编辑器常写入 BOM，直接 JSON.parse 会失败） */
@@ -233,22 +235,26 @@ function resolveAgentType(args) {
 
 /**
  * 应用 agent 模型配置到目标 opencode.json：
- *   - 未指定 agent-type：清理 impm 管理的 agent 的模型配置（model/reasoning_effort），
+ *   - 未指定 agent-type：完全不调整 opencode.json 中 agent 的设置。
+ *   - agent-type 为 clear：清理 impm 管理的 agent 的模型配置（model/reasoning_effort），
  *     其余字段与用户自定义 agent 保留；清理后 key 为空则整体删除该 agent。
- *   - 指定 agent-type：按预设为各 agent 写入 model + reasoning_effort；
+ *   - 其他预设值：按预设为各 agent 写入 model + reasoning_effort；
  *     custom 预设跳过已存在的模型配置（保留手工设置）。
  * @param extraManagedAgents 历史版本安装过、现已不在 assets 的 agent 名（来自累积清单），
  *                          清理时一并处理，避免改名的模型配置残留
  */
 function applyAgentConfig(config, agentType, extraManagedAgents = []) {
-    const currentAgents = collectAgents();
-    if (currentAgents.length === 0) {
+    // 未指定 agent-type：不调整 opencode.json 中 agent 的设置
+    if (!agentType) {
+        console.log("  未指定 agent-type：不调整 opencode.json 中 agent 的设置");
         return;
     }
+
+    const currentAgents = collectAgents();
     const cleanAgents = [...new Set([...currentAgents, ...extraManagedAgents])].filter(Boolean);
 
-    // 未指定 agent-type：仅清理 immp 管理的 agent 模型配置，不写入任何设置
-    if (!agentType) {
+    // clear：仅清理 impm 管理的 agent 模型配置，不写入任何设置
+    if (agentType === "clear") {
         let cleaned = 0;
         if (config.agent && typeof config.agent === "object") {
             for (const name of cleanAgents) {
@@ -276,11 +282,15 @@ function applyAgentConfig(config, agentType, extraManagedAgents = []) {
                 delete config.agent;
             }
         }
-        console.log(`  未指定 agent-type：已清理 ${cleaned} 个 impm 管理的 agent 模型配置（保留其他自定义 agent）`);
+        console.log(`  agent-type=clear：已清理 ${cleaned} 个 impm 管理的 agent 模型配置（保留其他自定义 agent）`);
         return;
     }
 
-    // 指定 agent-type：加载预设并校验
+    if (currentAgents.length === 0) {
+        return;
+    }
+
+    // 指定预设：加载并校验
     const presets = loadAgentPresets();
     const preset = presets[agentType];
     if (!preset || !preset.agents) {
@@ -443,7 +453,7 @@ function main() {
     console.log("");
     console.log(`插件目录: ${PLUGIN_ROOT}`);
     console.log(`目标项目: ${targetRoot}${isGlobal ? "（全局安装）" : ""}`);
-    console.log(`agent-type: ${agentType || "（未指定，将清理 impm 管理的 agent 模型配置）"}`);
+    console.log(`agent-type: ${agentType || "（未指定，不调整 opencode.json 中 agent 的设置）"}`);
     console.log("");
 
     if (!existsSync(ASSETS_DIR)) {

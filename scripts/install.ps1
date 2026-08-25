@@ -22,11 +22,12 @@
 #
 # 模型配置预设（-AgentType）：
 #   - 可选值：opencode-zen-free / opencode-go-lite / opencode-go-balance /
-#             opencode-go-optimize / custom
+#             opencode-go-optimize / custom / clear
 #   - 每个预设对应一套 agent 的 model + reasoning_effort 设置，定义在 scripts/agent-models.json。
 #   - custom 预设为手工维护：安装时目标 opencode.json 已有该 agent 模型配置则保留，
 #     仅对缺失的 agent 按预设补齐（更新插件不影响 custom 手工设置）。
-#   - 不传 -AgentType：清理 opencode.json 中 impm 管理的 agent 模型配置，不写入任何设置。
+#   - clear 为特殊值：清理 opencode.json 中 impm 管理的 agent 模型配置，不写入任何设置。
+#   - 不传 -AgentType：完全不调整 opencode.json 中 agent 的设置。
 #
 # 历史残留清理：维护累积安装清单 .opencode/impm-manifest.json（everInstalled 只增不减），
 # 安装时按清单精确清理历史已改名/移除的残留（含 agents 等非 impm 前缀命名项）；
@@ -88,7 +89,7 @@ $globalConfigDir = Join-Path $HOME ".config\opencode"
 $defaultPlugins = @("opencode-impm-cn", "opencode-browser")
 
 # --agent-type 可选值
-$agentTypes = @("opencode-zen-free", "opencode-go-lite", "opencode-go-balance", "opencode-go-optimize", "custom")
+$agentTypes = @("opencode-zen-free", "opencode-go-lite", "opencode-go-balance", "opencode-go-optimize", "custom", "clear")
 
 # 将 PSCustomObject/IDictionary 统一转换为 Hashtable，便于按字符串键读写
 function ConvertTo-HashTable($obj) {
@@ -202,7 +203,7 @@ if ($Global) {
 if ($AgentType) {
     Write-Host "agent-type: $AgentType"
 } else {
-    Write-Host "agent-type: （未指定，将清理 impm 管理的 agent 模型配置）"
+    Write-Host "agent-type: （未指定，不调整 opencode.json 中 agent 的设置）"
 }
 Write-Host ""
 
@@ -389,7 +390,10 @@ if ($null -ne $config.agent) {
 }
 
 if (-not $AgentType) {
-    # 未指定 AgentType：仅清理 impm 管理的 agent 模型配置（model/reasoning_effort），不写入
+    # 未指定 AgentType：完全不调整 opencode.json 中 agent 的设置
+    Write-Host "未指定 AgentType：不调整 opencode.json 中 agent 的设置"
+} elseif ($AgentType -eq "clear") {
+    # clear：仅清理 impm 管理的 agent 模型配置（model/reasoning_effort），不写入
     $cleaned = 0
     foreach ($name in $cleanAgents) {
         if (-not $agentConfig.ContainsKey($name)) {
@@ -419,7 +423,7 @@ if (-not $AgentType) {
     } else {
         $config | Add-Member -NotePropertyName agent -NotePropertyValue $agentConfig -Force
     }
-    Write-Host "未指定 AgentType：已清理 $cleaned 个 impm 管理的 agent 模型配置（保留其他自定义 agent）"
+    Write-Host "clear：已清理 $cleaned 个 impm 管理的 agent 模型配置（保留其他自定义 agent）"
 } else {
     # 读取预设并写入各 agent 模型配置
     $presets = Get-Content -Path $presetFile -Raw -Encoding UTF8 | ConvertFrom-Json

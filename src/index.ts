@@ -98,11 +98,13 @@ interface ToolContext {
     directory: string;
     /**
      * OpenCode SDK 客户端（新版插件上下文注入，旧版可能缺失）。
-     * 心跳检测用它中止卡死的 subagent 子会话（client.session.abort）。
+     * 心跳检测用它中止卡死会话（client.session.abort）并向主会话注入续跑指令
+     * （client.session.chat）。
      */
     client?: {
         session?: {
             abort?: (arg: unknown) => Promise<unknown>;
+            chat?: (arg: unknown, body?: unknown) => Promise<unknown>;
         };
     };
 }
