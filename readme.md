@@ -5,7 +5,7 @@
 **我是项目经理 —— AI 驱动的工程化全流程开发套件**
 
 <p>
-  <a href="#"><img src="https://img.shields.io/badge/version-0.7.3-2ea44f?style=flat-square" alt="version"></a>
+  <a href="#"><img src="https://img.shields.io/badge/version-0.8.0-2ea44f?style=flat-square" alt="version"></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square" alt="license"></a>
   <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/node->=%2022.5-339933?style=flat-square&logo=node.js&logoColor=white" alt="node"></a>
   <a href="https://opencode.ai/"><img src="https://img.shields.io/badge/OpenCode-必需-ff6b6b?style=flat-square" alt="opencode"></a>
