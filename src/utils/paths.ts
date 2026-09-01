@@ -40,6 +40,7 @@ export type DocType =
     | "ui-test-record"
     | "regression-unit"
     | "regression-api"
+    | "regression"
     | "rtm"
     | "apifox-openapi"
     | "apifox-postman"
@@ -200,6 +201,8 @@ export function getDocPath(
             return join(versionDir(projectRoot, abbrev, version), "regression-unit-test.md");
         case "regression-api":
             return join(versionDir(projectRoot, abbrev, version), "regression-api-test.md");
+        case "regression":
+            return join(versionDir(projectRoot, abbrev, version), "regression.md");
         case "rtm":
             return target === "main"
                 ? join(docsRoot(projectRoot), `${abbrev}-rtm.md`)

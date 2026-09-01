@@ -20,7 +20,7 @@
  *
  * docType 取值：
  *   project | sad | urs | prd | dbd | api | lld | testcase | task | sql | review
- *   context | cs | ws | ui-test-record | regression-unit | regression-api | rtm
+ *   context | cs | ws | ui-test-record | regression-unit | regression-api | regression | rtm
  *   apifox-openapi | apifox-postman
  *   readme | agent | deploy-build | deploy-deploy
  *
@@ -40,7 +40,7 @@ import {
 
 export const docReaderDefinition = {
     description:
-        "读取项目管理文档：按标准路径读取 docs 下的文档（project、sad、urs、prd、dbd、api、lld、testcase、task、sql、review、context、cs、ws、ui-test-record、regression-unit、regression-api、rtm、apifox-openapi、apifox-postman 等）。读取任务清单（task）时返回任务摘要与完整内容。",
+        "读取项目管理文档：按标准路径读取 docs 下的文档（project、sad、urs、prd、dbd、api、lld、testcase、task、sql、review、context、cs、ws、ui-test-record、regression-unit、regression-api、regression、rtm、apifox-openapi、apifox-postman 等）。读取任务清单（task）时返回任务摘要与完整内容。",
 };
 
 /** 解析任务清单 JSON，返回摘要：总数、按状态计数、未完成任务列表；解析失败返回 null */

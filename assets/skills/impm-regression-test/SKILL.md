@@ -1,12 +1,12 @@
 ---
 name: impm-regression-test
-description: 执行版本回归测试，将测试用例合并到主测试用例、全量运行单元测试和接口测试并记录结果，并对需求追踪矩阵（RTM）进行测试用例回填与覆盖完整度校验
+description: 执行版本回归测试，将测试用例合并到主测试用例、全量运行单元测试和接口测试并记录结果，对需求追踪矩阵（RTM）进行测试用例回填与覆盖完整度校验，并生成当前版本质量度量报告（阶段一：测试度量，写入 regression.md，审核类质量指标由 impm-regression-metrics 阶段二回填）
 ---
 
 # impm-regression-test 技能
 
 ## 触发词
-回归测试、单元测试、接口测试、测试用例合并、需求追踪矩阵、RTM、覆盖校验、regression
+回归测试、单元测试、接口测试、测试用例合并、需求追踪矩阵、RTM、覆盖校验、测试覆盖率、质量度量、缺陷指标、regression
 
 ## 何时使用
 阶段4开始、版本编码开发全部完成后，需要对整个版本进行回归测试时使用；同时将测试用例回填到需求追踪矩阵（RTM）并校验所有需求/用户故事的覆盖完整度（设计、任务、测试用例）。
@@ -82,7 +82,18 @@ description: 执行版本回归测试，将测试用例合并到主测试用例�
 6. 调用 impm_doc_writer（docType=rtm，target=version，expectedBase=步骤 1 读取到的最新全文）将包含测试用例关联、覆盖校验与问题清单的完整 rtm.md 覆盖写回（若本版本原本无 rtm.md，可新建，或按 main 写入主文档）。
 7. 核对 rtm.md 已写入且校验结果正确。
 
-### 步骤 6：记录进度
+### 步骤 6：生成版本质量度量报告（阶段一：测试度量）
+> 本步骤只产出阶段一的"测试类"质量指标并写入 regression.md；"审核类"质量指标（审核问题数及严重级别分布、修复率、缺陷密度、DRE）因依赖 impm-coding-review 生成的审核报告，由阶段二技能 impm-regression-metrics 在代码审核完成后回填到同一份 regression.md。
+1. 读取质量度量报告模板：调用 impm_template_reader 读取 REGRESSION-TEMPLATE.MD 模板内容。
+2. 汇总阶段一所需测试指标：
+   - 单元测试：用例总数、通过数、失败数、通过率（取自步骤 2/3 的回归结果）；
+   - 接口测试：用例总数、通过数、失败数、通过率（取自步骤 4 的回归结果）；
+   - 测试覆盖率：需求/用户故事用例覆盖（依据步骤 5 RTM 覆盖完整度校验结果计算：已覆盖的需求/用户故事数 / 需求/用户故事总数）；如工具可产出代码/分支覆盖率一并填入，无则标注"不适用"。
+3. 读取当前版本 regression.md（docType=regression，target=version）；若不存在则按模板新建，若已存在则保留历史内容与后续阶段二已回填部分，仅更新阶段一测试度量部分。
+4. 调用 impm_doc_writer（docType=regression，target=version，expectedBase=步骤 3 读取到的最新全文）写入 docs/{项目英文缩写}-v{当前版本号}/regression.md；审核质量度量章节（第 3~5 章）暂留待阶段二回填。
+5. 核对 regression.md 已写入且测试度量内容正确。
+
+### 步骤 7：记录进度
 1. 调用 impm_progress add（impm-regression-test，已完成），在 version_progress.md 中记录本技能完成状态。
 2. 核对 version_progress.md 中已记录本步骤状态。
 
@@ -91,6 +102,7 @@ description: 执行版本回归测试，将测试用例合并到主测试用例�
 - docs/{项目英文缩写}-v{当前版本号}/regression-unit-test.md
 - docs/{项目英文缩写}-v{当前版本号}/regression-api-test.md
 - docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-rtm-v{当前版本号}.md（已回填测试用例关联与覆盖校验结果）
+- docs/{项目英文缩写}-v{当前版本号}/regression.md（阶段一：测试度量；审核类质量指标由 impm-regression-metrics 阶段二回填）
 - version_progress.md 进度记录
 
 ## 完成后提示

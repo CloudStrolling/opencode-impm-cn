@@ -471,7 +471,19 @@ c) 功能与UI测试；在docs/{项目英文缩写}-v{当前版本号}/ 目录�
 2. 根据当前所用的开发语言和测试插件，全量运行单元测试。
 3. 将单元测试的结果写入：docs/{项目英文缩写}-v{当前版本号}/regression-unit-test.md。
 4. 运行所有在scripts/API-TEST/目录下的测试脚本，并将测试结果写入：docs/{项目英文缩写}-v{当前版本号}/regression-api-test.md。
-5. 版本进度文件：docs/{项目英文缩写}-v{当前版本号}/version_progress.md。增加第一行：步骤序号：前一序号+1，步骤名称：impm-regression-test，步骤状态：已完成。
+5. 对需求追踪矩阵（RTM）进行测试用例回填与覆盖完整度校验（如有 RTM）。
+6. 生成版本质量度量报告（阶段一：测试度量）：汇总单元/接口测试用例数与通过率、测试覆盖率（需求/用户故事用例覆盖等），按 REGRESSION-TEMPLATE.MD 写入 docs/{项目英文缩写}-v{当前版本号}/regression.md；审核类质量指标留待阶段二 impm-regression-metrics 回填。
+7. 版本进度文件：docs/{项目英文缩写}-v{当前版本号}/version_progress.md。增加第一行：步骤序号：前一序号+1，步骤名称：impm-regression-test，步骤状态：已完成。
+
+### a2）回填回归质量度量报告（阶段二）
+- Skill：impm-regression-metrics
+- agent：TL
+- 处理内容：
+1. 读取当前版本代码审核报告：docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-review.md。
+2. 统计代码审核问题数及严重级别分布（高/中/低）、已修复/未修复数，计算修复率。
+3. 计算缺陷质量指标：缺陷密度（按代码规模或需求规模，注明口径）与缺陷移除率 DRE（已修复 / 发现缺陷总数）。
+4. 将审核质量度量、量化目标达标判定与结论回填到阶段一生成的 docs/{项目英文缩写}-v{当前版本号}/regression.md，不得覆盖删除阶段一测试度量内容。
+5. 版本进度文件：docs/{项目英文缩写}-v{当前版本号}/version_progress.md。增加第一行：步骤序号：前一序号+1，步骤名称：impm-regression-metrics，步骤状态：已完成。
 
 ### b）代码备注
 - Skill：impm-coding-comment
@@ -541,6 +553,11 @@ c) 功能与UI测试；在docs/{项目英文缩写}-v{当前版本号}/ 目录�
 ## skills
 项目的上述的每个步骤都定义为一个opencode的skill
 
+### 需求分析文档审核版技能（impm-docs-review / impm-review-edition）
+- 在标准 impm-docs / impm 流程基础上，提供"文档审核版"：
+  - **impm-docs-review**：与 impm-docs 步骤一致（版本创建→URS→PRD→SAD→DBD→API→LLD→任务清单→RTM→git提交），区别在于 urs/prd/sad/dbd/api/lld/task 这 7 个文档生成步骤完成后，均由 PM 通过 question 工具弹出提示框请用户审核文档；用户选择"审核通过"才进入下一步，"需要修改"则按反馈重新生成再审，期间不推进下一步。判定为"无需修改/无需数据库/无需接口"且未产出新文档的步骤不弹窗。
+  - **impm-review-edition**：与 impm 全流程一致，仅将需求分析整理阶段由 impm-docs 替换为 impm-docs-review，实现全流程开发过程中的逐文档用户审核。
+
 ## commands
 每个skill都对应一个command。
 另外定义几个command
@@ -549,6 +566,8 @@ c) 功能与UI测试；在docs/{项目英文缩写}-v{当前版本号}/ 目录�
 3.  /impm-docs 执行需求分析整理阶段的所有步骤。
 4.  /impm-coding 执行需求分析整理阶段的所有步骤。
 5.  /impm-finish 执行回归测试和版本文档整理阶段的所有步骤。
+6.  /impm-docs-review 执行需求分析整理阶段的所有步骤（含 urs/prd/sad/dbd/api/lld/task 逐文档用户审核）。
+7.  /impm-review-edition 执行4个阶段的所有步骤（文档审核版，阶段二使用 impm-docs-review）。
 
 ## plugins
 1. 根据上述需求，自行决定将哪些通用功能集成到ts写成的插件里。

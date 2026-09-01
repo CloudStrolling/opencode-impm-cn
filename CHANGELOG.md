@@ -2,6 +2,20 @@
 
 本项目版本号遵循语义化版本（SemVer）：主版本.次版本.修订版本。
 
+## [0.8.4] - 2026-09-01
+
+### 新增
+- 版本质量度量报告（regression.md）：回归测试阶段（impm-regression-test）新增阶段一质量度量输出，汇总单元/接口测试用例数与通过率、测试覆盖率（需求/用户故事用例覆盖）写入 docs/{项目英文缩写}-v{当前版本号}/regression.md
+- 质量度量回填技能与命令（impm-regression-metrics / /impm-regression-metrics，TL 执行）：在代码审核（impm-coding-review）完成后回填阶段二审核质量度量，统计代码审核问题数及严重级别分布、修复率，并计算缺陷密度、缺陷移除率 DRE、量化目标达标判定，与阶段一共同构成完整回归质量度量报告
+- regression.md 映射新增 docType（regression）接入 doc_reader/doc_writer 标准路径（版本目录 regression.md），模板 REGRESSION-TEMPLATE.MD
+- impm-finish 阶段4流程新增 impm-regression-metrics 步骤（置于 coding-review 之后），阶段4子步骤由 8 个增至 9 个
+- 需求分析文档审核技能（impm-docs-review / /impm-docs-review）：在 impm-docs 基础上，为 urs/prd/sad/dbd/api/lld/task 每步文档生成后增加"用户审核确认"环节（PM 通过 question 工具弹出提示框），审核通过才进入下一步；需要修改时按用户反馈重新生成再审
+- 文档审核版总流程技能（impm-review-edition / /impm-review-edition）：与 impm 全流程一致，仅将需求分析整理阶段由 impm-docs 替换为 impm-docs-review，实现全流程开发过程中的逐文档用户审核
+
+### 更新
+- impm-regression-test 技能描述与执行要求同步调整，明确阶段一测试度量与阶段二审核度量（impm-regression-metrics）两阶段协同生成同一份 regression.md
+- impm 总流程技能阶段四步骤清单同步补入 impm-regression-metrics（回归测试→代码备注→代码审核→质量度量回填→项目地图更新→文档合并→readme/agent→部署方案→合并主分支）
+
 ## [0.8.3] - 2026-09-01
 
 ### 新增
