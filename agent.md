@@ -83,7 +83,7 @@ PM → BA / SA / TL / DBA / TE / SCM / DW / CS / WS / FEE / BEE / SSE
 
 **文件：** `assets/agents/tl.md`
 
-**执行技能：** `impm-init-lld`、`impm-init-task`、`impm-api-create`、`impm-lld-create`、`impm-task-create`、`impm-task-coding-context`、`impm-task-coding-api`、`impm-coding-review`、`impm-cpc-level3`
+**执行技能：** `impm-init-lld`、`impm-init-task`、`impm-api-create`、`impm-lld-create`、`impm-task-create`、`impm-rtm-create`、`impm-task-coding-context`、`impm-task-coding-api`、`impm-coding-review`、`impm-cpc-level3`
 
 **职责：**
 - 编写 API 接口设计文档与详细设计文档（LLD，聚焦整体业务逻辑设计，接口细节由 API 文档负责）

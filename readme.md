@@ -311,6 +311,7 @@ flowchart LR
 | `/impm-api-create` | 生成 API 接口设计文档 | TL |
 | `/impm-lld-create` | 生成详细设计文档（LLD） | TL |
 | `/impm-task-create` | 生成任务清单（task JSON） | TL |
+| `/impm-rtm-create` | 生成需求追踪矩阵（RTM，关联需求/用户故事/设计/任务） | TL |
 | `/impm-analysis-commit` | 提交需求分析整理阶段全部产出 | SCM |
 
 #### 阶段 3：编码开发
@@ -525,6 +526,7 @@ You may obtain a copy of the License at
 | 创建当前版本的 API 设计 | `impm-api-create` | TL |
 | 创建当前版本的详细设计 | `impm-lld-create` | TL |
 | 创建当前版本的开发任务清单 | `impm-task-create` | TL |
+| 创建当前版本的需求追踪矩阵（RTM） | `impm-rtm-create` | TL |
 | 提交此前生成的所有文档 | `impm-analysis-commit` | SCM |
 
 </details>

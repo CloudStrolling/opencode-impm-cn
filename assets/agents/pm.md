@@ -81,7 +81,7 @@ permission:
 |-----|-----|-----|
 | BA | 业务分析师 | impm-init-urs / impm-init-prd / impm-urs-create / impm-prd-create |
 | SA | 系统架构师 | impm-init-project / impm-init-version / impm-init-sad / impm-init-api / impm-sad-update / impm-project-update |
-| TL | 技术负责人 | impm-init-lld / impm-lld-create / impm-api-create / impm-task-create / impm-task-coding-context / impm-task-coding-api / impm-coding-review |
+| TL | 技术负责人 | impm-init-lld / impm-lld-create / impm-api-create / impm-task-create / impm-rtm-create / impm-task-coding-context / impm-task-coding-api / impm-coding-review |
 | DBA | 数据库架构设计师 | impm-init-dbd / impm-dbd-create / impm-task-coding-dbd |
 | TE | 测试工程师 | impm-init-testcase / impm-task-coding-testcase / impm-task-coding-writetest / impm-task-coding-runtest / impm-regression-test / impm-sprint-test |
 | SCM | 软件配置工程师 | impm-init-git / impm-init-commit / impm-version-create / impm-analysis-commit / impm-task-coding-gitcommit / impm-git-merge |

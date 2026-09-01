@@ -1,6 +1,6 @@
 ---
 name: impm-docs
-description: 编排并执行需求分析整理阶段（阶段2）的全部9个步骤（版本创建、URS、PRD、SAD更新、DBD、API、LLD、任务清单、git提交），确保各步骤严格按顺序依次执行。
+description: 编排并执行需求分析整理阶段（阶段2）的全部10个步骤（版本创建、URS、PRD、SAD更新、DBD、API、LLD、任务清单、需求追踪矩阵、git提交），确保各步骤严格按顺序依次执行。
 ---
 
 # impm-docs 技能
@@ -9,7 +9,7 @@ description: 编排并执行需求分析整理阶段（阶段2）的全部9个�
 需求分析、需求分析整理、impm-docs、生成需求文档、开始分析需求、执行阶段2、/impm-docs
 
 ## 何时使用
-当用户需要执行需求分析整理阶段（阶段2）时使用。本技能是阶段编排技能，负责按固定顺序调度该阶段全部9个子技能：impm-version-create → impm-urs-create → impm-prd-create → impm-sad-update → impm-dbd-create → impm-api-create → impm-lld-create → impm-task-create → impm-analysis-commit。每个子技能由对应 subagent 执行。
+当用户需要执行需求分析整理阶段（阶段2）时使用。本技能是阶段编排技能，负责按固定顺序调度该阶段全部10个子技能：impm-version-create → impm-urs-create → impm-prd-create → impm-sad-update → impm-dbd-create → impm-api-create → impm-lld-create → impm-task-create → impm-rtm-create → impm-analysis-commit。每个子技能由对应 subagent 执行。
 
 ## 执行角色
 本技能由 项目经理（主控 Agent） 负责执行（编排），执行时使用 Skill 工具加载本技能。内部子步骤必须按下方「通用调度要求」派发对应 subagent 执行，PM 只调度、检查与决策。
@@ -33,7 +33,8 @@ description: 编排并执行需求分析整理阶段（阶段2）的全部9个�
 | 7 | impm-api-create | tl |
 | 8 | impm-lld-create | tl |
 | 9 | impm-task-create | tl |
-| 10 | impm-analysis-commit | scm |
+| 10 | impm-rtm-create | tl |
+| 11 | impm-analysis-commit | scm |
 
 ## 关键变量定义与取值
 | 变量 | 说明 | 获取方式 |
@@ -91,15 +92,19 @@ description: 编排并执行需求分析整理阶段（阶段2）的全部9个�
 启动 TL subagent，使用 Skill 工具加载并执行 impm-task-create 技能，生成任务清单 docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-task-v{当前版本号}.json。
 执行完成后，核对文件存在、version_progress.md 已记录 impm-task-create 状态为"已完成"，再进入下一步。
 
-### 步骤 10：执行 impm-analysis-commit
-启动 SCM subagent，使用 Skill 工具加载并执行 impm-analysis-commit 技能，将需求分析整理阶段生成的所有文件和目录提交到 git。
+### 步骤 10：执行 impm-rtm-create
+启动 TL subagent，使用 Skill 工具加载并执行 impm-rtm-create 技能，根据当前版本 URS、PRD、LLD 与任务清单，建立"需求 → 设计 → 任务"的多对多追踪矩阵，写入 docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-rtm-v{当前版本号}.md。
+执行完成后，核对文件存在、version_progress.md 已记录 impm-rtm-create 状态为"已完成"，再进入下一步。
+
+### 步骤 11：执行 impm-analysis-commit
+启动 SCM subagent，使用 Skill 工具加载并执行 impm-analysis-commit 技能，将需求分析整理阶段生成的所有文件和目录（含 rtm.md）提交到 git。
 执行完成后，核对 version_progress.md 已记录 impm-analysis-commit 状态为"已完成"。
 
-### 步骤 11：结算最后步骤并汇报
+### 步骤 12：结算最后步骤并汇报
 调用 impm_progress（action=finalize）在退出前结算进度表最后一行（impm-analysis-commit，已完成）的总耗时与 token（含该步骤主会话与 subagent 子会话消耗）；汇总本阶段全部产出文件清单、各步骤完成状态，并向用户说明下一步建议（进入编码开发阶段，输入 /impm-coding）。
 
 ## 交付物
-- docs/{项目英文缩写}-v{当前版本号}/version_progress.md（版本进度表，9 个步骤全部记录）
+- docs/{项目英文缩写}-v{当前版本号}/version_progress.md（版本进度表，10 个步骤全部记录）
 - docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-urs-v{当前版本号}.md
 - docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-prd-v{当前版本号}.md
 - docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-dbd-v{当前版本号}.md（如适用）
@@ -107,6 +112,7 @@ description: 编排并执行需求分析整理阶段（阶段2）的全部9个�
 - docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-api-v{当前版本号}.md（如适用）
 - docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-lld-v{当前版本号}.md
 - docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-task-v{当前版本号}.json
+- docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-rtm-v{当前版本号}.md（需求追踪矩阵）
 - 更新后的 docs/{项目英文缩写}-sad.md（如判断需要修改）
 
 ## 完成后提示

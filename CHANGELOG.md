@@ -2,6 +2,14 @@
 
 本项目版本号遵循语义化版本（SemVer）：主版本.次版本.修订版本。
 
+## [0.8.3] - 2026-09-01
+
+### 新增
+- 需求追踪矩阵（RTM）技能与命令（impm-rtm-create / /impm-rtm-create，TL 执行）：在 impm-task-create 之后新增步骤，根据当前版本 URS 需求（FR/NFR）、PRD 用户故事（US）、LLD 设计与任务清单，建立"需求 → 设计 → 任务"的多对多追踪矩阵，生成 docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-rtm-v{当前版本号}.md，并执行覆盖完整度校验、输出问题清单
+- impm 总流程技能与 impm-docs 阶段编排技能同步纳入 impm-rtm-create 步骤（版本创建→URS→PRD→SAD→DBD→API→LLD→任务清单→RTM→git提交，共 10 步）
+- impm_regression_test（回归测试）新增 RTM 测试用例回填与覆盖校验环节：将测试用例（TC）按关联需求/用户故事回填到 rtm.md，并校验每个原始需求与用户故事是否均有设计、任务、测试用例，缺口标注到 RTM 问题清单
+- RTM 文档类型接入 doc_reader/doc_writer 标准路径（{缩写}-rtm-v{版本号}.md / 主文档 {缩写}-rtm.md），模板 RTM-TEMPLATE.MD
+
 ## [0.8.2] - 2026-08-26
 
 ### 新增

@@ -60,7 +60,7 @@ description: impm 总流程技能，自动执行瀑布式开发全部四个阶�
 
 ### 阶段二：需求分析整理（impm-docs）
 1. 向用户询问本轮需求：请用户输入本次版本的需求描述（或提供需求文档路径）。
-2. 使用 Skill 工具加载并执行 impm-docs 技能，依次执行：impm-version-create → impm-urs-create → impm-prd-create → impm-sad-update → impm-dbd-create → impm-api-create → impm-lld-create → impm-task-create → impm-analysis-commit。
+2. 使用 Skill 工具加载并执行 impm-docs 技能，依次执行：impm-version-create → impm-urs-create → impm-prd-create → impm-sad-update → impm-dbd-create → impm-api-create → impm-lld-create → impm-task-create → impm-rtm-create → impm-analysis-commit。
 3. 每步由对应 subagent 执行，每步完成后检查 version_progress.md 确认步骤状态已记录，再继续下一步。
 
 ### 阶段三：编码开发（impm-coding）

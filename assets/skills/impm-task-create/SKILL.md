@@ -64,6 +64,6 @@ description: 根据 SAD、当前版本 PRD 与 LLD，按任务模板生成当前
 - docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-task-v{当前版本号}.json（任务清单）
 
 ## 完成后提示
-- 如需继续执行下一步骤，请输入 /impm-analysis-commit
+- 如需继续执行下一步骤，请输入 /impm-rtm-create
 - 如需继续执行本阶段后续所有步骤，请输入 /impm-docs
 <!-- SPDX-License-Identifier: Apache-2.0 / Copyright 2026 jenemy8023 <jenemy8023@163.com> -->
