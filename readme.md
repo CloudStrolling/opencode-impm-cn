@@ -5,7 +5,7 @@
 **我是项目经理 —— AI 驱动的工程化全流程开发套件**
 
 <p>
-  <a href="#"><img src="https://img.shields.io/badge/version-0.8.0-2ea44f?style=flat-square" alt="version"></a>
+  <a href="#"><img src="https://img.shields.io/badge/version-0.8.1-2ea44f?style=flat-square" alt="version"></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square" alt="license"></a>
   <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/node->=%2022.5-339933?style=flat-square&logo=node.js&logoColor=white" alt="node"></a>
   <a href="https://opencode.ai/"><img src="https://img.shields.io/badge/OpenCode-必需-ff6b6b?style=flat-square" alt="opencode"></a>
@@ -42,7 +42,7 @@
 | 特性 | 说明 |
 |:---:|:---|
 | 🎭 | **AI 项目经理调度** — 统一编排 BA / SA / TL / DBA / TE / SCM / DW / CS / WS / FEE / BEE / SSE 共 13 个专业 Agent |
-| 📋 | **4 阶段 51 个技能** — 阶段间严格按序执行、不跳过、不乱序；编码开发阶段任务间按上下游依赖并发执行（最多 5 个并行），Git 提交串行 |
+| 📋 | **4 阶段 51 个技能 + 独立合规检查** — 阶段间严格按序执行、不跳过、不乱序；编码开发阶段任务间按上下游依赖并发执行（最多 5 个并行），Git 提交串行 |
 | ⚡ | **两条轻量流程** — 敏捷冲刺 `/impm-sprint` 与热修复 `/impm-hotfix`，大幅减少环节与 token 消耗，保留合理文档留痕 |
 | 🧪 | **测试先行（TDD）** — 编码前先写测试用例，编码后执行测试，全部通过才提交 |
 | 📁 | **版本化管理** — 每个版本独立目录 `docs/{项目缩写}-v{版本号}/` + 独立 Git 分支 |
@@ -196,8 +196,8 @@ node scripts/install.mjs --target /path/to/project --agent-type opencode-go-bala
 项目根目录/
 ├── .opencode/
 │   ├── agents/              # 13 个 AI Agent 定义
-│   ├── commands/            # 51 个命令定义
-│   ├── skills/              # 51 个技能与 17 个模板
+│   ├── commands/            # 52 个命令定义
+│   ├── skills/              # 52 个技能与 18 个模板
 │   └── plugins/impm/        # 编译后的插件入口
 └── opencode.json            # OpenCode 配置文件
 ```
@@ -269,7 +269,7 @@ flowchart LR
 ### 完整命令清单
 
 <details>
-<summary>📋 点击展开 51 个命令（按阶段分组）</summary>
+<summary>📋 点击展开 52 个命令（按阶段分组）</summary>
 
 #### 总流程
 
@@ -344,6 +344,12 @@ flowchart LR
 | `/impm-deploy-update` | 更新编译部署方案（`deploy/build.md`、`deploy/deploy.md`） | DW |
 | `/impm-git-merge` | 合并版本分支到主分支 | SCM |
 
+#### 🛡️ 安全合规检查（独立）
+
+| 命令 | 说明 | 执行 Agent |
+|:-----|:-----|:----------:|
+| `/impm-cpc-level3` | 等保三级代码审查：按 GB/T 22239-2019 逐项核查 CheckList，输出 `docs/{缩写}-cpc-level3-check.md` | TL |
+
 #### ⚡ 轻量流程：敏捷冲刺
 
 | 命令 | 说明 | 执行 Agent |
@@ -369,8 +375,8 @@ flowchart LR
 opencode-impm-cn/
 ├── 📁 assets/                   # 套件资源（安装时复制到 .opencode/）
 │   ├── 📁 agents/               # 13 个 AI Agent 定义（.md）
-│   ├── 📁 commands/             # 51 个命令（.md）
-│   └── 📁 skills/               # 51 个技能（每技能一个目录）+ template/ 17 个模板
+│   ├── 📁 commands/             # 52 个命令（.md）
+│   └── 📁 skills/               # 52 个技能（每技能一个目录）+ template/ 18 个模板
 ├── 📁 src/                      # 插件源码（TypeScript）
 │   ├── 📁 tools/                # 14 个工具的实现（含 prompt-recorder）
 │   ├── 📁 utils/                # 路径 / 版本 / git / 项目信息工具
@@ -578,5 +584,14 @@ You may obtain a copy of the License at
 |:---------|:-------|:------:|
 | 热修复编排（定位分析/留存提交为 PM 直接执行） | `impm-hotfix` | PM |
 | 热修复编码（最小改动 + 回归测试） | `impm-hotfix-fix` | SSE/FEE/BEE |
+
+</details>
+
+<details>
+<summary>🛡️ 安全合规检查（独立命令）</summary>
+
+| 步骤说明 | 技能名 | 子代理 |
+|:---------|:-------|:------:|
+| 等保三级代码审查（逐项核查 CheckList + 输出检查报告） | `impm-cpc-level3` | TL |
 
 </details>

@@ -31,6 +31,10 @@
  * token 数据源：opencode SQLite 数据库（message 表 assistant 消息
  * data.tokens，含缓存命中 cache.read / 缓存写入 cache.write，
  * 思考 token 并入输出列）
+ *
+ * 步骤完成输出约定：init 写入首行、add 插入/去重、finalize 结算时，
+ * 返回结果的 message 一律附带「当前时间」，currentTime 字段单独返回，
+ * 保证每次向对话框输出步骤完成时都能看到当前时间
  */
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
@@ -390,14 +394,16 @@ export async function progressExecute(args: {
                 }
                 mkdirSync(dirname(file), { recursive: true });
                 writeFileSync(file, buildFile(abbrev, version, rows), "utf8");
+                const currentTime = formatTime(Date.now());
                 return {
                     success: true,
                     action,
                     path: file,
+                    currentTime,
                     rows,
                     message: rows.length
-                        ? `已创建进度表并写入首行（1 | ${stepName} | ${status} | 启动时间 ${rows[0].startTime}）。`
-                        : "已创建进度表（表头：步骤序号 | 步骤名称 | 步骤状态 | 启动时间 | 总耗时(秒) | 输入token | 输出token | 命中缓存 | 存入缓存 | 总token）。",
+                        ? `已创建进度表并写入首行（1 | ${stepName} | ${status} | 启动时间 ${rows[0].startTime}）。当前时间：${currentTime}。`
+                        : `已创建进度表（表头：步骤序号 | 步骤名称 | 步骤状态 | 启动时间 | 总耗时(秒) | 输入token | 输出token | 命中缓存 | 存入缓存 | 总token）。当前时间：${currentTime}。`,
                 };
             });
         }
@@ -482,15 +488,17 @@ export async function progressExecute(args: {
                     };
                 }
                 writeFileSync(file, buildFile(abbrev, version, lockedRows), "utf8");
+                const currentTime = formatTime(Date.now());
                 let msg = `已结算最后一行（${prev.stepName} | 总耗时 ${settled.duration} 秒`;
                 msg += settled.tokens
                     ? ` | 输入 ${settled.tokens.input} | 输出 ${settled.tokens.output} | 缓存命中 ${settled.tokens.cacheRead} | 缓存写入 ${settled.tokens.cacheWrite} | 总token ${settled.tokens.total}`
                     : "，token 查询失败";
-                msg += "）。";
+                msg += `）。当前时间：${currentTime}。`;
                 return {
                     success: true,
                     action,
                     path: file,
+                    currentTime,
                     seq: prev.seq,
                     stepName: prev.stepName,
                     duration: settled.duration,
@@ -538,8 +546,9 @@ export async function progressExecute(args: {
                 const duplicate = lockedRows.some(
                     (r) => r.stepName === stepName && r.status === status,
                 );
+                const currentTime = formatTime(now);
                 if (duplicate) {
-                    let msg = `已存在相同记录（${stepName} | ${status}），未重复插入。`;
+                    let msg = `已存在相同记录（${stepName} | ${status}），未重复插入。当前时间：${currentTime}。`;
                     if (finalized) {
                         msg += `已结算上一行（${finalized.stepName} | 总耗时 ${finalized.duration} 秒`;
                         msg += finalized.tokens
@@ -551,6 +560,7 @@ export async function progressExecute(args: {
                         success: true,
                         action,
                         path: file,
+                        currentTime,
                         duplicate: true,
                         seq: lockedRows.find((r) => r.stepName === stepName && r.status === status)?.seq,
                         finalized,
@@ -566,7 +576,7 @@ export async function progressExecute(args: {
                 };
                 const newRows = [newRow, ...lockedRows];
                 writeFileSync(file, buildFile(abbrev, version, newRows), "utf8");
-                let msg = `已插入新行（序号 ${newRow.seq}，${stepName} | ${status}，启动时间 ${newRow.startTime}）。`;
+                let msg = `已插入新行（序号 ${newRow.seq}，${stepName} | ${status}，启动时间 ${newRow.startTime}）。当前时间：${currentTime}。`;
                 if (finalized) {
                     msg += `已结算上一行（${finalized.stepName} | 总耗时 ${finalized.duration} 秒`;
                     msg += finalized.tokens
@@ -578,6 +588,7 @@ export async function progressExecute(args: {
                     success: true,
                     action,
                     path: file,
+                    currentTime,
                     seq: newRow.seq,
                     stepName,
                     status,
