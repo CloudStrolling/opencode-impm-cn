@@ -1,12 +1,12 @@
 ---
-name: impm-cpc-level3
+name: impm-tools-cpc-level3
 description: 按 GB/T 22239-2019 等保三级要求逐项核查当前项目代码与配置的安全合规情况，输出等保三级代码审查检查报告
 ---
 
-# impm-cpc-level3 技能
+# impm-tools-cpc-level3 技能
 
 ## 触发词
-等保三级、等保检查、等保测评、合规检查、安全合规、CPC、cpc-level3
+等保三级、等保检查、等保测评、合规检查、安全合规、CPC、cpc-level3、tools-cpc-level3
 
 ## 何时使用
 需要对当前项目进行网络安全等级保护三级（GB/T 22239-2019）中软件开发相关要求的代码审查与合规自查，并输出检查报告时使用。可独立执行，也可在阶段4代码审核后追加执行。
@@ -16,14 +16,14 @@ description: 按 GB/T 22239-2019 等保三级要求逐项核查当前项目代�
 
 ## 调度说明（PM/上级编排者启动本技能时必须遵守）
 1. 启动方式：使用 task 工具启动 subagent，subagent_type 必须为 `tl`；禁止由 PM 或编排者自己代替执行本技能内容。
-2. 提示词必传上下文（缺一不可）：项目根目录绝对路径（projectRoot）、用户输入 $ARGUMENTS 原文（含用户提到的文件路径）、技能名（impm-cpc-level3，要求 subagent 先用 Skill 工具加载本技能再执行）。
+2. 提示词必传上下文（缺一不可）：项目根目录绝对路径（projectRoot）、用户输入 $ARGUMENTS 原文（含用户提到的文件路径）、技能名（impm-tools-cpc-level3，要求 subagent 先用 Skill 工具加载本技能再执行）。
 3. 完成要求：等待 subagent 返回完成结果后，核对检查报告产出文件已生成且内容完整，全部正确后才能结束。
 
 ## 关键变量定义与取值
 | 变量 | 说明 | 获取方式 |
 | 项目中文名称 | 项目的中文名称 | 通过 impm_project_info 从 docs/project.md 读取 |
 | 项目英文缩写 | 项目的英文缩写，用于拼接报告路径 | 通过 impm_project_info 从 docs/project.md 读取 |
-| Checklist 模板 | 等保三级代码审查 Checklist | 通过 impm_template_reader 读取 CPC-LEVEL3-TEMPLATE.MD |
+| Checklist 模板 | 等保三级代码审查 Checklist | 通过 impm_template_reader 读取 TOOLS-CPC-LEVEL3-TEMPLATE.MD |
 
 ## 执行要求
 1. 严格按照执行步骤中的内容和顺序依次执行：不跳过、不乱序、不并行、不合并任何步骤。
@@ -40,7 +40,7 @@ description: 按 GB/T 22239-2019 等保三级要求逐项核查当前项目代�
 2. 结合 docs/project.md 的项目地图与源代码目录结构，确定本次检查范围：源码目录、配置文件、部署脚本、依赖清单（如 package.json、requirements.txt、pom.xml 等）与 docs 下的设计文档。
 
 ### 步骤 2：读取等保三级 Checklist 模板
-1. 调用 impm_template_reader（templateName=CPC-LEVEL3-TEMPLATE.MD）读取模板全文，获得全部检查项及其标准条款与检查要点。
+1. 调用 impm_template_reader（templateName=TOOLS-CPC-LEVEL3-TEMPLATE.MD）读取模板全文，获得全部检查项及其标准条款与检查要点。
 
 ### 步骤 3：逐项核查 CheckList
 1. 按模板中的检查项顺序逐项核查，覆盖全部九大类：开发过程管理（自行软件开发、外包软件开发）、身份鉴别与会话管理、访问控制、安全审计、入侵防范与输入安全、数据安全、个人信息保护、测试验收；不允许跳过任何检查项。
@@ -51,7 +51,7 @@ description: 按 GB/T 22239-2019 等保三级要求逐项核查当前项目代�
    - 当前项目确实不存在该场景（如无外包开发、不采集个人信息）→ 检查结果填「不适用」，说明中写明判定理由。
 
 ### 步骤 4：生成检查报告
-1. 严格按 CPC-LEVEL3-TEMPLATE.MD 的格式组织检查报告：表头信息（项目名称、检查日期、检查人=TL、标准依据）、各类别汇总统计表（检查项数、通过、不通过、不适用数量）、Checklist 明细（每个检查项的检查结果与说明）、总体结论、整改建议优先级。
+1. 严格按 TOOLS-CPC-LEVEL3-TEMPLATE.MD 的格式组织检查报告：表头信息（项目名称、检查日期、检查人=TL、标准依据）、各类别汇总统计表（检查项数、通过、不通过、不适用数量）、Checklist 明细（每个检查项的检查结果与说明）、总体结论、整改建议优先级。
 2. 使用 Write 工具将报告写入 docs/{项目英文缩写}-cpc-level3-check.md。
 3. 核对文件存在且内容完整：每个检查项均填写了检查结果与说明，汇总统计与明细一致。
 

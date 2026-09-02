@@ -349,7 +349,7 @@ flowchart LR
 
 | 命令 | 说明 | 执行 Agent |
 |:-----|:-----|:----------:|
-| `/impm-cpc-level3` | 等保三级代码审查：按 GB/T 22239-2019 逐项核查 CheckList，输出 `docs/{缩写}-cpc-level3-check.md` | TL |
+| `/impm-tools-cpc-level3` | 等保三级代码审查：按 GB/T 22239-2019 逐项核查 CheckList，输出 `docs/{缩写}-cpc-level3-check.md` | TL |
 
 #### ⚡ 轻量流程：敏捷冲刺
 
@@ -594,6 +594,6 @@ You may obtain a copy of the License at
 
 | 步骤说明 | 技能名 | 子代理 |
 |:---------|:-------|:------:|
-| 等保三级代码审查（逐项核查 CheckList + 输出检查报告） | `impm-cpc-level3` | TL |
+| 等保三级代码审查（逐项核查 CheckList + 输出检查报告） | `impm-tools-cpc-level3` | TL |
 
 </details>
