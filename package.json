@@ -1,6 +1,6 @@
 {
   "name": "opencode-impm-cn",
-  "version": "0.8.9",
+  "version": "0.9.0",
   "description": "我是项目经理（AI项目经理）OpenCode 插件 - 中文版工程化全流程开发套件（agents + commands + skills + 工具链）",
   "type": "module",
   "main": "dist/index.js",
@@ -27,6 +27,7 @@
     "dist/",
     "assets/",
     "scripts/install.mjs",
+    "scripts/install-core.mjs",
     "scripts/uninstall.mjs",
     "scripts/install.ps1",
     "scripts/uninstall.ps1",

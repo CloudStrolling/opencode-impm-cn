@@ -2,6 +2,13 @@
 
 本项目版本号遵循语义化版本（SemVer）：主版本.次版本.修订版本。
 
+## [0.9.0] - 2026-09-04
+
+### 新增
+- 插件启动时版本感知的自动安装（`ensureInstalled`）：当 opencode 通过 npm 自动安装插件（其安装器 `ignoreScripts:true` 不执行 postinstall）时，插件入口函数在每次启动时对比 `.opencode/impm-manifest.json` 的 `installedVersion` 与当前插件版本，首次安装或版本升级时自动同步 agents/commands/skills 资产、清理过时文件并更新 opencode.json，版本一致时零开销跳过
+- 安装核心逻辑抽取为独立模块 `scripts/install-core.mjs`（导出 `runInstall`/`loadManifest`/`saveManifest`/`AGENT_TYPES`），供 CLI 入口（`scripts/install.mjs`）与插件入口（`src/index.ts` → `ensureInstalled`）共用，保证 `npm install` 与 opencode 自动安装两条路径行为一致
+- 安装清单新增 `installedVersion` 字段，用于记录已安装资产对应的插件版本，驱动"首次/升级/跳过"三态判定
+
 ## [0.8.9] - 2026-09-03
 
 ### 新增

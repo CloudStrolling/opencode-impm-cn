@@ -29,6 +29,9 @@
  *    并在 opencode.json 中配置插件路径。
  */
 
+import { readFileSync, existsSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { projectInfoDefinition, projectInfoExecute, isInitDefinition, isInitExecute } from "./tools/project-state.js";
 import { docReaderDefinition, docReaderExecute } from "./tools/doc-reader.js";
 import { docWriterDefinition, docWriterExecute } from "./tools/doc-writer.js";
@@ -110,12 +113,95 @@ interface ToolContext {
 }
 
 /**
+ * 插件执行环境信息：当前编译产物所在目录与插件包根目录
+ * dist/index.js 位于 {包根}/dist/，插件根目录为其上一级。
+ */
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+/** 插件包根目录（含 assets/、dist/、scripts/、package.json） */
+const PLUGIN_ROOT = join(__dirname, "..");
+
+/** 当前插件版本号（从插件包 package.json 读取） */
+function getPluginVersion(): string {
+    try {
+        const pkg = JSON.parse(
+            readFileSync(join(PLUGIN_ROOT, "package.json"), "utf-8"),
+        ) as { version?: string };
+        return pkg.version || "";
+    } catch {
+        return "";
+    }
+}
+
+/**
+ * 确保目标项目已安装 impm 资产（agents/commands/skills）。
+ *
+ * 版本感知安装：对比 .opencode/impm-manifest.json 中的 installedVersion 与当前插件版本，
+ * 相同时直接跳过（零开销）；不同时（首次安装/插件升级）动态加载 scripts/install-core.mjs
+ * 的 runInstall 重跑完整安装（清理过时文件 + 复制新增 + 更新 opencode.json）。
+ *
+ * 背景：opencode 通过 npm 自动安装插件时（ignoreScripts:true）不会执行 postinstall，
+ * 因此本插件必须在入口函数启动时自检，保证 assets 始终与插件版本同步。
+ *
+ * @param projectRoot 目标项目根目录（assets 复制到其 .opencode/）
+ */
+async function ensureInstalled(projectRoot: string): Promise<void> {
+    try {
+        const manifestPath = join(projectRoot, ".opencode", "impm-manifest.json");
+        const currentVersion = getPluginVersion();
+
+        // 读取已安装版本（manifest 不存在或损坏视为首次安装）
+        let installedVersion = "";
+        if (existsSync(manifestPath)) {
+            try {
+                const m = JSON.parse(
+                    readFileSync(manifestPath, "utf-8"),
+                ) as { installedVersion?: string };
+                installedVersion = m.installedVersion || "";
+            } catch {
+                /* 忽略损坏清单，按首次安装处理 */
+            }
+        }
+
+        // 版本一致 → 跳过（首次启动已安装或未升级）
+        if (installedVersion === currentVersion) {
+            return;
+        }
+
+        // 首次安装或版本升级 → 动态加载安装核心逻辑执行完整安装
+        const corePath = pathToFileURL(join(PLUGIN_ROOT, "scripts", "install-core.mjs")).href;
+        const core = (await import(corePath)) as {
+            runInstall: (opts: {
+                pluginRoot: string;
+                projectRoot: string;
+                version: string;
+                agentType?: string;
+            }) => boolean;
+        };
+        core.runInstall({
+            pluginRoot: PLUGIN_ROOT,
+            projectRoot,
+            version: currentVersion,
+        });
+    } catch (err) {
+        // 安装失败不阻断插件加载：记录警告，插件其余功能照常可用
+        console.warn(
+            `[opencode-impm] 自动安装资产失败（将在下次启动重试）: ${(err as Error)?.message ?? err}`,
+        );
+    }
+}
+
+/**
  * 插件主函数 — OpenCode 在加载插件时自动调用
  * @param context OpenCode 运行上下文，包含项目路径、工作区等信息
  * @returns 返回工具注册表，OpenCode 会自动注册这些工具供 Agent 使用
  */
 export default async function impmPlugin(context: ToolContext) {
     const projectRoot = context.project?.path || context.directory;
+
+    // 启动时自检安装：版本不一致则自动同步 assets（首次安装/插件升级）
+    await ensureInstalled(projectRoot);
 
     // 内置功能：prompt-recorder（提问记录 + 对话导出，含钩子与 3 个手动工具）
     const promptRecorder = await createPromptRecorder(projectRoot);
