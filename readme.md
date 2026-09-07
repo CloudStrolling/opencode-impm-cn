@@ -5,13 +5,13 @@
 **我是项目经理 —— AI 驱动的工程化全流程开发套件**
 
 <p>
-  <a href="#"><img src="https://img.shields.io/badge/version-0.8.9-2ea44f?style=flat-square" alt="version"></a>
+  <a href="#"><img src="https://img.shields.io/badge/version-0.9.2-2ea44f?style=flat-square" alt="version"></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square" alt="license"></a>
   <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/node->=%2022.5-339933?style=flat-square&logo=node.js&logoColor=white" alt="node"></a>
   <a href="https://opencode.ai/"><img src="https://img.shields.io/badge/OpenCode-必需-ff6b6b?style=flat-square" alt="opencode"></a>
 </p>
 
-<p><i>基于 OpenCode 平台，以「AI 项目经理」为核心，编排 13 个专业 Agent，按瀑布式四阶段完成软件全生命周期开发。</i></p>
+<p><i>基于 OpenCode 平台，以「AI 项目经理」为核心，根据CMMI5的规范要求，编排 13 个专业 Agent，按瀑布式四阶段完成软件全生命周期开发。为用户提供测试完备的代码，完整的文档支持和可靠的流程管理。</i></p>
 
 [🚀 快速开始](#-快速开始) · [📖 使用文档](#-使用文档) · [📂 项目结构](#-项目结构) · [❓ 常见问题](#-常见问题)
 
@@ -42,12 +42,12 @@
 | 特性 | 说明 |
 |:---:|:---|
 | 🎭 | **AI 项目经理调度** — 统一编排 BA / SA / TL / DBA / TE / SCM / DW / CS / WS / FEE / BEE / SSE 共 13 个专业 Agent |
-| 📋 | **4 阶段 51 个技能 + 独立合规检查** — 阶段间严格按序执行、不跳过、不乱序；编码开发阶段任务间按上下游依赖并发执行（最多 5 个并行），Git 提交串行 |
+| 📋 | **4 阶段 62 个技能 + 独立合规检查工具集 + 文档审核机制** — 阶段间严格按序执行、不跳过、不乱序；编码开发阶段任务间按上下游依赖并发执行（最多 5 个并行），Git 提交串行 |
 | ⚡ | **两条轻量流程** — 敏捷冲刺 `/impm-sprint` 与热修复 `/impm-hotfix`，大幅减少环节与 token 消耗，保留合理文档留痕 |
 | 🧪 | **测试先行（TDD）** — 编码前先写测试用例，编码后执行测试，全部通过才提交 |
 | 📁 | **版本化管理** — 每个版本独立目录 `docs/{项目缩写}-v{版本号}/` + 独立 Git 分支 |
 | 📝 | **全程简体中文** — 文档、注释、汇报均使用简体中文，降低团队学习成本 |
-| 🔌 | **14 个插件工具** — 文档读写、版本管理、任务调度、Git 操作、Prompt 记录与导出等 |
+| 🔌 | **15 个插件工具** — 文档读写、版本管理、任务调度、Git 操作、Prompt 记录与导出等 |
 
 ---
 
@@ -87,7 +87,11 @@
 在 OpenCode 中输入：
 
 ```bash
+# 标准流程
 /impm
+
+# 文档审核的流程
+/impm-review-edition
 ```
 
 PM Agent 将自动引导完成全部四阶段开发任务。
@@ -117,7 +121,17 @@ PM Agent 将自动引导完成全部四阶段开发任务。
 - [OpenCode](https://opencode.ai/)（支持插件、技能、命令的版本）
 - [Python](https://www.python.org/) 3.8+（**接口测试依赖 python 环境**，用于运行 scripts/API-TEST/ 下的接口测试执行器与脚本；可用系统 python、conda 环境或 uv 托管环境任一提供，运行时会自动按「shell python → conda → uv」顺序检测）
 
-### 方式一：本地安装（⭐ 推荐，用于开发调试）
+### 方式一：OpenCode自动安装（⭐ 推荐）
+在opencode.json里增加:
+```1c
+"plugin": [
+    "opencode-impm-cn"
+  ]
+```
+如果opencode.json在项目里，就是为项目添加。
+如果opencode.json是全局的，就是为全局添加。
+
+### 方式二：本地安装
 
 ```bash
 # 克隆项目
@@ -136,13 +150,13 @@ node scripts/install.mjs --target /path/to/project
 # .\scripts\install.ps1 -Target D:\path\to\project
 ```
 
-### 方式二：作为 npm 依赖安装
+### 方式三：作为 npm 依赖安装
 
 ```bash
 npm install opencode-impm-cn
 ```
 
-### 方式三：全局安装（所有项目可用）
+### 方式四：全局安装（所有项目可用）
 
 ```bash
 node scripts/install.mjs --global
@@ -196,8 +210,8 @@ node scripts/install.mjs --target /path/to/project --agent-type opencode-go-bala
 项目根目录/
 ├── .opencode/
 │   ├── agents/              # 13 个 AI Agent 定义
-│   ├── commands/            # 61 个命令定义
-│   ├── skills/              # 62 个技能与 25 个模板
+│   ├── commands/            # 62 个命令定义
+│   ├── skills/              # 62 个技能与 26 个模板
 │   └── plugins/impm/        # 编译后的插件入口
 └── opencode.json            # OpenCode 配置文件
 ```
@@ -269,13 +283,14 @@ flowchart LR
 ### 完整命令清单
 
 <details>
-<summary>📋 点击展开 52 个命令（按阶段分组）</summary>
+<summary>📋 点击展开 62 个命令（按阶段分组）</summary>
 
 #### 总流程
 
 | 命令 | 说明 |
 |:-----|:-----|
 | `/impm` | 我是项目经理：编排四阶段全流程 |
+| `/impm-review-edition` | 文档审核版：与 /impm 一致，仅需求分析阶段逐文档弹出用户审核确认 |
 | `/impm-sprint` | 敏捷冲刺：轻量 6 环节完成一个小批量迭代（⚡ 敏捷流程） |
 | `/impm-hotfix` | 热修复：轻量 3 环节完成 bug 定位到修复（⚡ 热修复流程） |
 
@@ -303,6 +318,7 @@ flowchart LR
 | 命令 | 说明 | 执行 Agent |
 |:-----|:-----|:----------:|
 | `/impm-docs` | 编排需求分析整理阶段全部步骤 | PM |
+| `/impm-docs-review` | 需求分析文档审核版：每步文档生成后弹出提示框请用户审核确认 | PM |
 | `/impm-version-create` | 确定版本号、创建版本分支、版本目录与进度表 | SCM |
 | `/impm-urs-create` | 生成用户需求说明书（URS） | BA |
 | `/impm-prd-create` | 生成产品需求文档（PRD，含用户故事与验收标准） | BA |
@@ -339,6 +355,7 @@ flowchart LR
 | `/impm-regression-test` | 回归测试（全量单元测试 + 接口测试） | TE |
 | `/impm-coding-comment` | 为版本代码补充中文注释 | DW |
 | `/impm-coding-review` | 代码审核（安全、性能、质量、合规、测试覆盖） | TL |
+| `/impm-regression-metrics` | 回填版本质量度量报告（审核度量：问题数/严重级别/修复率/缺陷密度/DRE） | TL |
 | `/impm-project-update` | 更新项目地图与 `docs/project.md` | SA |
 | `/impm-doc-merge` | 合并版本文档到主文档 | DW |
 | `/impm-doc-update` | 更新 `readme.md` 与 `agent.md` | DW |
@@ -352,6 +369,10 @@ flowchart LR
 | `/impm-tools-cpc-level3` | 等保三级代码审查：按 GB/T 22239-2019 逐项核查 CheckList，输出 `docs/{缩写}-cpc-level3-check.md` | TL |
 | `/impm-tools-personal-info` | 个人信息保护合规检查：依据《个人信息保护法》逐项核查采集/传输/存储合规性，输出 `docs/{缩写}-personal-info-check.md` | TL |
 | `/impm-tools-encrypt-check` | 密码算法合规检查：核查是否使用国密算法（SM2/SM3/SM4）、是否残留弱算法（MD5/DES/SHA-1 等），输出 `docs/{缩写}-encrypt-check.md` | TL |
+| `/impm-tools-license-check` | 开源许可证合规检查：检测依赖库 License 类型、Copyleft（GPL/AGPL）传染性冲突，输出检测报告 | TL |
+| `/impm-tools-secrets-scanning` | 敏感信息/密钥泄露检测：扫描硬编码密钥、Token、密码、私钥、AK/SK、内网 IP，输出检测报告 | TL |
+| `/impm-tools-vulnscan` | 漏洞探查：使用 OSV.dev API 查询中间件与三方包已知漏洞，生成漏洞探查报告 | TL |
+| `/impm-tools-operate-log` | 操作审计日志检查：核查关键操作（登录/权限变更/数据导出等）审计日志埋点，输出检查报告 | TL |
 
 #### ⚡ 轻量流程：敏捷冲刺
 
@@ -378,10 +399,10 @@ flowchart LR
 opencode-impm-cn/
 ├── 📁 assets/                   # 套件资源（安装时复制到 .opencode/）
 │   ├── 📁 agents/               # 13 个 AI Agent 定义（.md）
-│   ├── 📁 commands/             # 61 个命令（.md）
-│   └── 📁 skills/               # 62 个技能（每技能一个目录）+ template/ 25 个模板
+│   ├── 📁 commands/             # 62 个命令（.md）
+│   └── 📁 skills/               # 62 个技能（每技能一个目录）+ template/ 26 个模板
 ├── 📁 src/                      # 插件源码（TypeScript）
-│   ├── 📁 tools/                # 14 个工具的实现（含 prompt-recorder）
+│   ├── 📁 tools/                # 15 个工具的实现（含 prompt-recorder、heartbeat）
 │   ├── 📁 utils/                # 路径 / 版本 / git / 项目信息工具
 │   └── 📄 index.ts              # 插件入口
 ├── 📁 scripts/
@@ -529,6 +550,7 @@ You may obtain a copy of the License at
 | 创建当前版本的详细设计 | `impm-lld-create` | TL |
 | 创建当前版本的开发任务清单 | `impm-task-create` | TL |
 | 创建当前版本的需求追踪矩阵（RTM） | `impm-rtm-create` | TL |
+| 文档审核版（每步文档完成后弹出用户审核确认） | `impm-docs-review` | PM |
 | 提交此前生成的所有文档 | `impm-analysis-commit` | SCM |
 
 </details>
@@ -561,6 +583,7 @@ You may obtain a copy of the License at
 | 回归测试 | `impm-regression-test` | TE |
 | 代码备注 | `impm-coding-comment` | DW |
 | 代码审核 | `impm-coding-review` | TL |
+| 质量度量回填（审核度量：问题数/严重级别/修复率/DRE） | `impm-regression-metrics` | TL |
 | 项目地图更新 | `impm-project-update` | SA |
 | 版本文档合并到主文档 | `impm-doc-merge` | DW |
 | 更新 README.md 和 agent.md | `impm-doc-update` | DW |
@@ -598,5 +621,10 @@ You may obtain a copy of the License at
 |:---------|:-------|:------:|
 | 等保三级代码审查（逐项核查 CheckList + 输出检查报告） | `impm-tools-cpc-level3` | TL |
 | 密码算法合规检查（核查国密 SM2/SM3/SM4 使用、残留弱算法 MD5/DES/SHA-1，输出检查报告） | `impm-tools-encrypt-check` | TL |
+| 个人信息保护合规检查（依据《个人信息保护法》核查采集/传输/存储合规性） | `impm-tools-personal-info` | TL |
+| 开源许可证合规检查（检测 License 类型与 Copyleft 传染性冲突） | `impm-tools-license-check` | TL |
+| 敏感信息/密钥泄露检测（扫描硬编码密钥/Token/密码/私钥/AK-SK/内网 IP） | `impm-tools-secrets-scanning` | TL |
+| 漏洞探查（OSV.dev 查询中间件与三方包已知漏洞） | `impm-tools-vulnscan` | TL |
+| 操作审计日志检查（核查关键操作审计日志埋点） | `impm-tools-operate-log` | TL |
 
 </details>

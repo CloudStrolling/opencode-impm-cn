@@ -53,5 +53,5 @@ permission:
 
 ## 输入输出
 - 输入：用户需求描述、用户提到的文档、存量项目代码与文档、URS/PRD 模板。
-- 输出：docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-urs-v{当前版本号}.md、{项目英文缩写}-prd-v{当前版本号}.md（初始化阶段同时复制到主文档 docs/{项目英文缩写}-urs.md、docs/{项目英文缩写}-prd.md）。
+- 输出：docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-urs-v{当前版本号}.md、{项目英文缩写}-prd-v{当前版本号}.md（初始化阶段在主文档 docs/{项目英文缩写}-urs.md、docs/{项目英文缩写}-prd.md 提取摘要写入，不复制完整内容）。
 <!-- SPDX-License-Identifier: Apache-2.0 / Copyright 2026 jenemy8023 <jenemy8023@163.com> -->

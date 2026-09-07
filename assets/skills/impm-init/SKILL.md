@@ -80,12 +80,12 @@ description: 编排初始化阶段全部13个步骤（impm-init-isinit、impm-in
 完成后核对版本目录与 version_progress.md 存在。
 
 ### 步骤 e：执行 impm-init-urs（用户需求说明书）
-启动 BA subagent（subagent_type=ba）执行 impm-init-urs 技能：由 BA 调用 impm_template_reader(projectRoot, URS-TEMPLATE.MD) 读取模板，反推或按空结构生成用户需求说明书，impm_doc_writer docType=urs target=main 写入版本文档 docs/{项目英文缩写}-v0.0.1/{项目英文缩写}-urs-v0.0.1.md 并复制到主文档 docs/{项目英文缩写}-urs.md。
-完成后核对两个文件存在且内容一致，并核对/补录进度行（impm-init-urs，已完成）。
+启动 BA subagent（subagent_type=ba）执行 impm-init-urs 技能：由 BA 调用 impm_template_reader(projectRoot, URS-TEMPLATE.MD) 读取模板，反推或按空结构生成用户需求说明书，impm_doc_writer docType=urs target=version 写入完整版本文档 docs/{项目英文缩写}-v0.0.1/{项目英文缩写}-urs-v0.0.1.md，再提取摘要写入主文档 docs/{项目英文缩写}-urs.md（不复制完整内容）。
+完成后核对版本文档为完整内容、主文档为摘要内容，并核对/补录进度行（impm-init-urs，已完成）。
 
 ### 步骤 f：执行 impm-init-prd（产品需求文档）
-启动 BA subagent（subagent_type=ba）执行 impm-init-prd 技能：由 BA 调用 impm_template_reader(projectRoot, PRD-TEMPLATE.MD) 读取模板，根据项目代码、文档及 URS 反推或按空结构生成产品需求文档，impm_doc_writer docType=prd target=main 写入版本文档 docs/{项目英文缩写}-v0.0.1/{项目英文缩写}-prd-v0.0.1.md 并复制到主文档 docs/{项目英文缩写}-prd.md。
-完成后核对两个文件存在且内容一致，并核对/补录进度行（impm-init-prd，已完成）。
+启动 BA subagent（subagent_type=ba）执行 impm-init-prd 技能：由 BA 调用 impm_template_reader(projectRoot, PRD-TEMPLATE.MD) 读取模板，根据项目代码、文档及 URS 反推或按空结构生成产品需求文档，impm_doc_writer docType=prd target=version 写入完整版本文档 docs/{项目英文缩写}-v0.0.1/{项目英文缩写}-prd-v0.0.1.md，再提取摘要写入主文档 docs/{项目英文缩写}-prd.md（不复制完整内容）。
+完成后核对版本文档为完整内容、主文档为摘要内容，并核对/补录进度行（impm-init-prd，已完成）。
 
 ### 步骤 g：执行 impm-init-sad（系统架构设计）
 启动 SA subagent（subagent_type=sa）执行 impm-init-sad 技能：由 SA 调用 impm_template_reader(projectRoot, SAD-TEMPLATE.MD) 读取模板，根据项目代码、文档及 PRD 反推或按空结构生成系统架构设计文档，impm_doc_writer docType=sad target=main 写入 docs/sad.md（sad 仅主文档，无版本内文档）。

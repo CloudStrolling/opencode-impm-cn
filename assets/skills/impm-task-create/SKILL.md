@@ -49,7 +49,7 @@ description: 根据 SAD、当前版本 PRD 与 LLD，按任务模板生成当前
 ### 步骤 3：生成任务清单
 根据 SAD、当前版本的 PRD 和当前版本的 LLD，使用模板中的 JSON 格式完成当前版本的任务清单。任务清单包含字段：projectName、version、tasks 数组。每个任务包含：id、title、description、taskType（backend|frontend|common）、userStoryId、apiId、upstreamTaskIds、downstreamTaskIds、priority、status（未完成|执行中|已完成）、testMethod、acceptanceCriteria。
 字段映射规则：
-- userStoryId：填写该任务实现的 PRD 用户故事编号（如 US-001），从步骤 2 读取的 PRD 中获取；
+- userStoryId：填写该任务实现的 PRD 用户故事编号（如 US-v{当前版本号}-001，编号项目全局唯一，含版本号），从步骤 2 读取的 PRD 中获取；
 - apiId：填写该任务涉及/实现的 API 接口编号（如 API-001），从步骤 2 读取的 API 文档中获取；一个任务涉及多个接口时用逗号分隔（如 API-001,API-002）；任务不涉及接口或项目无 API 文档时留空字符串。
 任务必须按上下游依赖关系排序：被依赖的任务在前，依赖他人的任务在后，确保编码阶段可依序串行执行。
 

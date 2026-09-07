@@ -1,5 +1,5 @@
 ---
-description: 生成并写入产品需求文档（PRD版本文档+主文档）
+description: 生成并写入产品需求文档（PRD版本文档完整内容+主文档摘要）
 agent: pm
 subtask: false
 ---

@@ -2,6 +2,13 @@
 
 本项目版本号遵循语义化版本（SemVer）：主版本.次版本.修订版本。
 
+## [0.9.2] - 2026-09-06
+
+### 新增
+- URS/PRD 需求编号项目全局唯一：功能需求（FR）、非功能需求（NFR）、功能编号（F）、用户故事（US）编号格式统一为「前缀-v版本号-序号」（如 FR-v0.0.1-001、US-v0.0.2-003），跨版本不变的需求沿用原编号，仅新增/变更启用新编号；URS/PRD/RTM/TESTCASE 模板、impm-urs-create/impm-prd-create/impm-init-urs/impm-init-prd/impm-rtm-create/impm-task-create/impm-init-task/impm-regression-test 技能同步套用该规则
+- URS/PRD 主文档摘要化：初始化阶段与 impm-doc-merge 合并时不写完整内容，从当前版本提取摘要（需求/功能/用户故事全局清单、业务目标/场景/约束的按版本概要、版本演进表）写入 docs/{项目英文缩写}-urs.md、docs/{项目英文缩写}-prd.md，完整内容保留在版本目录文档
+- impm-doc-merge 重构式合并：改为按项目组织方式、代码结构、系统架构组织主文档结构——URS/PRD 摘要式合并；API 按模块分组原位更新、废弃接口移入下线小节；DBD 按业务域/模块→表合并、废弃表留存；DBD SQL 新表 CREATE/既有表 ALTER 保持可重执行；LLD 按模块/业务流程合并并随架构演进重构章节；文档头统一维护版本演进表
+
 ## [0.9.0] - 2026-09-04
 
 ### 新增

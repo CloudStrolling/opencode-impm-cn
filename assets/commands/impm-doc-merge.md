@@ -1,5 +1,5 @@
 ---
-description: 将当前版本的 URS、PRD、API、DBD、DBD SQL、LLD 文档合并到项目主文档
+description: 将当前版本的 URS、PRD、API、DBD、DBD SQL、LLD 文档重构式合并到项目主文档（URS/PRD 摘要合并）
 agent: pm
 subtask: false
 ---
