@@ -53,13 +53,13 @@ impm-task-coding 启动 DBA subagent 处理数据库设计，需要根据任务�
 调用 impm_doc_reader（docType=dbd，target=main）与（docType=dbd，target=version），读取主数据库设计文档与当前版本数据库设计文档。
 
 ### 步骤 5：判断是否需要变更
-根据当前任务的 context.md、cs.md、ws.md，判断数据库设计是否需要变更：
-- 如果不需要变更，调用 impm_progress（action=add，stepName=impm-task-coding-dbd，status={任务编号}-数据库设计无需修改），然后结束此步骤。
+根据当前任务的 context.md、cs.md、ws.md，判断数据库设计是否需要变更（新增表、修改表结构、新增索引、数据初始化等实质性 Schema 变动）：
+- 如果不需要变更（即使任务涉及数据库相关代码，但无实质性 Schema 变动），调用 impm_progress（action=add，stepName=impm-task-coding-dbd，status={任务编号}-数据库设计无需修改），然后结束此步骤。
 
 ### 步骤 6：更新数据库设计文档与脚本
 如果需要修改：
 1. 先调用 impm_doc_reader（docType=dbd，target=version）与（docType=sql，target=version）读取版本数据库设计文档与 SQL 脚本的**最新内容**（可能有其他并行任务已写入，必须基于最新内容合并）；
-2. 在最新内容基础上，合并本任务需要新增/修改的表、字段、索引等内容（SQL 按新增对象追加，不重写他人已建对象）；
+2. 在最新内容基础上，合并本任务需要新增/修改的表、字段、索引等内容（SQL 按新增对象追加，不重写他人已建对象）；新增表必须遵循 `{子系统缩写}_{模块缩写}_{实体名}` 命名规范，并插入到物理模型中对应的子系统/业务模块分组下；如涉及数据初始化需求，在 DBD 文档第 11 章和 SQL 脚本末尾同步追加 INSERT INTO 语句；
 3. 调用 impm_doc_writer（docType=dbd，target=version，expectedBase=第1步读取到的 dbd 文档最新全文）写回版本数据库设计文档 docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-dbd-v{当前版本号}.md；若返回并发冲突错误（文件已被其他任务修改），回到第1步重新读取最新内容合并后再写回；
 4. 然后调用 impm_doc_writer（docType=sql，target=version，expectedBase=第1步读取到的 SQL 脚本最新全文）写回版本数据库脚本 docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-dbd-v{当前版本号}.sql；若返回并发冲突错误，回到第1步重新读取合并后再写回；
 5. 写回后立即回读两份文件，校验本任务内容已写入且他人内容未被破坏（版本目录写入冲突规避：多任务并行时禁止基于旧快照整体覆盖）；核对两份文件内容一致、脚本可执行。
