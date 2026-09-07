@@ -1,6 +1,6 @@
 ---
 name: impm-doc-merge
-description: 将当前版本的 URS、PRD、API、DBD、DBD SQL、LLD 文档重构式合并到项目主文档（URS/PRD 摘要式合并，API/DBD/SQL/LLD 按项目结构与系统架构重构合并）
+description: 将当前版本的 URS、PRD、API、DBD、DBD SQL、LLD 文档重构式合并到项目主文档（URS/PRD 摘要式合并，API/DBD/SQL/LLD 按项目结构与系统架构重构合并），并合并 OpenAPI 3.0 JSON 和 Swagger UI HTML。
 ---
 
 # impm-doc-merge 技能
@@ -66,13 +66,81 @@ description: 将当前版本的 URS、PRD、API、DBD、DBD SQL、LLD 文档重�
 5. 用 impm_doc_writer（docType=prd，target=main）写回主文档。
 6. 核对：主文档为全局产品需求摘要、按项目/模块/业务逻辑重组排序、无版本号分节，编号全局唯一不重复，历史内容保留。
 
-### 步骤 3：合并 API 文档（重构式合并）
+### 步骤 3：合并 API 文档（重构式合并）+ OpenAPI 合并
+
+#### 3.1 合并 Markdown API 文档
 1. 用 impm_doc_reader（docType=api，target=main）读取主文档 docs/{项目英文缩写}-api.md；若主文档不存在且当前版本 API 文档存在，按其结构+架构基准创建。
 2. 确定接口分组：以 sad.md/LLD 的模块划分为准；现有分组保留，新模块接口插入与架构一致的位置。
-3. 将版本文档 docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-api-v{当前版本号}.md 的接口逐条并入：新增接口插入所属模块组；已有接口（URL/路径相同视为同一接口）原位更新请求/响应/错误码，并标注最近修改版本；接口清单同步更新；被删除或废弃的接口移入"废弃/下线接口"小节并标注下线版本。
-4. 若本次为首次合并（v0.0.1），按架构分组建立主文档结构，将版本接口重构组织进去而非原文照抄。
-5. 用 impm_doc_writer（docType=api，target=main）写回主文档。
-6. 核对：主文档按模块分组、无重复定义、接口与编号/来源版本可追溯，历史接口保留。
+3. 将版本文档 docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-api-v{当前版本号}.md 的接口逐条并入：
+   - **编号全局唯一**：先读取主文档所有接口编号（格式 API-{序号}），确定最大序号 max_api_number；版本文档中的接口编号若与主文档冲突，重新编号为 max_api_number + 1 开始递增，保证全局唯一
+   - 新增接口插入所属模块组
+   - 已有接口（URL/路径相同视为同一接口）原位更新请求/响应/错误码，并标注最近修改版本
+   - 接口清单同步更新
+   - 被删除或废弃的接口移入"废弃/下线接口"小节并标注下线版本
+4. **重组原则**（不按版本分节）：
+   - 主文档按「模块 → 业务逻辑」排序，不按版本号分节
+   - 模块以 SAD 的模块划分为基准
+   - 模块内按业务逻辑排序（主流程在前，支线在后）
+   - 每个接口保留「来源版本」列，标注首次引入和最近修改版本
+5. 若本次为首次合并（v0.0.1），按架构分组建立主文档结构，将版本接口重构组织进去而非原文照抄。
+6. 用 impm_doc_writer（docType=api，target=main）写回主文档。
+7. 核对：主文档按模块分组、无重复定义、接口与编号/来源版本可追溯，历史接口保留。
+
+#### 3.2 合并 OpenAPI 3.0 JSON
+1. 读取项目级主文档 docs/openapi.json（如不存在则创建空结构）：
+```json
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "{项目中文名称} API 文档",
+    "version": "v{当前版本号}",
+    "description": "由 impm 自动生成"
+  },
+  "servers": [
+    {
+      "url": "/api",
+      "description": "API 基础路径"
+    }
+  ],
+  "paths": {},
+  "components": {
+    "schemas": {},
+    "securitySchemes": {}
+  },
+  "tags": []
+}
+```
+2. 读取版本级 docs/{项目英文缩写}-v{当前版本号}/openapi-v{当前版本号}.json。
+3. 确定主文档最大 API 序号：遍历主文档 paths 的接口描述（operationId/summary 中的 API-{序号}），提取最大值。
+4. 版本文档接口编号重映射：若版本文档中的接口编号与主文档冲突，重新编号为 max_api_number + 1 开始递增。
+5. 合并 paths：新增接口直接加入，已有接口（路径相同）原位更新请求/响应。
+6. 合并 tags：新增模块 tag 加入，已有模块保留，按模块+业务逻辑排序。
+7. 合并 components：新增 schema 加入，已有 schema 保留。
+8. 更新 info.version 为当前版本号。
+9. 写入主文档 docs/openapi.json。
+
+#### 3.3 生成项目级 Swagger UI HTML
+根据以下模板生成项目级 Swagger UI 入口文件 docs/index.html：
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <title>{项目名称} API 文档</title>
+  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist/swagger-ui.css">
+</head>
+<body>
+  <h1>{项目名称} API 文档（最新版本）</h1>
+  <div id="swagger-ui"></div>
+  <script src="https://unpkg.com/swagger-ui-dist/swagger-ui-bundle.js"></script>
+  <script>
+    SwaggerUIBundle({
+      url: "./openapi.json",
+      dom_id: '#swagger-ui'
+    });
+  </script>
+</body>
+</html>
+```
 
 ### 步骤 4：合并 DBD 文档（重构式合并）
 1. 用 impm_doc_reader（docType=dbd，target=main）读取主文档 docs/{项目英文缩写}-dbd.md。
@@ -99,6 +167,8 @@ description: 将当前版本的 URS、PRD、API、DBD、DBD SQL、LLD 文档重�
 ## 交付物
 - docs/{项目英文缩写}-urs.md、docs/{项目英文缩写}-prd.md（需求/功能/用户故事**摘要**汇总主文档，非完整内容）
 - docs/{项目英文缩写}-api.md、docs/{项目英文缩写}-dbd.md、docs/{项目英文缩写}-dbd.sql、docs/{项目英文缩写}-lld.md（按项目组织方式、代码结构、系统架构**重构式合并**后的完整设计主文档）
+- docs/openapi.json（项目级 OpenAPI 3.0 格式）
+- docs/index.html（项目级 Swagger UI 入口）
 - version_progress.md 进度记录
 
 ## 完成后提示

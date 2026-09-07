@@ -1,6 +1,6 @@
 ---
 name: impm-task-coding-api
-description: 判断当前任务是否需要变更接口设计，如需变更则更新当前版本 API 设计文档。
+description: 判断当前任务是否需要变更接口设计，如需变更则更新当前版本 API 设计文档，并同步更新当前版本 OpenAPI 3.0 JSON。
 ---
 
 # impm-task-coding-api 技能
@@ -63,11 +63,19 @@ description: 判断当前任务是否需要变更接口设计，如需变更则�
 3. 调用 impm_doc_writer（docType=api，target=version，expectedBase=第1步读取到的最新全文）写回版本接口设计文档 docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-api-v{当前版本号}.md；若返回并发冲突错误（文件已被其他任务修改），回到第1步重新读取最新内容合并后再写回；
 4. 写回后立即回读校验本任务接口已写入且他人内容未被破坏（版本目录写入冲突规避：多任务并行时禁止基于旧快照整体覆盖）；核对接口定义完整。
 
-### 步骤 7：记录完成
+### 步骤 7：同步更新 OpenAPI 3.0 JSON
+版本接口设计文档更新后（新增/修改/废弃接口），同步更新当前版本 OpenAPI JSON docs/{项目英文缩写}-v{当前版本号}/openapi-v{当前版本号}.json：
+1. 读取当前版本 OpenAPI JSON（不存在时按基础结构创建：「openapi: 3.0.3」，info.title=项目中文名称，info.version=v{当前版本号}，paths/components/tags 空结构）。
+2. 将本任务新增/修改的接口按接口定义同步到 paths（HTTP 方法、路径、summary=接口名称、description=功能描述、tags=模块分组、parameters 从请求参数提取、requestBody 从请求示例提取、responses 从响应示例提取）。
+3. 废弃接口（若已移到废弃小节）从 paths 删除或保留并在 description 标注"已废弃"。
+4. 写回 docs/{项目英文缩写}-v{当前版本号}/openapi-v{当前版本号}.json。
+
+### 步骤 8：记录完成
 调用 impm_progress（action=add，stepName=impm-task-coding-api，status={任务编号}-API设计已更新）。
 
 ## 交付物
 - docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-api-v{当前版本号}.md（如有变更）
+- docs/{项目英文缩写}-v{当前版本号}/openapi-v{当前版本号}.json（如有变更，与 md 同步）
 - version_progress.md 中的进度记录
 
 ## 完成后提示

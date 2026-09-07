@@ -1,6 +1,6 @@
 ---
 name: impm-init-api
-description: 判断项目是否需要接口设计，需要时读取 API-TEMPLATE.MD 模板反推接口设计文档，写入版本文档并复制到主文档 docs/{项目英文缩写}-api.md。当初始化阶段需要设计系统接口时使用。
+description: 判断项目是否需要接口设计，需要时读取 API-TEMPLATE.MD 模板反推接口设计文档，写入版本文档并复制到主文档 docs/{项目英文缩写}-api.md，并生成 OpenAPI 3.0 JSON 和 Swagger UI HTML。当初始化阶段需要设计系统接口时使用。
 ---
 
 # impm-init-api 技能
@@ -55,11 +55,74 @@ description: 判断项目是否需要接口设计，需要时读取 API-TEMPLATE
 ### 步骤 4：写入版本文档并复制主文档
 调用 impm_doc_writer(projectRoot, api, {项目中文名称}, {当前版本号}, {任务编号}, main, 内容)：写入版本文档 docs/{项目英文缩写}-v0.0.1/{项目英文缩写}-api-v0.0.1.md，并复制到主文档 docs/{项目英文缩写}-api.md（主文档不存在则创建）。核对两个文件均存在且内容一致。
 
+### 步骤 4.1：生成 OpenAPI 3.0 JSON
+根据步骤 3 生成的 API Markdown 文档，转换为 OpenAPI 3.0 格式的 JSON 文件 docs/{项目英文缩写}-v0.0.1/openapi-v0.0.1.json：
+1. **基础结构**：
+```json
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "{项目中文名称} API 文档",
+    "version": "v0.0.1",
+    "description": "由 impm 自动生成"
+  },
+  "servers": [
+    {
+      "url": "/api",
+      "description": "API 基础路径"
+    }
+  ],
+  "paths": {},
+  "components": {
+    "schemas": {},
+    "securitySchemes": {}
+  },
+  "tags": []
+}
+```
+2. **接口提取规则**：
+   - 从 API Markdown 的接口定义（### 5.x 格式）提取
+   - HTTP 方法：从接口行 `GET/POST/PUT/DELETE /api/xxx` 提取
+   - 路径：从接口行提取完整路径
+   - Summary：接口名称
+   - Description：功能描述
+   - Tags：按模块分组（从章节层级推断）
+   - Parameters：从请求参数表提取
+   - RequestBody：从请求参数/请求示例提取
+   - Responses：从响应参数/响应示例提取
+3. **编号规则**：初始化阶段从 API-001 开始编号，格式为 API-{序号}。
+4. **Tags 分组**：以 SAD 的模块划分为基准生成 tags，格式为 `{ "name": "模块名称", "description": "模块描述" }`。
+
+### 步骤 4.2：生成 Swagger UI HTML
+根据以下模板生成版本级 Swagger UI 入口文件 docs/{项目英文缩写}-v0.0.1/index.html：
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <title>{项目名称} API 文档 - v0.0.1</title>
+  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist/swagger-ui.css">
+</head>
+<body>
+  <h1>{项目名称} API 文档 - v0.0.1</h1>
+  <div id="swagger-ui"></div>
+  <script src="https://unpkg.com/swagger-ui-dist/swagger-ui-bundle.js"></script>
+  <script>
+    SwaggerUIBundle({
+      url: "./openapi-v0.0.1.json",
+      dom_id: '#swagger-ui'
+    });
+  </script>
+</body>
+</html>
+```
+
 ### 步骤 5：记录进度
 调用 impm_progress(projectRoot, {项目英文缩写}, {当前版本号}, add, impm-init-api, 已完成) 记录本步骤完成。
 
 ## 交付物
 - docs/{项目英文缩写}-v0.0.1/{项目英文缩写}-api-v0.0.1.md
+- docs/{项目英文缩写}-v0.0.1/openapi-v0.0.1.json（OpenAPI 3.0 格式）
+- docs/{项目英文缩写}-v0.0.1/index.html（Swagger UI 入口）
 - docs/{项目英文缩写}-api.md
 
 ## 完成后提示

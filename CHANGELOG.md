@@ -2,6 +2,14 @@
 
 本项目版本号遵循语义化版本（SemVer）：主版本.次版本.修订版本。
 
+## [0.9.3] - 2026-09-07
+
+### 新增
+- API 文档 OpenAPI 3.0 化与 Swagger UI：生成版本级 API 文档的同时生成 OpenAPI 3.0 JSON（docs/{缩写}-v{版本}/openapi-v{版本}.json）与 Swagger UI 入口（index.html）；impm-doc-merge 合并 API 文档时同源合并 OpenAPI JSON 并生成项目级 docs/openapi.json 与 docs/index.html（引用最新合并结果）
+- API 编号全局唯一：生成语法 impm-api-create/impm-init-api 时先读取项目级 API 文档确定当前最大编号，版本内新接口向后递增编号；合并时按主文档最大编号重映射冲突编号，保证跨版本全局唯一
+- 项目级 API 文档按模块+业务逻辑重组：impm-doc-merge 合并 API 文档不按版本号分节，按「模块 → 业务逻辑」排序组织，每个接口保留来源版本/最近修改版本列
+- impm_doc_reader/impm_doc_writer 新增 openapi、swagger 两种文档类型，标准路径接入版本级与项目级 OpenAPI JSON/Swagger HTML
+
 ## [0.9.2] - 2026-09-06
 
 ### 新增
