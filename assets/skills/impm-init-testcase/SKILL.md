@@ -47,8 +47,14 @@ description: 读取 TESTCASE-TEMPLATE.MD 模板，根据项目代码、文档及
 - 存量项目：根据现有功能与代码确定用例。
 - 空项目：按模板结构写入空文档，章节标题保留，内容填写“待补充”或空值。
 
-### 步骤 3：写入版本文档并复制主文档
-调用 impm_doc_writer(projectRoot, testcase, {项目中文名称}, {当前版本号}, {任务编号}, main, 内容)：写入版本文档 docs/{项目英文缩写}-v0.0.1/{项目英文缩写}-testcase-v0.0.1.md，并复制到主文档 docs/{项目英文缩写}-testcase.md（主文档不存在则创建）。核对两个文件均存在且内容一致。
+### 步骤 3：写入版本文档
+调用 impm_doc_writer(projectRoot, testcase, {项目中文名称}, {当前版本号}, {任务编号}, version, 内容)：写入版本文档 docs/{项目英文缩写}-v0.0.1/{项目英文缩写}-testcase-v0.0.1.md。核对文件存在且内容正确。
+
+### 测试用例编号规则
+每个测试用例必须具有全局唯一编号，格式为：`TC-{版本号}-{任务编号}-{当前序号}`。例如：`TC-v0.0.1-TASK-001-001`。其中：
+- 版本号：当前执行的版本号
+- 任务编号：关联的任务编号（初始化阶段可使用 TASK-001）
+- 当前序号：该任务下测试用例的递增序号，从 001 开始，三位数补零
 
 ### 步骤 4：编写单元测试函数
 针对测试用例中的单元测试部分，编写单元测试函数：测试函数与用例一一对应，函数名、入参、断言与用例的测试步骤、预期结果保持一致。
@@ -72,7 +78,6 @@ description: 读取 TESTCASE-TEMPLATE.MD 模板，根据项目代码、文档及
 
 ## 交付物
 - docs/{项目英文缩写}-v0.0.1/{项目英文缩写}-testcase-v0.0.1.md
-- docs/{项目英文缩写}-testcase.md
 - scripts/API-TEST/{项目英文缩写}-api-test-v0.0.1.postman_collection.json（Postman Collection v2.1 接口测试用例）
 - scripts/API-TEST/run_api_test.py（接口测试执行程序，由模板复制）
 

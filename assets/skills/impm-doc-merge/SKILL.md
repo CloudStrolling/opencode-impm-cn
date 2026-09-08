@@ -167,19 +167,13 @@ description: 将当前版本的 URS、PRD、API、DBD、DBD SQL、LLD 文档重�
 4. 用 impm_doc_writer（docType=sql，target=main）写回主文档。
 5. 核对：SQL 语句完整、按子系统/业务模块组织、无重复冲突、数据初始化语句包含在内、可直接执行。
 
-### 步骤 6：合并 LLD 文档（重构式合并）
-1. 用 impm_doc_reader（docType=lld，target=main）读取主文档 docs/{项目英文缩写}-lld.md。
-2. 将版本文档 docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-lld-v{当前版本号}.md 按模块/业务流程并入：新模块插入与架构一致的位置；已有模块的业务规则、时序图、核心逻辑原位更新并标注修订版本；若架构演进导致模块重划，重构主文档章节以匹配当前架构；LLD 中引用的需求/用户故事编号（FR-v{版本号}-xxx、US-v{版本号}-xxx）保持全局唯一一致。
-3. 用 impm_doc_writer（docType=lld，target=main）写回主文档。
-4. 核对：主文档按模块组织、历史内容保留、与当前系统架构一致、可追溯版本。
-
-### 步骤 7：记录进度
+### 步骤 6：记录进度
 1. 调用 impm_progress add（impm-doc-merge，已完成），在 version_progress.md 中记录本技能完成状态。
 2. 核对 version_progress.md 中已记录本步骤状态。
 
 ## 交付物
 - docs/{项目英文缩写}-urs.md、docs/{项目英文缩写}-prd.md（需求/功能/用户故事**摘要**汇总主文档，非完整内容）
-- docs/{项目英文缩写}-api.md、docs/{项目英文缩写}-dbd.md、docs/{项目英文缩写}-dbd.sql、docs/{项目英文缩写}-lld.md（按项目组织方式、代码结构、系统架构**重构式合并**后的完整设计主文档）
+- docs/{项目英文缩写}-api.md、docs/{项目英文缩写}-dbd.md、docs/{项目英文缩写}-dbd.sql（按项目组织方式、代码结构、系统架构**重构式合并**后的完整设计主文档）
 - docs/openapi.json（项目级 OpenAPI 3.0 格式）
 - docs/index.html（项目级 Swagger UI 入口）
 - version_progress.md 进度记录
