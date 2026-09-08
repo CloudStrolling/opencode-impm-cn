@@ -13,7 +13,7 @@ subtask: false
 1. 使用 Skill 工具加载技能：impm-docs-review，按技能中的「通用调度要求」执行。
 2. 每个文档生成子步骤用 task 工具启动对照表中对应的 subagent 执行对应技能（version-create→scm、urs-create/prd-create→ba、sad-update→sa、dbd-create→dba、api-create/lld-create/task-create/rtm-create→tl、analysis-commit→scm），禁止自己代替执行文档生成事务。
 3. 任务提示词必传上下文（缺一不可）：项目根目录绝对路径（projectRoot）、项目英文缩写、当前版本号、用户输入 $ARGUMENTS 原文、技能名（要求 subagent 先用 Skill 工具加载技能再执行）。
-4. **在 urs/prd/sad/dbd/api/lld/task 每步文档生成并核对无误后，用 question 工具弹出提示框请用户审核该文档**；用户选择"审核通过"才进入下一步，选择"需要修改"则按用户反馈重新派发对应 subagent 重新生成并再次审核，期间不得推进到下一步。
+4. **在 urs/prd/sad/dbd/api/lld/task 每步文档生成并核对无误后，先读取该文档提取简明摘要并以文本形式展示在对话框中（仅展示、不写入任何文件），随后用 question 工具弹出提示框请用户审核该文档**；用户选择"审核通过"才进入下一步，选择"需要修改"则按用户反馈重新派发对应 subagent 重新生成并再次展示摘要+提示审核，期间不得推进到下一步。
 5. 严格按照技能中的执行步骤依次执行：不跳过、不乱序、不并行、不合并。
 6. 每步完成后核对产出文件与 version_progress.md 进度记录；全部完成后向用户简要汇报本阶段产出、各文档审核结果与下一步建议。
 

@@ -565,21 +565,23 @@ c) 功能与UI测试；在docs/{项目英文缩写}-v{当前版本号}/ 目录�
 ## skills
 项目的上述的每个步骤都定义为一个opencode的skill
 
-### 需求分析文档审核版技能（impm-docs-review / impm-review-edition）
-- 在标准 impm-docs / impm 流程基础上，提供"文档审核版"：
-  - **impm-docs-review**：与 impm-docs 步骤一致（版本创建→URS→PRD→SAD→DBD→API→LLD→任务清单→RTM→git提交），区别在于 urs/prd/sad/dbd/api/lld/task 这 7 个文档生成步骤完成后，均由 PM 通过 question 工具弹出提示框请用户审核文档；用户选择"审核通过"才进入下一步，"需要修改"则按反馈重新生成再审，期间不推进下一步。判定为"无需修改/无需数据库/无需接口"且未产出新文档的步骤不弹窗。
-  - **impm-review-edition**：与 impm 全流程一致，仅将需求分析整理阶段由 impm-docs 替换为 impm-docs-review，实现全流程开发过程中的逐文档用户审核。
+### 文档审核版技能（impm-init-review / impm-docs-review / impm-review-edition）
+- 在标准 impm-init / impm-docs / impm 流程基础上，提供"文档审核版"：
+  - **impm-init-review**：与 impm-init 步骤一致（isinit→git→project→version→urs→prd→sad→dbd→api→lld→task→testcase→commit），区别在于 project/urs/prd/sad/dbd/api/lld/task/testcase 这 9 个文档生成步骤完成后，均由 PM 先读取文档提取简明摘要并以文本形式展示在对话框中（仅展示、不写入文件），再通过 question 工具弹出提示框请用户审核文档；用户选择"审核通过"才进入下一步，"需要修改"则按反馈重新生成再审（重新展示摘要），期间不推进下一步。判定为"无需数据库/无需接口"且未产出新文档的步骤不弹窗。
+  - **impm-docs-review**：与 impm-docs 步骤一致（版本创建→URS→PRD→SAD→DBD→API→LLD→任务清单→RTM→git提交），区别在于 urs/prd/sad/dbd/api/lld/task 这 7 个文档生成步骤完成后，均由 PM 先读取文档提取简明摘要并以文本形式展示在对话框中（仅展示、不写入文件），再通过 question 工具弹出提示框请用户审核文档；用户选择"审核通过"才进入下一步，"需要修改"则按反馈重新生成再审（重新展示摘要），期间不推进下一步。判定为"无需修改/无需数据库/无需接口"且未产出新文档的步骤不弹窗。
+  - **impm-review-edition**：与 impm 全流程一致，仅将项目初始化阶段由 impm-init 替换为 impm-init-review、将需求分析整理阶段由 impm-docs 替换为 impm-docs-review，实现全流程开发过程中的逐文档用户审核。
 
 ## commands
 每个skill都对应一个command。
 另外定义几个command
 1.  /impm  自动执行4个阶段的所有步骤。
 2.  /impm-init 执行项目初始化阶段的所有步骤。
-3.  /impm-docs 执行需求分析整理阶段的所有步骤。
-4.  /impm-coding 执行需求分析整理阶段的所有步骤。
-5.  /impm-finish 执行回归测试和版本文档整理阶段的所有步骤。
-6.  /impm-docs-review 执行需求分析整理阶段的所有步骤（含 urs/prd/sad/dbd/api/lld/task 逐文档用户审核）。
-7.  /impm-review-edition 执行4个阶段的所有步骤（文档审核版，阶段二使用 impm-docs-review）。
+3.  /impm-init-review 执行项目初始化阶段的所有步骤（含 project/urs/prd/sad/dbd/api/lld/task/testcase 逐文档用户审核）。
+4.  /impm-docs 执行需求分析整理阶段的所有步骤。
+5.  /impm-coding 执行需求分析整理阶段的所有步骤。
+6.  /impm-finish 执行回归测试和版本文档整理阶段的所有步骤。
+7.  /impm-docs-review 执行需求分析整理阶段的所有步骤（含 urs/prd/sad/dbd/api/lld/task 逐文档用户审核）。
+8.  /impm-review-edition 执行4个阶段的所有步骤（文档审核版，阶段一使用 impm-init-review、阶段二使用 impm-docs-review）。
 
 ## plugins
 1. 根据上述需求，自行决定将哪些通用功能集成到ts写成的插件里。

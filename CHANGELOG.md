@@ -2,6 +2,15 @@
 
 本项目版本号遵循语义化版本（SemVer）：主版本.次版本.修订版本。
 
+## [Unreleased]
+
+### 新增
+- 初始化文档审核技能（impm-init-review / /impm-init-review）：在 impm-init 基础上，为 project/urs/prd/sad/dbd/api/lld/task/testcase 每步文档生成后增加"用户审核确认"环节，审核通过才进入下一步；需要修改时按用户反馈重新生成再审
+- 文档审核版全流程技能同步覆盖初始化阶段：impm-review-edition 阶段一由 impm-init 替换为 impm-init-review（项目初始化文档逐份审核），阶段二仍使用 impm-docs-review
+
+### 更新
+- impm-docs-review 与 impm-init-review 技能在弹出审核提示框前，先读取待审核文档提取简明摘要并以文本形式展示在对话框中（仅展示、不写入文件），供用户快速预览后再审核
+
 ## [0.9.3] - 2026-09-07
 
 ### 新增

@@ -103,7 +103,9 @@ PM Agent 将自动引导完成全部四阶段开发任务。
 | 阶段 | 命令 | 说明 |
 |:----:|:-----|:-----|
 | 1 | `/impm-init` | 初始化项目、生成 URS/PRD/SAD/DBD/API/LLD/任务清单/测试用例 |
+| 1 | `/impm-init-review` | 初始化审核版：每步文档生成后先展示文档摘要、再弹出提示框请用户审核 |
 | 2 | `/impm-docs` | 确认版本需求、更新设计文档、创建任务清单 |
+| 2 | `/impm-docs-review` | 需求分析文档审核版：每步文档生成后先展示文档摘要、再弹出提示框请用户审核 |
 | 3 | `/impm-coding` | 循环执行任务：上下文 → 编码 → 测试 → 提交 |
 | 4 | `/impm-finish` | 回归测试、代码审核、文档合并、合并主分支 |
 | ⚡ | `/impm-sprint` | 敏捷冲刺：需求简报 → 版本与任务 → 编码 → 测试 → 汇总留存 → 提交合并 |
@@ -250,7 +252,9 @@ flowchart LR
 | 阶段 | 命令 | 核心动作 |
 |:----:|:-----|:---------|
 | **1** | `/impm-init` | 判定项目类型 → 创建版本目录与进度表 → 生成全部初始文档 → 提交 |
+| **1** | `/impm-init-review` | 初始化审核版：同 `/impm-init`，另在 project/urs/prd/sad/dbd/api/lld/task/testcase 每步展示摘要并弹出提示框请用户审核 |
 | **2** | `/impm-docs` | 确认版本需求 → 创建版本分支 → 生成/更新 URS/PRD/SAD/DBD/API/LLD → 创建任务清单 |
+| **2** | `/impm-docs-review` | 需求分析文档审核版：同 `/impm-docs`，另在 urs/prd/sad/dbd/api/lld/task 每步展示摘要并弹出提示框请用户审核 |
 | **3** | `/impm-coding` | 按任务清单按波次调度（最多 5 任务并行，依赖上游先完成）：收集上下文 → 代码查询 → 网络查询 → 数据库/API 设计 → 测试用例 → 编码 → 写测试 → 跑测试 → 串行提交 |
 | **4** | `/impm-finish` | 全量回归测试 → 补充注释 → 代码审核 → 更新项目地图 → 合并文档 → 更新 README/Agent/部署文档 → 合并主分支 |
 | **⚡敏捷** | `/impm-sprint` | 需求简报（1份代URS/PRD）→ 版本与任务（任务描述内嵌需求）→ 编码（跳过 context/cs/ws/testcase）→ 测试 → 汇总留存 → 提交合并 |
@@ -290,7 +294,7 @@ flowchart LR
 | 命令 | 说明 |
 |:-----|:-----|
 | `/impm` | 我是项目经理：编排四阶段全流程 |
-| `/impm-review-edition` | 文档审核版：与 /impm 一致，仅需求分析阶段逐文档弹出用户审核确认 |
+| `/impm-review-edition` | 文档审核版：与 /impm 一致，项目初始化阶段（impm-init-review）与需求分析阶段（impm-docs-review）逐文档先展示摘要再弹出用户审核确认 |
 | `/impm-sprint` | 敏捷冲刺：轻量 6 环节完成一个小批量迭代（⚡ 敏捷流程） |
 | `/impm-hotfix` | 热修复：轻量 3 环节完成 bug 定位到修复（⚡ 热修复流程） |
 
@@ -299,6 +303,7 @@ flowchart LR
 | 命令 | 说明 | 执行 Agent |
 |:-----|:-----|:----------:|
 | `/impm-init` | 编排初始化阶段全部步骤 | PM |
+| `/impm-init-review` | 初始化文档审核版：每步文档生成后先展示摘要再弹出提示框请用户审核确认 | PM |
 | `/impm-init-isinit` | 判定项目是否已初始化、是否为空项目 | PM |
 | `/impm-init-git` | 初始化 git 仓库并创建首个提交 | SCM |
 | `/impm-init-project` | 生成项目基本信息 `docs/project.md` | SA |
@@ -318,7 +323,7 @@ flowchart LR
 | 命令 | 说明 | 执行 Agent |
 |:-----|:-----|:----------:|
 | `/impm-docs` | 编排需求分析整理阶段全部步骤 | PM |
-| `/impm-docs-review` | 需求分析文档审核版：每步文档生成后弹出提示框请用户审核确认 | PM |
+| `/impm-docs-review` | 需求分析文档审核版：每步文档生成后先展示摘要再弹出提示框请用户审核确认 | PM |
 | `/impm-version-create` | 确定版本号、创建版本分支、版本目录与进度表 | SCM |
 | `/impm-urs-create` | 生成用户需求说明书（URS） | BA |
 | `/impm-prd-create` | 生成产品需求文档（PRD，含用户故事与验收标准） | BA |
@@ -532,6 +537,7 @@ You may obtain a copy of the License at
 | 详细设计初始化 | `impm-init-lld` | TL |
 | 开发任务初始化 | `impm-init-task` | TL |
 | 测试用例、测试函数和测试脚本初始化 | `impm-init-testcase` | TE |
+| 初始化文档审核版（每步文档完成后展示摘要并弹出用户审核确认） | `impm-init-review` | PM |
 | 提交初始化文档 | `impm-init-commit` | SCM |
 
 </details>
@@ -550,7 +556,7 @@ You may obtain a copy of the License at
 | 创建当前版本的详细设计 | `impm-lld-create` | TL |
 | 创建当前版本的开发任务清单 | `impm-task-create` | TL |
 | 创建当前版本的需求追踪矩阵（RTM） | `impm-rtm-create` | TL |
-| 文档审核版（每步文档完成后弹出用户审核确认） | `impm-docs-review` | PM |
+| 文档审核版（每步文档完成后先展示摘要并弹出用户审核确认） | `impm-docs-review` | PM |
 | 提交此前生成的所有文档 | `impm-analysis-commit` | SCM |
 
 </details>

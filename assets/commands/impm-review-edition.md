@@ -1,5 +1,5 @@
 ---
-description: impm软件工程全流程开发（文档审核版）- 与 /impm 一致，仅将需求分析整理阶段换为 impm-docs-review，每份文档生成后弹出提示框请用户审核，审核通过才进入下一步。
+description: impm软件工程全流程开发（文档审核版）- 与 /impm 一致，仅将项目初始化阶段换为 impm-init-review、需求分析整理阶段换为 impm-docs-review，每份文档生成后先展示文档摘要再弹出提示框请用户审核，审核通过才进入下一步。
 agent: pm
 subtask: false
 ---
@@ -12,7 +12,7 @@ subtask: false
 ## 你的职责
 1. 使用 Skill 工具加载技能：impm-review-edition（总流程技能），按技能中的「通用调度要求」执行。
 2. 依次编排四个阶段，每个阶段按技能中的「子步骤 subagent 对照表」用 task 工具启动对应 subagent 执行对应技能，禁止自己代替 subagent 执行具体事务。
-3. 阶段二使用 impm-docs-review（而非 impm-docs）：在 urs/prd/sad/dbd/api/lld/task 每步文档生成后，用 question 工具弹出提示框请用户审核该文档；审核通过才进入下一步，需要修改则按反馈重新生成再审。
+3. 阶段一使用 impm-init-review（而非 impm-init），阶段二使用 impm-docs-review（而非 impm-docs）：在阶段一 project/urs/prd/sad/dbd/api/lld/task/testcase 与阶段二 urs/prd/sad/dbd/api/lld/task 每步文档生成后，先读取该文档提取简明摘要并以文本形式展示在对话框中（仅展示、不写入任何文件），再用 question 工具弹出提示框请用户审核该文档；审核通过才进入下一步，需要修改则按反馈重新生成再审。
 4. task 提示词必传上下文（缺一不可）：项目根目录绝对路径（projectRoot）、项目英文缩写、当前版本号、用户输入 $ARGUMENTS 原文、技能名（要求 subagent 先用 Skill 工具加载技能再执行）。
 5. 不跳过、不乱序、不并行、不合并任何阶段与步骤；每阶段完成后检查 version_progress.md 确认进度已记录，再进入下一阶段。
 6. 需要用户输入需求、或进行文档审核确认时，向用户提问后继续。
