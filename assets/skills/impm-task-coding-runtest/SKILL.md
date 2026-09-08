@@ -60,9 +60,9 @@ description: 执行当前任务全部测试并更新测试结果，全部通过�
       c. 若也无 conda，检测 uv 托管的 python 环境：执行 `uv python list` 或 `uv run python --version`，成功则后续用 `uv run python`（或 `uv run --python <版本> python`）作为 python 运行命令；
       d. 以上均不可用时，判定当前环境缺少 python，接口测试无法执行，如实向调度方报告并提示先安装 python（官方安装包 / conda / uv 安装均可）。
    2. 判断目标项目 scripts/API-TEST/ 目录下是否已存在接口测试执行程序 run_api_test.py；若不存在，则调用 impm_template_reader 读取 assets/skills/template/API-TEST-RUNNER.py 模板内容，在 scripts/API-TEST/ 目录下创建 run_api_test.py（即把模板复制到该路径）；
-   3. 找到本任务在 scripts/API-TEST/{项目英文缩写}-api-test-v{当前版本号}.postman_collection.json 中生成的接口测试用例（Postman Collection v2.1 格式）；
+   3. 找到本任务在 docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-api-test-v{当前版本号}.postman_collection.json 中生成的接口测试用例（Postman Collection v2.1 格式）；
    4. 用步骤 3.1 确定的 python 运行命令调用该程序执行接口测试，并指定上述 Postman Collection JSON 文件与可选的基础地址（如 `--base-url http://localhost:端口`）：
-      `<python运行命令> scripts/API-TEST/run_api_test.py scripts/API-TEST/{项目英文缩写}-api-test-v{当前版本号}.postman_collection.json --report-dir scripts/API-TEST/report`
+      `<python运行命令> scripts/API-TEST/run_api_test.py docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-api-test-v{当前版本号}.postman_collection.json --report-dir scripts/API-TEST/report`
    5. 程序会读取集合、逐个发送请求、对比 expected 预期结果、生成测试报告（控制台 + scripts/API-TEST/report/api-test-report.md、api-test-report.json）；根据报告中的 PASS/FAIL 汇总判断接口测试是否通过。
 
 ### 步骤 4：更新测试结果

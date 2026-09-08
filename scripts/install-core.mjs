@@ -366,11 +366,13 @@ function updateOpenCodeConfig(projectRoot, agentType, assetsDir, pluginRoot, man
  * @param {string} options.projectRoot  - 目标项目根目录（assets 复制到 projectRoot/.opencode/）
  * @param {string} options.version      - 当前插件版本号（写入 manifest）
  * @param {string} [options.agentType]  - agent 模型预设类型（空=不调整 agent 配置）
+ * @param {string} [options.opencodeDirOverride] - 资源安装目录覆盖（默认 projectRoot/.opencode）；
+ *                                         全局安装时传 opencode 全局配置目录（~/.config/opencode）
  */
-export function runInstall({ pluginRoot, projectRoot, version, agentType = "" }) {
+export function runInstall({ pluginRoot, projectRoot, version, agentType = "", opencodeDirOverride = "" }) {
     const assetsDir = join(pluginRoot, "assets");
     const distDir = join(pluginRoot, "dist");
-    const opencodeDir = join(projectRoot, ".opencode");
+    const opencodeDir = opencodeDirOverride || join(projectRoot, ".opencode");
 
     console.log("============================================");
     console.log("  opencode-impm-cn 安装");

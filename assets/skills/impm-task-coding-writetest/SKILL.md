@@ -45,7 +45,7 @@ description: 按测试用例编写单元测试函数、接口测试 Python 脚�
 ### 步骤 2：读取测试用例并分类编写
 调用 impm_doc_reader（docType=testcase，taskId={任务编号}）读取当前任务的测试用例，按测试类型分别编写：
 1. 单元测试：按当前开发语言，直接按开发语言的习惯和常用的测试插件，编写单元测试函数；
-2. 接口测试：生成 Postman Collection v2.1 格式的 JSON 用例文件，放入 scripts/API-TEST/{项目英文缩写}-api-test-v{当前版本号}.postman_collection.json。先调用 impm_template_reader 读取 API-TEST-COLLECTION-TEMPLATE.json 模板了解结构（重点：info/variable/item/request/expected），再按本任务的接口类测试用例逐个生成 item：
+2. 接口测试：生成 Postman Collection v2.1 格式的 JSON 用例文件，放入当前版本目录 docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-api-test-v{当前版本号}.postman_collection.json。先调用 impm_template_reader 读取 API-TEST-COLLECTION-TEMPLATE.json 模板了解结构（重点：info/variable/item/request/expected），再按本任务的接口类测试用例逐个生成 item：
    - item.name = 接口路径 + 用例名称 + 用例 ID；
    - item.request.method/url/header/body 按用例所属接口与测试步骤填写（url.raw 使用 `{{base_url}}` 占位符，query 以数组填写，body 为 JSON 时 mode=raw）；
    - item.event 中按用例预期结果生成 pm.test 断言脚本（状态码、业务码、字段值），便于在 Apifox 中调试；
@@ -61,7 +61,7 @@ description: 按测试用例编写单元测试函数、接口测试 Python 脚�
 
 ## 交付物
 - 单元测试函数（随源码提交）
-- scripts/API-TEST/{项目英文缩写}-api-test-v{当前版本号}.postman_collection.json 接口测试用例（Postman Collection v2.1）
+- docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-api-test-v{当前版本号}.postman_collection.json 接口测试用例（Postman Collection v2.1）
 - docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-ui-test-record-v{当前版本号}.md 功能/UI测试记录文档
 - 任务目录 testcase.md（已回标测试位置）
 - version_progress.md 中的进度记录

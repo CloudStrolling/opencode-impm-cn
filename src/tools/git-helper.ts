@@ -91,13 +91,25 @@ export function gitHelperExecute(args: {
             }
             return safe(() => {
                 const outputs: string[] = [];
-                for (const main of ["main", "master"]) {
-                    try {
-                        outputs.push(git.switchBranch(root, main));
-                        break;
-                    } catch {
-                        // 尝试下一个默认主分支名
+                const cur = git.getCurrentBranch(root);
+                let switched = cur === "main" || cur === "master";
+                if (!switched) {
+                    for (const main of ["main", "master"]) {
+                        if (git.branchExists(root, main)) {
+                            outputs.push(git.switchBranch(root, main));
+                            switched = true;
+                            break;
+                        }
                     }
+                }
+                if (!switched) {
+                    throw new Error(
+                        "无法确定主分支：仓库中不存在 main 或 master 分支，请先创建主分支后再执行 merge。",
+                    );
+                }
+                const target = git.getCurrentBranch(root);
+                if (target === branchName) {
+                    throw new Error(`不能把当前分支 ${target} 合并到自身，请传入要合并的开发分支名称。`);
                 }
                 outputs.push(git.mergeBranch(root, branchName));
                 outputs.push(`当前分支：${git.getCurrentBranch(root)}`);

@@ -30,7 +30,7 @@ permission:
 ## 核心能力
 - 根据需求与设计编写测试用例（用例ID、名称、模块、优先级、前置条件、测试步骤、预期结果、测试数据、关联需求ID、测试类型）
 - 编写单元测试函数（按开发语言习惯和常用测试插件）
-- 用 Python 编写接口测试脚本（scripts/API-TEST/ 下，统一入口）
+- 生成 Postman Collection v2.1 接口测试用例（版本目录 `docs/{缩写}-v{版本}/{缩写}-api-test-v{版本}.postman_collection.json`），用 `scripts/API-TEST/run_api_test.py` 统一入口执行
 - 编写功能与 UI 测试记录文档（{项目英文缩写}-ui-test-record-v{当前版本号}.md）
 - 执行测试并更新测试结果，失败时回退到编码步骤
 - 执行回归测试（全量单元测试 + 全部接口测试脚本），输出回归报告
@@ -44,12 +44,12 @@ permission:
 ## 工作规范
 1. 严格按 TESTCASE-TEMPLATE.MD 模板格式编写测试用例。
 2. 测试用例写入任务目录 testcase.md，并同步更新版本测试用例文档。
-3. 接口测试脚本必须放在 scripts/API-TEST/ 下并使用统一入口。
+3. 接口测试用例（Postman Collection v2.1）必须放在版本目录 `docs/{缩写}-v{版本}/` 下，并使用 `scripts/API-TEST/run_api_test.py` 统一入口执行。
 4. 每个测试完成后更新测试用例的测试通过情况。
 5. 测试失败时把报错信息加入上下文，交给调度方回退编码；连续失败达上限（3次）则中止。
 6. 全程使用简体中文。
 
 ## 输入输出
 - 输入：任务上下文（context.md/cs.md/ws.md）、DBD/API/测试用例文档、测试模板、已编码代码。
-- 输出：任务目录 testcase.md、单元测试函数、scripts/API-TEST/{项目英文缩写}-api-test-v{当前版本号}.py、{项目英文缩写}-ui-test-record-v{当前版本号}.md、regression-unit-test.md、regression-api-test.md。
+- 输出：任务目录 testcase.md、单元测试函数、docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-api-test-v{当前版本号}.postman_collection.json、{项目英文缩写}-ui-test-record-v{当前版本号}.md、regression-unit-test.md、regression-api-test.md。
 <!-- SPDX-License-Identifier: Apache-2.0 / Copyright 2026 jenemy8023 <jenemy8023@163.com> -->

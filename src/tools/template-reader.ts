@@ -31,6 +31,12 @@ export const templateReaderDefinition = {
         "读取模板文件：按模板名从 .opencode/skills/template、assets/skills/template 或插件内置目录读取模板内容（如 PROJECT-TEMPLATE.MD、TASK-TEMPLATE.json 等）。生成各类文档前读取模板时使用。",
 };
 
+/** 去除文件名末尾扩展名（.md/.json/.txt/.M D 等，只剥最后一段） */
+function stripExtension(name: string): string {
+    const idx = name.lastIndexOf(".");
+    return idx > 0 ? name.slice(0, idx) : name;
+}
+
 /** 在目录中查找模板：文件名与模板名不区分大小写匹配，支持省略扩展名 */
 function matchTemplate(dir: string, base: string): string | null {
     if (!existsSync(dir)) {
@@ -40,7 +46,7 @@ function matchTemplate(dir: string, base: string): string | null {
         if (name.toLowerCase() === base.toLowerCase()) {
             return join(dir, name);
         }
-        const [stem] = name.split(".");
+        const stem = stripExtension(name);
         if (stem?.toLowerCase() === base.toLowerCase()) {
             return join(dir, name);
         }
@@ -65,7 +71,7 @@ export function templateReaderExecute(args: {
         if (!name) {
             return { success: false, error: "缺少必填参数 templateName（模板名称）。" };
         }
-        const base = name.split(".")[0];
+        const base = stripExtension(name);
 
         const searchDirs = [
             join(args.projectRoot, ".opencode", "skills", "template"),

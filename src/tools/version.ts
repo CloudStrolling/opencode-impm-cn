@@ -28,7 +28,7 @@ import { latestVersion, resolveAbbrev } from "../utils/project.js";
 
 export const versionDefinition = {
     description:
-        "版本号管理：action=current 获取 docs 下当前最新版本号；action=next 在最大版本号 z 值上 +1（可传 hintVersion 指定版本号）；action=init 创建版本目录 docs/{项目英文缩写}-v{版本号}（传 hintVersion 时使用指定版本号，否则自动取下一个版本号）。创建版本目录、确定当前版本号时使用。",
+        "版本号管理：action=current 获取 docs 下当前最新版本号；action=next 计算下一个版本号（未传 hintVersion 时在最大版本号 z 值上 +1，传了 hintVersion 则直接返回该版本号并校验格式）；action=init 创建版本目录 docs/{项目英文缩写}-v{版本号}（传 hintVersion 时使用指定版本号，否则自动取下一个版本号）。创建版本目录、确定当前版本号时使用。",
 };
 
 /** 确定版本号：hintVersion 合法时优先使用，否则最新版本 patch+1，无版本目录时从 0.0.1 开始；返回 null 表示 hintVersion 非法 */

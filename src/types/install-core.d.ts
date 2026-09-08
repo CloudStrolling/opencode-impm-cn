@@ -32,6 +32,8 @@ export interface RunInstallOptions {
     version: string;
     /** agent 模型预设类型（空=不调整 agent 配置） */
     agentType?: string;
+    /** 资源安装目录覆盖（默认 projectRoot/.opencode；全局安装时传 opencode 全局配置目录） */
+    opencodeDirOverride?: string;
 }
 
 declare module "*/install-core.mjs" {
@@ -40,6 +42,7 @@ declare module "*/install-core.mjs" {
         projectRoot: string;
         version: string;
         agentType?: string;
+        opencodeDirOverride?: string;
     }): boolean;
     export function loadManifest(
         opencodeDir: string,

@@ -151,6 +151,9 @@ function main() {
         projectRoot: targetRoot,
         version,
         agentType,
+        // 全局安装：资源直接放入 opencode 全局配置目录（~/.config/opencode），
+        // 与 install.ps1/uninstall.mjs --global 的目录口径保持一致
+        opencodeDirOverride: isGlobal ? targetRoot : "",
     });
 }
 

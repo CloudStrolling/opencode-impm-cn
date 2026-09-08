@@ -1,6 +1,6 @@
 ---
 name: impm-init-testcase
-description: 读取 TESTCASE-TEMPLATE.MD 模板，根据项目代码、文档及 PRD、LLD 确定测试用例，编写单元测试函数并生成 Postman Collection v2.1 接口测试用例（scripts/API-TEST/，配合 run_api_test.py 执行）。当初始化阶段需要编写测试用例时使用。
+description: 读取 TESTCASE-TEMPLATE.MD 模板，根据项目代码、文档及 PRD、LLD 确定测试用例，编写单元测试函数并生成 Postman Collection v2.1 接口测试用例（版本目录 docs/{项目英文缩写}-v{当前版本号}/，配合 scripts/API-TEST/run_api_test.py 执行）。当初始化阶段需要编写测试用例时使用。
 ---
 
 # impm-init-testcase 技能
@@ -60,14 +60,14 @@ description: 读取 TESTCASE-TEMPLATE.MD 模板，根据项目代码、文档及
 针对测试用例中的单元测试部分，编写单元测试函数：测试函数与用例一一对应，函数名、入参、断言与用例的测试步骤、预期结果保持一致。
 
 ### 步骤 5：编写 API 接口测试用例（Postman Collection v2.1）
-针对测试用例中的 API 接口测试，生成 Postman Collection v2.1 格式的 JSON 用例文件，放入 scripts/API-TEST/{项目英文缩写}-api-test-v0.0.1.postman_collection.json，并与接口测试执行程序配套使用：
+针对测试用例中的 API 接口测试，生成 Postman Collection v2.1 格式的 JSON 用例文件，放入当前版本目录 docs/{项目英文缩写}-v0.0.1/{项目英文缩写}-api-test-v0.0.1.postman_collection.json，并与接口测试执行程序配套使用：
 1. 确认 scripts/API-TEST/ 目录下已存在接口测试执行程序 run_api_test.py；若不存在，则从 assets/skills/template/API-TEST-RUNNER.py 模板复制到该路径（即创建 run_api_test.py）。
 2. 按 API-TEST-COLLECTION-TEMPLATE.json 模板结构，针对每个接口用例生成 item：
    - item.name = 接口路径 + 用例名称 + 用例 ID；
    - item.request.method/url/header/body 按用例所属接口与测试步骤填写（url.raw 使用 `{{base_url}}` 占位符，query 以数组填写，body 为 JSON 时 mode=raw）；
    - item.event 中按用例预期结果生成 pm.test 断言脚本（状态码、业务码、字段值），便于在 Apifox 中调试；
    - item.expected 按用例预期结果填写结构化断言（status 状态码、max_response_time 耗时上限、headers 响应头包含、assertions 响应体断言：type=json 用 path+equals/contains，type=body_contains 用 value）；该 expected 字段由 API-TEST-RUNNER.py 读取执行，必须与实际接口预期一致。
-3. 接口测试通过 `python scripts/API-TEST/run_api_test.py scripts/API-TEST/{项目英文缩写}-api-test-v0.0.1.postman_collection.json --report-dir scripts/API-TEST/report` 执行，由程序读取集合、逐个发送请求、对比 expected 预期结果并生成测试报告（控制台 + scripts/API-TEST/report/api-test-report.md、api-test-report.json）。**运行前先检测 Python 环境**（运行 .py 接口测试程序依赖 python 环境）：
+3. 接口测试通过 `python scripts/API-TEST/run_api_test.py docs/{项目英文缩写}-v0.0.1/{项目英文缩写}-api-test-v0.0.1.postman_collection.json --report-dir scripts/API-TEST/report` 执行，由程序读取集合、逐个发送请求、对比 expected 预期结果并生成测试报告（控制台 + scripts/API-TEST/report/api-test-report.md、api-test-report.json）。**运行前先检测 Python 环境**（运行 .py 接口测试程序依赖 python 环境）：
    a. 直接检测 shell 能否访问 python：执行 `python --version`；若失败再试 `python3 --version`（Windows 还可试 `py -3 --version`），任一成功即以成功的那条命令作为 python 运行命令；
    b. 若无直接可用的 python，检测 conda 环境：执行 `conda env list` 列出环境，任选其一（如 base）执行 `conda run -n <环境名> python --version` 验证，成功则后续用 `conda run -n <环境名> python` 作为 python 运行命令；
    c. 若也无 conda，检测 uv 托管的 python 环境：执行 `uv python list` 或 `uv run python --version`，成功则后续用 `uv run python`（或 `uv run --python <版本> python`）作为 python 运行命令；
@@ -78,7 +78,7 @@ description: 读取 TESTCASE-TEMPLATE.MD 模板，根据项目代码、文档及
 
 ## 交付物
 - docs/{项目英文缩写}-v0.0.1/{项目英文缩写}-testcase-v0.0.1.md
-- scripts/API-TEST/{项目英文缩写}-api-test-v0.0.1.postman_collection.json（Postman Collection v2.1 接口测试用例）
+- docs/{项目英文缩写}-v0.0.1/{项目英文缩写}-api-test-v0.0.1.postman_collection.json（Postman Collection v2.1 接口测试用例）
 - scripts/API-TEST/run_api_test.py（接口测试执行程序，由模板复制）
 
 ## 完成后提示

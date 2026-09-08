@@ -34,7 +34,7 @@ import { withFileLock } from "../utils/file-lock.js";
 /** 任务合法状态集合 */
 export const TASK_STATUSES = ["未完成", "执行中", "已完成"] as const;
 
-/** 任务条目：id/status 为必填字段，title、userStoryId、apiId、upstreamTaskIds 等其余字段透传 */
+/** 任务条目：id/title/taskType/status 为必填字段，其余字段（userStoryId、apiId、upstreamTaskIds 等）透传 */
 export interface TaskItem {
     id: string;
     title: string;
@@ -95,7 +95,13 @@ function upstreamDone(task: TaskItem, tasks: TaskItem[]): boolean {
     return true;
 }
 
-/** 生成任务清单摘要：总数、按状态计数、未完成任务列表 */
+/** 按任务 id 查找（大小写不敏感，兼容外部传入小写/大写编号） */
+function findTask(tasks: TaskItem[], taskId: string): TaskItem | undefined {
+    const id = String(taskId);
+    return tasks.find((t) => String(t.id).toLowerCase() === id.toLowerCase());
+}
+
+/** 生成任务清单摘要：总数、按状态计数、待执行任务列表（不含执行中） */
 function summaryOf(tasks: TaskItem[]) {
     const byStatus: Record<string, number> = {};
     for (const t of tasks) {
@@ -108,7 +114,10 @@ function summaryOf(tasks: TaskItem[]) {
         total: tasks.length,
         byStatus,
         pending: tasks
-            .filter((t) => t.status !== "已完成")
+            .filter((t) => t.status !== "已完成" && t.status !== "执行中")
+            .map((t) => ({ id: t.id, title: t.title })),
+        inProgress: tasks
+            .filter((t) => t.status === "执行中")
             .map((t) => ({ id: t.id, title: t.title })),
     };
 }
@@ -194,6 +203,20 @@ export async function taskManagerExecute(args: {
                         };
                     }
                     seen.add(id);
+                    if (!t.title || String(t.title).trim() === "") {
+                        return {
+                            success: false,
+                            action,
+                            error: `任务 ${id} 缺少 title 字段：每个任务必须包含标题。`,
+                        };
+                    }
+                    if (!t.taskType || String(t.taskType).trim() === "") {
+                        return {
+                            success: false,
+                            action,
+                            error: `任务 ${id} 缺少 taskType 字段：每个任务必须包含任务类型（backend/frontend/common）。`,
+                        };
+                    }
                     const status = TASK_STATUSES.includes(t.status as (typeof TASK_STATUSES)[number])
                         ? (t.status as string)
                         : "未完成";
@@ -224,7 +247,7 @@ export async function taskManagerExecute(args: {
 
         if (action === "query") {
             if (args.taskId) {
-                const task = tasks.find((t) => t.id === args.taskId);
+                const task = findTask(tasks, args.taskId);
                 if (!task) {
                     return {
                         success: false,
@@ -275,7 +298,7 @@ export async function taskManagerExecute(args: {
                 }
                 const lockedList = readTaskList(file);
                 const lockedTasks = lockedList.tasks;
-                const task = lockedTasks.find((t) => t.id === taskId);
+                const task = findTask(lockedTasks, taskId);
                 if (!task) {
                     return {
                         success: false,

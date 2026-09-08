@@ -2,7 +2,27 @@
 
 本项目版本号遵循语义化版本（SemVer）：主版本.次版本.修订版本。
 
-## [Unreleased]
+## [1.0.0] - 2026-09-08
+
+### 更新
+- 项目版本号统一为 1.0.0（package.json、package-lock.json、readme.md 徽章）
+
+## [0.9.7] - 2026-09-08
+
+### 更新
+- 文档技能优化：impm-doc-merge 合并逻辑精简、impm-init-lld、impm-init-testcase、impm-regression-test、impm-task-coding-testcase 细节完善
+
+### 修复
+- 接口测试用例（Postman Collection v2.1）统一改存到版本目录 docs/{项目英文缩写}-v{当前版本号}/ 下，执行经 scripts/API-TEST/run_api_test.py 统一入口，readme/agent/imp 相关技能/测试技能同步更新
+- impm_progress 已知步骤名补齐：impm-init-review、impm-rtm-create、impm-regression-metrics、impm-docs-review、impm-review-edition、impm-hotfix、impm-hotfix-fix
+- impm_doc_reader/impm_doc_writer 的 docType 描述补充 regression
+- impm_task_manager：init 校验增强（title/taskType 必填）、任务 id 查找改为大小写不敏感、pending 摘要排除"执行中"并新增 inProgress 字段
+- impm_git merge：自动确定主分支（main/master），无主分支时报错而非静默继续
+- impm_template_reader：模板名匹配支持多扩展名
+- impm_version：next 描述明确 hintVersion 语义
+- 安装脚本（install.mjs / install.ps1 / install-core.mjs）：全局安装资源目录口径对齐（~/.config/opencode）、安装清单合并历史 pluginNames 并记录 installedVersion
+
+## [0.9.6] - 2026-09-08
 
 ### 新增
 - 初始化文档审核技能（impm-init-review / /impm-init-review）：在 impm-init 基础上，为 project/urs/prd/sad/dbd/api/lld/task/testcase 每步文档生成后增加"用户审核确认"环节，审核通过才进入下一步；需要修改时按用户反馈重新生成再审
@@ -10,6 +30,16 @@
 
 ### 更新
 - impm-docs-review 与 impm-init-review 技能在弹出审核提示框前，先读取待审核文档提取简明摘要并以文本形式展示在对话框中（仅展示、不写入文件），供用户快速预览后再审核
+
+## [0.9.5] - 2026-09-07
+
+### 更新
+- impm-git-merge 提交前判断：如果不满足提交条件（工作区存在异常改动等），则不提交。
+
+## [0.9.4] - 2026-09-07
+
+### 更新
+- DBD 文档处理完善：impm-dbd-create、impm-doc-merge、impm-init-dbd、impm-task-coding-dbd 技能与 DBD 模板（DBD-TEMPLATE.MD）优化
 
 ## [0.9.3] - 2026-09-07
 

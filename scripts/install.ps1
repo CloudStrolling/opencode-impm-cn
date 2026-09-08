@@ -278,6 +278,7 @@ if ($null -eq $manifest) {
         everInstalled    = $everInstalled
         pluginNames      = @()
         pkgJsonTypeModule = $false
+        installedVersion = ""
     }
 } else {
     $merged = @{}
@@ -286,10 +287,13 @@ if ($null -eq $manifest) {
         if ($manifest.everInstalled) { $prev = @($manifest.everInstalled."$dir") }
         $merged[$dir] = @(Merge-Unique $prev $everInstalled[$dir])
     }
+    $prevPluginNames = @()
+    if ($manifest.pluginNames) { $prevPluginNames = @($manifest.pluginNames) }
     $manifest = @{
         everInstalled    = $merged
-        pluginNames      = @()
+        pluginNames      = @(Merge-Unique $prevPluginNames $null)
         pkgJsonTypeModule = $manifest.pkgJsonTypeModule
+        installedVersion = ""
     }
 }
 
@@ -465,6 +469,8 @@ if (-not $AgentType) {
 [System.IO.File]::WriteAllText($configPath, ($config | ConvertTo-Json -Depth 10))
 
 # 保存累积清单（覆盖式全量写，供下次安装清理历史残留与卸载精确删除）
+$pkgJson = Get-Content -Path (Join-Path $pluginRoot "package.json") -Raw -Encoding UTF8 | ConvertFrom-Json
+$manifest.installedVersion = $pkgJson.version
 Write-Manifest $opencodeDir $manifest
 Write-Host "安装清单已保存 -> $(Get-ManifestPath $opencodeDir)"
 

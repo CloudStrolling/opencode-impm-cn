@@ -54,6 +54,16 @@ export function getCurrentBranch(cwd: string): string {
     return gitExec(cwd, ["rev-parse", "--abbrev-ref", "HEAD"]);
 }
 
+/** 判断分支是否存在（本地分支） */
+export function branchExists(cwd: string, branchName: string): boolean {
+    try {
+        gitExec(cwd, ["rev-parse", "--verify", "--quiet", `refs/heads/${branchName}`]);
+        return true;
+    } catch {
+        return false;
+    }
+}
+
 /** 拉取最新代码 */
 export function pull(cwd: string): string {
     return gitExec(cwd, ["pull"]);

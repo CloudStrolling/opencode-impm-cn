@@ -66,8 +66,8 @@ description: 执行版本回归测试，全量运行单元测试和接口测试�
    c. 若也无 conda，检测 uv 托管的 python 环境：执行 `uv python list` 或 `uv run python --version`，成功则后续用 `uv run python`（或 `uv run --python <版本> python`）作为 python 运行命令；
    d. 以上均不可用时，判定当前环境缺少 python，接口测试无法执行，如实向调度方报告并提示先安装 python（官方安装包 / conda / uv 安装均可）。
 1. 确认 scripts/API-TEST/ 目录下存在接口测试执行程序 run_api_test.py；若不存在，则从 assets/skills/template/API-TEST-RUNNER.py 模板复制到该路径。
-2. 列出 scripts/API-TEST/ 目录下的全部 Postman Collection v2.1 接口测试用例文件（如 {项目英文缩写}-api-test-v{当前版本号}.postman_collection.json）。
-3. 用步骤 3.0 确定的 python 运行命令依次调用 run_api_test.py 运行每个集合（可加 `--base-url http://localhost:端口` 指定被测服务地址），读取其生成的 scripts/API-TEST/report/api-test-report.json 汇总结果，记录每个集合的执行结果（通过/失败、断言明细、错误信息）。
+2. 列出当前版本目录 docs/{项目英文缩写}-v{当前版本号}/ 下的全部 Postman Collection v2.1 接口测试用例文件（如 {项目英文缩写}-api-test-v{当前版本号}.postman_collection.json）。
+3. 用步骤 3.0 确定的 python 运行命令依次调用 scripts/API-TEST/run_api_test.py 运行当前版本目录 docs/{项目英文缩写}-v{当前版本号}/ 下的每个集合文件（可加 `--base-url http://localhost:端口` 指定被测服务地址），读取其生成的 scripts/API-TEST/report/api-test-report.json 汇总结果，记录每个集合的执行结果（通过/失败、断言明细、错误信息）。
 
 ### 步骤 3.5：处理过时测试用例（仅接口测试）
 1. 分析步骤 3 中失败的接口测试用例，识别失败原因为"用例已过时"（如接口已下线、请求/响应格式已变更、业务逻辑已调整导致用例不再适用）的测试用例。
