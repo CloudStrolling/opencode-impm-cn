@@ -55,8 +55,9 @@ description: impm 总流程技能，自动执行瀑布式开发全部四个阶�
 1. 使用 Skill 工具加载并执行 impm-init 技能。
 2. 先执行 impm-init-isinit 判断项目是否已初始化：
    - 若 docs/project.md 与 docs/sad.md 都存在且非空，说明已初始化，跳过整个初始化阶段；
-   - 若为空项目或存量项目，依次执行初始化全部步骤：impm-init-isinit → impm-init-git → impm-init-project → impm-init-version → impm-init-urs → impm-init-prd → impm-init-sad → impm-init-dbd → impm-init-api → impm-init-lld → impm-init-task → impm-init-testcase → impm-init-commit。
-3. 初始化阶段完成后，检查 version_progress.md 确认初始化步骤已记录。
+   - 若为存量项目，依次执行初始化全部步骤：impm-init-isinit → impm-init-git → impm-init-project → impm-init-version → impm-init-urs → impm-init-prd → impm-init-sad → impm-init-dbd → impm-init-api → impm-init-lld → impm-init-task → impm-init-testcase → impm-init-commit；
+   - 若为空项目，仅执行：impm-init-isinit → impm-init-git → impm-init-project，跳过步骤 d-m，**直接进入阶段二（impm-docs）**。空项目的版本目录、URS、PRD、SAD、DBD、API、LLD、任务清单、测试用例等文档由阶段二 impm-docs 的 impm-version-create 起按需创建。
+3. 初始化阶段完成后，检查 version_progress.md 确认初始化步骤已记录（空项目阶段无版本进度表，跳过该检查，由阶段二 impm-version-create 创建）。
 
 ### 阶段二：需求分析整理（impm-docs）
 1. 向用户询问本轮需求：请用户输入本次版本的需求描述（或提供需求文档路径）。

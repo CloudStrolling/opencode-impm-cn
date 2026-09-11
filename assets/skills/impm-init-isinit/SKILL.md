@@ -41,7 +41,7 @@ description: 判断当前项目是否已初始化（docs/project.md 与 docs/sad
 
 ## 执行步骤
 ### 步骤 1：判断是否已初始化
-调用 impm_isinit(projectRoot) 判断 docs/project.md 与 docs/sad.md 是否都存在且非空：
+调用 impm_isinit(projectRoot) 判断 docs/project.md 是否存在且非空：
 - 若两者都存在且非空：项目已初始化，本技能结束，不创建、不修改任何文件，向用户输出判定结论（已初始化，跳过初始化阶段）。
 - 否则，继续执行步骤 2。
 

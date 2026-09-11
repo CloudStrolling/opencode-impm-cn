@@ -1,6 +1,6 @@
 ---
 name: impm-review-edition
-description: impm 总流程的"文档审核版"，自动执行瀑布式开发全部四个阶段（项目初始化（含逐文档审核）、需求分析整理（含逐文档用户审核）、编码开发、回归测试和版本文档整理），其中项目初始化阶段使用 impm-init-review（project/urs/prd/sad/dbd/api/lld/task/testcase 每步完成后先展示文档摘要再弹出提示框请用户审核文档），需求分析整理阶段使用 impm-docs-review（urs/prd/sad/dbd/api/lld/task 每步完成后先展示文档摘要再弹出提示框请用户审核文档）。
+description: impm 总流程的"文档审核版"，自动执行瀑布式开发全部四个阶段（项目初始化（含逐文档审核）、需求分析整理（含逐文档用户审核）、编码开发、回归测试和版本文档整理），其中项目初始化阶段使用 impm-init-review（project/urs/prd/sad/dbd/api/lld/task/testcase 每步完成后先展示文档摘要再弹出提示框请用户审核文档），需求分析整理阶段使用 impm-docs-review（urs/prd/sad/dbd/api/lld/task 每步完成后先展示文档摘要再弹出提示框请用户审核文档）。空项目在创建并审核 project.md 后跳过后续初始化步骤，直接进入 impm-docs-review。
 ---
 
 # impm-review-edition 技能
@@ -52,8 +52,9 @@ description: impm 总流程的"文档审核版"，自动执行瀑布式开发全
 1. 使用 Skill 工具加载并执行 impm-init-review 技能。
 2. 先执行 impm-init-isinit 判断项目是否已初始化：
    - 若 docs/project.md 与 docs/sad.md 都存在且非空，说明已初始化，跳过整个初始化阶段；
-   - 若为空项目或存量项目，依次执行初始化全部步骤：impm-init-isinit → impm-init-git → impm-init-project（审核）→ impm-init-version → impm-init-urs（审核）→ impm-init-prd（审核）→ impm-init-sad（审核）→ impm-init-dbd（审核）→ impm-init-api（审核）→ impm-init-lld（审核）→ impm-init-task（审核）→ impm-init-testcase（审核）→ impm-init-commit。其中标记"（审核）"的步骤完成后均由 PM 先提取文档摘要展示在对话框中，再弹出提示框请用户审核文档，审核通过后才进入下一步。
-3. 初始化阶段完成后，检查 version_progress.md 确认初始化步骤已记录。
+   - 若为存量项目，依次执行初始化全部步骤：impm-init-isinit → impm-init-git → impm-init-project（审核）→ impm-init-version → impm-init-urs（审核）→ impm-init-prd（审核）→ impm-init-sad（审核）→ impm-init-dbd（审核）→ impm-init-api（审核）→ impm-init-lld（审核）→ impm-init-task（审核）→ impm-init-testcase（审核）→ impm-init-commit。其中标记"（审核）"的步骤完成后均由 PM 先提取文档摘要展示在对话框中，再弹出提示框请用户审核文档，审核通过后才进入下一步；
+   - 若为空项目，仅执行：impm-init-isinit → impm-init-git → impm-init-project（审核），跳过步骤 d-m，**直接进入阶段二（impm-docs-review）**。空项目的版本目录、URS、PRD、SAD、DBD、API、LLD、任务清单、测试用例等文档由阶段二 impm-docs-review 的 impm-version-create 起按需创建。
+3. 初始化阶段完成后，检查 version_progress.md 确认初始化步骤已记录（空项目阶段无版本进度表，跳过该检查，由阶段二 impm-version-create 创建）。
 
 ### 阶段二：需求分析整理（impm-docs-review，含逐文档用户审核）
 1. 向用户询问本轮需求：请用户输入本次版本的需求描述（或提供需求文档路径）。
