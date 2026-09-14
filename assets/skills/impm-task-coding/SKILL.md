@@ -47,7 +47,7 @@ impm-coding（PM）确定某任务可执行（无前置任务或前置任务全�
 | {项目英文缩写}-dbd-v{当前版本号}.md / .sql | dbd 阶段 | 多任务并发覆盖写 | 同上：先读最新，合并本任务表/字段/索引变更（SQL 按新增对象追加，不重写他人已建对象），expectedBase 写回，冲突重试，回读校验 |
 | {项目英文缩写}-api-v{当前版本号}.md | api 阶段 | 多任务并发覆盖写 | 同上：先读最新，合并本任务接口定义，expectedBase 写回，冲突重试，回读校验 |
 | {项目英文缩写}-ui-test-record-v{当前版本号}.md | writetest 阶段 | 多任务并发覆盖写 | 同上：先读最新，追加本任务测试记录段落，expectedBase 写回，冲突重试 |
-| {项目英文缩写}-api-test-v{当前版本号}.postman_collection.json（版本目录 docs/{项目英文缩写}-v{当前版本号}/） | writetest 阶段 | 多任务并发覆盖写 | 同上：先读最新集合 JSON，保留他人 item，仅新增本任务接口测试 item，expectedBase 写回，冲突重试 |
+| {项目英文缩写}-api-test-v{当前版本号}.postman_collection.json（版本目录 docs/api-test/{项目英文缩写}-v{当前版本号}/） | writetest 阶段 | 多任务并发覆盖写 | 同上：先读最新集合 JSON，保留他人 item，仅新增本任务接口测试 item，expectedBase 写回，冲突重试 |
 
 **通用规避铁律**：
 1. 本任务只写自己的任务目录 docs/{项目英文缩写}-v{当前版本号}/task_{任务编号}/ 下的文件（context.md/cs.md/ws.md/testcase.md）与本任务对应的代码文件，禁止写其他任务目录。
@@ -101,7 +101,7 @@ impm-coding（PM）确定某任务可执行（无前置任务或前置任务全�
 根据任务类型（taskType）启动对应 subagent 执行 impm-task-coding-code 技能实现编码：backend→BEE subagent，frontend→FEE subagent，common→SSE subagent。编码只改本任务对应文件，不越界。
 
 ### 步骤 10：阶段 8 编写测试脚本
-启动 TE subagent 执行 impm-task-coding-writetest 技能，编写单元测试函数、接口测试用例（Postman Collection v2.1，版本目录 docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-api-test-v{当前版本号}.postman_collection.json，遵守写冲突规避规则）与功能/UI测试记录文档（版本目录 ui-test-record 文档，遵守写冲突规避规则）。
+启动 TE subagent 执行 impm-task-coding-writetest 技能，编写单元测试函数、接口测试用例（Postman Collection v2.1，版本目录 docs/api-test/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-api-test-v{当前版本号}.postman_collection.json，遵守写冲突规避规则）与功能/UI测试记录文档（版本目录 ui-test-record 文档，遵守写冲突规避规则）。
 
 ### 步骤 11：阶段 9 执行测试
 启动 TE subagent 执行 impm-task-coding-runtest 技能，执行全部测试并更新测试结果；如果测试失败，回退到步骤 3 重新收集信息并编码，再按序重新执行；连续失败达上限（3次）则中止本任务并向用户报告失败原因。
@@ -113,7 +113,7 @@ impm-coding（PM）确定某任务可执行（无前置任务或前置任务全�
 - 任务目录 docs/{项目英文缩写}-v{当前版本号}/task_{任务编号}/ 下的 context.md、cs.md、ws.md、testcase.md
 - 版本数据库设计文档与 SQL 脚本、API 设计文档（如需要变更，已按合并规则写回）
 - 任务编码实现代码
-- docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-api-test-v{当前版本号}.postman_collection.json 接口测试用例（Postman Collection v2.1，已合并）
+- docs/api-test/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-api-test-v{当前版本号}.postman_collection.json 接口测试用例（Postman Collection v2.1，已合并）
 - docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-ui-test-record-v{当前版本号}.md 功能/UI测试记录（已合并）
 - version_progress.md 中的进度记录（{任务编号} 前缀）
 

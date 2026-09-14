@@ -122,7 +122,7 @@ PM → BA / SA / TL / DBA / TE / SCM / DW / CS / WS / FEE / BEE / SSE
 **职责：**
 - 按模板编写测试用例（正常路径、边界条件、异常路径）
 - 编写单元测试函数与自动化测试脚本
-- 生成 Postman Collection v2.1 接口测试用例（版本目录 `docs/{缩写}-v{版本}/{缩写}-api-test-v{版本}.postman_collection.json`），用 `scripts/API-TEST/run_api_test.py` 统一入口执行
+- 生成 Postman Collection v2.1 接口测试用例（版本目录 `docs/api-test/{缩写}-v{版本}/{缩写}-api-test-v{版本}.postman_collection.json`），用 `docs/api-test/run_api_test.py` 统一入口执行
 - 执行测试并更新测试结果，失败时回退编码，运行接口测试前按「shell python → conda → uv」顺序检测并确认可用的 python 环境（三者均不可用时向调度方报告缺少 python）
 - 回归测试（全量单元测试 + 全部接口测试脚本），输出回归报告
 
@@ -133,7 +133,7 @@ PM → BA / SA / TL / DBA / TE / SCM / DW / CS / WS / FEE / BEE / SSE
 4. 测试通过 → 进入下一步
 
 **输入：** context.md、cs.md、ws.md、测试模板、已编码代码
-**输出：** `task_{编号}/testcase.md`、单元测试、`docs/{缩写}-v{版本}/{缩写}-api-test-v{版本}.postman_collection.json`、`{缩写}-ui-test-record-v{版本}.md`、回归测试报告
+**输出：** `task_{编号}/testcase.md`、单元测试、`docs/api-test/{缩写}-v{版本}/{缩写}-api-test-v{版本}.postman_collection.json`、`{缩写}-ui-test-record-v{版本}.md`、回归测试报告
 
 ---
 

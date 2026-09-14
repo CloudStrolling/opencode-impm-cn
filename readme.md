@@ -5,7 +5,7 @@
 **我是项目经理 —— AI 驱动的工程化全流程开发套件**
 
 <p>
-  <a href="#"><img src="https://img.shields.io/badge/version-1.0.0-2ea44f?style=flat-square" alt="version"></a>
+  <a href="#"><img src="https://img.shields.io/badge/version-1.0.3-2ea44f?style=flat-square" alt="version"></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square" alt="license"></a>
   <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/node->=%2022.5-339933?style=flat-square&logo=node.js&logoColor=white" alt="node"></a>
   <a href="https://opencode.ai/"><img src="https://img.shields.io/badge/OpenCode-必需-ff6b6b?style=flat-square" alt="opencode"></a>
@@ -121,7 +121,7 @@ PM Agent 将自动引导完成全部四阶段开发任务。
 
 - [Node.js](https://nodejs.org/) >= 22.5
 - [OpenCode](https://opencode.ai/)（支持插件、技能、命令的版本）
-- [Python](https://www.python.org/) 3.8+（**接口测试依赖 python 环境**，用于运行 scripts/API-TEST/ 下的接口测试执行器与脚本；可用系统 python、conda 环境或 uv 托管环境任一提供，运行时会自动按「shell python → conda → uv」顺序检测）
+- [Python](https://www.python.org/) 3.8+（**接口测试依赖 python 环境**，用于运行 `docs/api-test/` 下的接口测试执行器与脚本；可用系统 python、conda 环境或 uv 托管环境任一提供，运行时会自动按「shell python → conda → uv」顺序检测）
 
 ### 方式一：OpenCode自动安装（⭐ 推荐）
 在opencode.json里增加:
@@ -277,9 +277,9 @@ flowchart LR
 | 数据库脚本 | `docs/{缩写}-v{版本}/{缩写}-dbd-v{版本}.sql` |
 | 任务清单 | `docs/{缩写}-v{版本}/{缩写}-task-v{版本}.json` |
 | 版本进度表 | `docs/{缩写}-v{版本}/version_progress.md` |
-| 接口测试用例（Postman Collection v2.1） | `docs/{缩写}-v{版本}/{缩写}-api-test-v{版本}.postman_collection.json` |
-| 接口测试执行器 | `scripts/API-TEST/run_api_test.py`（由 `assets/skills/template/API-TEST-RUNNER.py` 模板复制生成） |
-| 接口测试报告 | `scripts/API-TEST/report/api-test-report.md`、`api-test-report.json` |
+| 接口测试用例（Postman Collection v2.1） | `docs/api-test/{缩写}-v{版本}/{缩写}-api-test-v{版本}.postman_collection.json` |
+| 接口测试执行器 | `docs/api-test/run_api_test.py`（由 `assets/skills/template/API-TEST-RUNNER.py` 模板复制生成） |
+| 接口测试报告 | `docs/api-test/{缩写}-v{版本}/api-test-report.md`、`api-test-report.json` |
 | 接口测试运行环境 | python 3.8+（运行接口测试前自动按「shell python → conda → uv」顺序检测，均不可用时提示先安装 python） |
 | 提问记录 | `docs/prompts/prompts.md` |
 | 编译/部署方案 | `deploy/build.md`、`deploy/deploy.md`（由 `/impm-deploy-update` 按需生成，项目尚无该目录时跳过） |

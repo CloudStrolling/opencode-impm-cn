@@ -438,7 +438,7 @@ skills下有一个template目录，为模板目录，存放skills需要生成文
 1. 接收当前的版本号和任务编号。
 2. 根据版本号和任务编号读取当前任务的测试用例：docs/{项目英文缩写}-v{当前版本号}/task_{当前任务编号}/testcase.md，按测试类型分别编写:
 a) 单元测试：按当前开发语言，直接按开发语言的习惯和常用的测试插件，编写单元测试函数。
-b) 接口测试：生成 Postman Collection v2.1 格式的 JSON 用例文件，放入当前版本目录docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-api-test-v{当前版本号}.postman_collection.json。每个测试脚本用统一的入口（scripts/API-TEST/run_api_test.py）。
+b) 接口测试：生成 Postman Collection v2.1 格式的 JSON 用例文件，放入当前版本目录docs/api-test/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-api-test-v{当前版本号}.postman_collection.json。每个测试脚本用统一的入口（docs/api-test/run_api_test.py）。
 c) 功能与UI测试；在docs/{项目英文缩写}-v{当前版本号}/ 目录下新增：{项目英文缩写}-ui-test-record-v{当前版本号}.md。里面列清楚。
 3. 根据完成的测试函数和脚本，在testcase.md中标注对应的函数位置或者脚本位置。
 4. 版本进度文件：docs/{项目英文缩写}-v{当前版本号}/version_progress.md。增加第一行：步骤序号：前一序号+1，步骤名称：impm-task-coding-writetest，步骤状态：{任务编号}-已完成。
@@ -481,7 +481,7 @@ c) 功能与UI测试；在docs/{项目英文缩写}-v{当前版本号}/ 目录�
 1. 将当前版本的docs/{项目英文缩写}-v{当前版本号}/ {项目英文缩写}-testcase-v{当前版本号}.md合并到主测试用例：docs/testcase.md
 2. 根据当前所用的开发语言和测试插件，全量运行单元测试。
 3. 将单元测试的结果写入：docs/{项目英文缩写}-v{当前版本号}/regression-unit-test.md。
-4. 运行当前版本目录下全部接口测试用例（Postman Collection v2.1，用 scripts/API-TEST/run_api_test.py 执行），并将测试结果写入：docs/{项目英文缩写}-v{当前版本号}/regression-api-test.md。
+4. 运行当前版本目录下全部接口测试用例（Postman Collection v2.1，用 docs/api-test/run_api_test.py 执行），并将测试结果写入：docs/{项目英文缩写}-v{当前版本号}/regression-api-test.md。
 5. 对需求追踪矩阵（RTM）进行测试用例回填与覆盖完整度校验（如有 RTM）。
 6. 生成版本质量度量报告（阶段一：测试度量）：汇总单元/接口测试用例数与通过率、测试覆盖率（需求/用户故事用例覆盖等），按 REGRESSION-TEMPLATE.MD 写入 docs/{项目英文缩写}-v{当前版本号}/regression.md；审核类质量指标留待阶段二 impm-regression-metrics 回填。
 7. 版本进度文件：docs/{项目英文缩写}-v{当前版本号}/version_progress.md。增加第一行：步骤序号：前一序号+1，步骤名称：impm-regression-test，步骤状态：已完成。

@@ -58,7 +58,7 @@ impm 瀑布式开发流程完成设计阶段（阶段2）、任务清单 docs/{�
 | {项目英文缩写}-dbd-v{当前版本号}.md / .sql | dbd 子步骤 | 多任务并发覆盖写 | 同上：先读最新，在最新内容上合并本任务表/字段/索引变更（SQL 按新增对象追加，不重写他人已建对象），expectedBase 写回，冲突重试，回读校验 |
 | {项目英文缩写}-api-v{当前版本号}.md | api 子步骤 | 多任务并发覆盖写 | 同上：先读最新，合并本任务接口定义，expectedBase 写回，冲突重试，回读校验 |
 | {项目英文缩写}-ui-test-record-v{当前版本号}.md | writetest 子步骤 | 多任务并发覆盖写 | 同上：先读最新，在最新内容后追加本任务测试记录段落，expectedBase 写回，冲突重试 |
-| {项目英文缩写}-api-test-v{当前版本号}.postman_collection.json（版本目录 docs/{项目英文缩写}-v{当前版本号}/） | writetest 子步骤 | 多任务并发覆盖写 | 同上：先读最新集合 JSON，保留他人 item，仅新增本任务接口测试 item，expectedBase 写回，冲突重试 |
+| {项目英文缩写}-api-test-v{当前版本号}.postman_collection.json（版本目录 docs/api-test/{项目英文缩写}-v{当前版本号}/） | writetest 子步骤 | 多任务并发覆盖写 | 同上：先读最新集合 JSON，保留他人 item，仅新增本任务接口测试 item，expectedBase 写回，冲突重试 |
 | {项目英文缩写}-task-v{当前版本号}.json | PM（标记"执行中"）、scm（标记"已完成"） | 并发更新互相覆盖 | 任务状态只由 PM 与 scm 独占更新，子步骤 subagent 一律不更新；提交串行化；工具层文件写锁保证并发更新不丢失 |
 | git 工作区 | impm_git commit | 并发 commit 会混入他人任务文件 | gitcommit 强制串行：一次只启动一个 scm 提交，前一个提交完成并确认后再提交下一个；提交前 impm_git（action=status）核对工作区改动仅含本任务与已完成任务的文件，若混入其他进行中任务的文件则暂缓提交并报告 PM |
 

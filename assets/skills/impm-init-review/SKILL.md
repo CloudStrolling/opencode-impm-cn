@@ -153,7 +153,7 @@ description: 编排初始化阶段全部13个步骤（impm-init-isinit、impm-in
 3. **审核确认（任务清单）**：按上文「用户审核确认环节」先提取任务清单摘要并展示在对话框中，再弹出提示框请用户审核；审核通过后方可进入下一步。
 
 ### 步骤 l：执行 impm-init-testcase（测试用例与测试脚本，仅存量项目，含审核）
-1. 启动 TE subagent（subagent_type=te）执行 impm-init-testcase 技能：由 TE 调用 impm_template_reader(projectRoot, TESTCASE-TEMPLATE.MD) 读取模板，根据项目代码、文档及 PRD、LLD 确定测试用例，impm_doc_writer docType=testcase target=main 写入版本文档 docs/{项目英文缩写}-v0.0.1/{项目英文缩写}-testcase-v0.0.1.md 并复制到主文档 docs/{项目英文缩写}-testcase.md；根据用例完成测试函数编写，并生成 Postman Collection v2.1 接口测试用例（版本目录 docs/{项目英文缩写}-v0.0.1/，配合 scripts/API-TEST/run_api_test.py 执行）。
+1. 启动 TE subagent（subagent_type=te）执行 impm-init-testcase 技能：由 TE 调用 impm_template_reader(projectRoot, TESTCASE-TEMPLATE.MD) 读取模板，根据项目代码、文档及 PRD、LLD 确定测试用例，impm_doc_writer docType=testcase target=main 写入版本文档 docs/{项目英文缩写}-v0.0.1/{项目英文缩写}-testcase-v0.0.1.md 并复制到主文档 docs/{项目英文缩写}-testcase.md；根据用例完成测试函数编写，并生成 Postman Collection v2.1 接口测试用例（版本目录 docs/api-test/{项目英文缩写}-v0.0.1/，配合 docs/api-test/run_api_test.py 执行）。
 2. 完成后核对文档与脚本存在，并核对/补录进度行（impm-init-testcase，已完成）。
 3. **审核确认（测试用例）**：按上文「用户审核确认环节」先提取测试用例文档摘要并展示在对话框中，再弹出提示框请用户审核；审核通过后方可进入下一步。
 

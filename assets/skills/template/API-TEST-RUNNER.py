@@ -382,7 +382,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description="Postman Collection v2.1 接口测试执行器")
     parser.add_argument("collection", help="Postman Collection v2.1 JSON 文件路径")
     parser.add_argument("--base-url", default=None, help="覆盖 base_url 变量（如 http://localhost:8080）")
-    parser.add_argument("--report-dir", default="scripts/API-TEST/report", help="测试报告输出目录")
+    parser.add_argument("--report-dir", default="api-test-report", help="测试报告输出目录（由调用方传入）")
     parser.add_argument("--timeout", type=int, default=30, help="单请求超时秒数")
     args = parser.parse_args(argv)
 

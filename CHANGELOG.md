@@ -2,6 +2,17 @@
 
 本项目版本号遵循语义化版本（SemVer）：主版本.次版本.修订版本。
 
+## [1.0.3] - 2026-09-14
+
+### 更新
+- 接口测试相关文件目录迁移：`scripts/API-TEST/` 迁移到 `docs/api-test/`
+  - `run_api_test.py` 放置在 `docs/api-test/` 根目录（不按版本分目录）
+  - Postman Collection 文件迁移到 `docs/api-test/{项目英文缩写}-v{版本号}/` 按版本分目录
+  - 测试报告（api-test-report.md/json）输出到 `docs/api-test/{项目英文缩写}-v{版本号}/` 按版本分目录
+- `API-TEST-RUNNER.py` 模板 `--report-dir` 默认值改为空（由调用方显式传入）
+- 回归测试支持遍历所有版本：可对 `docs/api-test/` 下所有版本目录依次执行回归
+- 同步更新全部涉及技能（impm-init-testcase、impm-task-coding-writetest、impm-task-coding-runtest、impm-regression-test、impm-sprint-test）与编排技能（impm-init、impm-init-review、impm-finish），文档同步更新（agent.md、readme.md、te.md、requirement.md）
+
 ## [1.0.0] - 2026-09-08
 
 ### 更新
