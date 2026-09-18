@@ -1,6 +1,6 @@
 ---
 name: impm-task-coding-runtest
-description: 执行当前任务全部测试并更新测试结果，全部通过后把任务测试用例合并更新到版本测试用例文档。
+description: 执行当前任务全部测试并更新测试结果。
 ---
 
 # impm-task-coding-runtest 技能
@@ -77,15 +77,11 @@ description: 执行当前任务全部测试并更新测试结果，全部通过�
 ### 步骤 6：确认全部通过
 如果全部测试都成功，表明当前任务编码已成功完成。
 
-### 步骤 7：合并版本测试用例
-将当前任务的测试用例 docs/{项目英文缩写}-v{当前版本号}/task_{任务编号}/testcase.md 合并、更新到当前版本的测试用例 docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-testcase-v{当前版本号}.md。**版本目录写入冲突规避**：先调用 impm_doc_reader（docType=testcase，target=version）读取最新内容，在最新内容基础上追加/合并本任务用例（保留他人用例），以 expectedBase=读取到的全文调用 impm_doc_writer（docType=testcase，target=version）整体写回；若返回并发冲突错误（文件已被其他任务修改），重新读取合并后再写回；写回后回读校验。
-
-### 步骤 8：记录完成
+### 步骤 7：记录完成
 调用 impm_progress（action=add，stepName=impm-task-coding-runtest，status={任务编号}-已完成）。
 
 ## 交付物
 - 任务目录 testcase.md（已更新测试通过情况）
-- docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-testcase-v{当前版本号}.md（已合并更新）
 - version_progress.md 中的进度记录
 
 ## 完成后提示

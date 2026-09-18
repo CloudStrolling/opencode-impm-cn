@@ -32,7 +32,6 @@ impm 瀑布式开发流程完成设计阶段（阶段2）、任务清单 docs/{�
    "以 {subagent 中文名}（subagent_type={x}）身份执行 impm 的 {技能名} 技能；先用 Skill 工具加载技能 {技能名}；必须携带的上下文：项目根目录={绝对路径}、项目英文缩写={缩写}、当前版本号={版本号}、用户输入={原文}、任务编号={taskId}；注意：本子步骤可能与其他任务的同阶段子步骤并行执行，写入版本目录共享文档时必须遵守「版本目录写入冲突规避」规则（先读最新、合并、expectedBase 写回、冲突重试）；按技能执行步骤完成全部操作后，返回：产出文件路径清单与 version_progress.md 中 {技能名} 的进度状态；重要：本子任务的范围仅限本技能本身，完成全部操作后必须立即结束并返回结果，严禁自行继续执行后续阶段、后续任务或等待后续指令（后续调度由 PM 负责）。"
 4. 完成核对：每个 subagent 返回后，核对产出文件存在、内容正确、version_progress.md 已记录（{任务编号} 前缀）；本阶段全部 subagent 核对通过后才能进入下一阶段。
 5. 失败处理：任一任务任一步骤失败时先定位原因，将该任务放入重试队列单独重跑（见步骤 3.4）；连续失败达上限（3次）则中止该任务（状态置回"未完成"并记录失败原因），其余任务继续，中止任务向用户报告后由人工介入。
-6. 卡死重启（心跳检测）：插件对每个 subagent 子会话做心跳监测，子会话未结束但长时间无活动时会被自动中止（abort），告警记录写入 docs/prompts/heartbeat.md。当 task 工具返回中止/卡死类错误，或 heartbeat.md 出现新告警时，视为该 subagent 被强制重启：立即用原提示词重新派发同一技能（重派计入该任务重试上限），必要时先用 impm_heartbeat（action=status）确认无残留卡死会话。
 
 ### 阶段波次 subagent 对照表（impm-coding）
 | 阶段 | 技能名 | subagent_type | 说明 |
@@ -54,11 +53,10 @@ impm 瀑布式开发流程完成设计阶段（阶段2）、任务清单 docs/{�
 | 冲突点（文件） | 写入方 | 并发冲突 | 规避规则 |
 |----|----|----|----|
 | version_progress.md | 全部子步骤 subagent（impm_progress action=add） | 多个 subagent 并发「读-改-写」可能丢失进度行 | 进度状态必须带 {任务编号} 前缀（如 {任务编号}-已完成），天然区分；impm_progress 对相同 (stepName, status) 幂等去重；工具层文件写锁（读改写全程加锁）保证并发不丢行 |
-| {项目英文缩写}-testcase-v{当前版本号}.md | testcase / runtest 子步骤 | 多任务并发整体覆盖写 | 写前先 impm_doc_reader（docType=testcase，target=version）读最新全文，在最新内容上追加/合并本任务用例后，以 expectedBase=读取到的全文调用 impm_doc_writer 写回；若返回并发冲突错误（文件已被他人修改），重新读取合并再写；写回后回读校验 |
-| {项目英文缩写}-dbd-v{当前版本号}.md / .sql | dbd 子步骤 | 多任务并发覆盖写 | 同上：先读最新，在最新内容上合并本任务表/字段/索引变更（SQL 按新增对象追加，不重写他人已建对象），expectedBase 写回，冲突重试，回读校验 |
-| {项目英文缩写}-api-v{当前版本号}.md | api 子步骤 | 多任务并发覆盖写 | 同上：先读最新，合并本任务接口定义，expectedBase 写回，冲突重试，回读校验 |
-| {项目英文缩写}-ui-test-record-v{当前版本号}.md | writetest 子步骤 | 多任务并发覆盖写 | 同上：先读最新，在最新内容后追加本任务测试记录段落，expectedBase 写回，冲突重试 |
-| {项目英文缩写}-api-test-v{当前版本号}.postman_collection.json（版本目录 docs/api-test/{项目英文缩写}-v{当前版本号}/） | writetest 子步骤 | 多任务并发覆盖写 | 同上：先读最新集合 JSON，保留他人 item，仅新增本任务接口测试 item，expectedBase 写回，冲突重试 |
+| {项目英文缩写}-dbd-v{当前版本号}.md / .sql | dbd 子步骤 | 多任务并发覆盖写 | 先读最新，在最新内容上合并本任务表/字段/索引变更（SQL 按新增对象追加，不重写他人已建对象），expectedBase 写回，冲突重试，回读校验 |
+| {项目英文缩写}-api-v{当前版本号}.md | api 子步骤 | 多任务并发覆盖写 | 先读最新，合并本任务接口定义，expectedBase 写回，冲突重试，回读校验 |
+| {项目英文缩写}-ui-test-record-v{当前版本号}.md | writetest 子步骤 | 多任务并发覆盖写 | 先读最新，在最新内容后追加本任务测试记录段落，expectedBase 写回，冲突重试 |
+| {项目英文缩写}-api-test-v{当前版本号}.postman_collection.json（版本目录 docs/api-test/{项目英文缩写}-v{当前版本号}/） | writetest 子步骤 | 多任务并发覆盖写 | 先读最新集合 JSON，保留他人 item，仅新增本任务接口测试 item，expectedBase 写回，冲突重试 |
 | {项目英文缩写}-task-v{当前版本号}.json | PM（标记"执行中"）、scm（标记"已完成"） | 并发更新互相覆盖 | 任务状态只由 PM 与 scm 独占更新，子步骤 subagent 一律不更新；提交串行化；工具层文件写锁保证并发更新不丢失 |
 | git 工作区 | impm_git commit | 并发 commit 会混入他人任务文件 | gitcommit 强制串行：一次只启动一个 scm 提交，前一个提交完成并确认后再提交下一个；提交前 impm_git（action=status）核对工作区改动仅含本任务与已完成任务的文件，若混入其他进行中任务的文件则暂缓提交并报告 PM |
 
@@ -110,7 +108,7 @@ impm 瀑布式开发流程完成设计阶段（阶段2）、任务清单 docs/{�
    - 阶段 7 code：按每个任务 taskType 并发启动对应 subagent（common→sse、frontend→fee、backend→bee）执行 impm-task-coding-code；
    - 阶段 8 writetest：为批次内每个任务并发启动 te subagent 执行 impm-task-coding-writetest；
    - 阶段 9 runtest：为批次内每个任务并发启动 te subagent 执行 impm-task-coding-runtest。
-4. **处理失败重试**：本批次某任务任一阶段失败时，将该任务放入重试队列；本批次其他任务继续。批次内全部成功任务完成后，对重试队列中每个任务**单独**重跑步骤序列（阶段1→阶段9），重试仍失败则再次进入重试队列；同一任务连续失败达上限（3次）则中止该任务：调用 impm_task_manager（action=update，status=未完成）置回未完成并记录失败原因，向用户报告后由人工介入，其余任务不受影响。task 返回中止/卡死类错误或 docs/prompts/heartbeat.md 出现该子会话新告警时（心跳检测强制重启），同样按失败重试处理：立即用原提示词重派同一 subagent，重派计入重试上限。
+4. **处理失败重试**：本批次某任务任一阶段失败时，将该任务放入重试队列；本批次其他任务继续。批次内全部成功任务完成后，对重试队列中每个任务**单独**重跑步骤序列（阶段1→阶段9），重试仍失败则再次进入重试队列；同一任务连续失败达上限（3次）则中止该任务：调用 impm_task_manager（action=update，status=未完成）置回未完成并记录失败原因，向用户报告后由人工介入，其余任务不受影响。
 5. **串行提交**：对本批次全部成功完成任务，**逐个串行**启动 scm subagent（subagent_type=scm）执行 impm-task-coding-gitcommit：先启动任务 A 的 scm，等待其提交完成并核对通过后，再启动任务 B 的 scm，依此类推，一次只提交一个任务。
 6. 回到本步骤第 1 条，重新计算下一批可并行任务；如果无任务可执行，跳到步骤 4。
 
@@ -121,13 +119,13 @@ impm 瀑布式开发流程完成设计阶段（阶段2）、任务清单 docs/{�
 调用 impm_progress（action=add，projectName={项目英文名称}，version={当前版本号}，stepName=impm-coding，status=已完成），在 version_progress.md 中记录编码开发阶段完成；随后调用 impm_progress（action=finalize，projectName={项目英文名称}，version={当前版本号}）在退出前结算进度表最后一行（impm-coding，已完成）的总耗时与 token（含该步骤主会话与 subagent 子会话消耗）。
 
 ### 步骤 6：汇报编码阶段完成情况
-向用户汇报编码阶段完成情况：当前版本号、任务总数与完成数、每个任务的执行结果摘要、版本目录共享文档的最终合并情况（testcase/dbd/api/ui-test-record/api-test 脚本是否有冲突及处理结果）、git 提交记录（{项目英文缩写}-v{当前版本号}-{任务编号}），并建议下一步进入测试阶段。
+向用户汇报编码阶段完成情况：当前版本号、任务总数与完成数、每个任务的执行结果摘要、版本目录共享文档的最终合并情况（dbd/api/ui-test-record/api-test 脚本是否有冲突及处理结果）、git 提交记录（{项目英文缩写}-v{当前版本号}-{任务编号}），并建议下一步进入测试阶段。
 
 ## 交付物
 - version_progress.md 中新增 impm-coding 执行中/已完成两条进度记录
 - docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-task-v{当前版本号}.json 中全部任务状态为"已完成"
 - 各任务目录 docs/{项目英文缩写}-v{当前版本号}/task_{任务编号}/ 下的全部编码产物
-- 版本目录共享文档（testcase/dbd/api/ui-test-record/api-test 脚本）的并发合并结果
+- 版本目录共享文档（dbd/api/ui-test-record/api-test 脚本）的并发合并结果
 - git 提交记录（{项目英文缩写}-v{当前版本号}-{任务编号}）
 
 ## 完成后提示

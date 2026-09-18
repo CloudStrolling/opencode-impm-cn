@@ -43,11 +43,10 @@ impm-coding（PM）确定某任务可执行（无前置任务或前置任务全�
 | 冲突点（文件） | 写入方 | 并发冲突 | 规避规则 |
 |----|----|----|----|
 | version_progress.md | 任务各阶段 subagent（impm_progress action=add） | 并发「读-改-写」可能丢失进度行 | 进度状态必须带 {任务编号} 前缀（如 {任务编号}-已完成），天然区分；impm_progress 对相同 (stepName, status) 幂等去重；工具层文件写锁保证并发不丢行 |
-| {项目英文缩写}-testcase-v{当前版本号}.md | testcase / runtest 阶段 | 多任务并发覆盖写 | 写前先 impm_doc_reader（docType=testcase，target=version）读最新全文，在最新内容上追加/合并本任务用例后，以 expectedBase=读取到的全文调用 impm_doc_writer 写回；若返回并发冲突错误（文件已被他人修改），重新读取合并再写；写回后回读校验 |
-| {项目英文缩写}-dbd-v{当前版本号}.md / .sql | dbd 阶段 | 多任务并发覆盖写 | 同上：先读最新，合并本任务表/字段/索引变更（SQL 按新增对象追加，不重写他人已建对象），expectedBase 写回，冲突重试，回读校验 |
-| {项目英文缩写}-api-v{当前版本号}.md | api 阶段 | 多任务并发覆盖写 | 同上：先读最新，合并本任务接口定义，expectedBase 写回，冲突重试，回读校验 |
-| {项目英文缩写}-ui-test-record-v{当前版本号}.md | writetest 阶段 | 多任务并发覆盖写 | 同上：先读最新，追加本任务测试记录段落，expectedBase 写回，冲突重试 |
-| {项目英文缩写}-api-test-v{当前版本号}.postman_collection.json（版本目录 docs/api-test/{项目英文缩写}-v{当前版本号}/） | writetest 阶段 | 多任务并发覆盖写 | 同上：先读最新集合 JSON，保留他人 item，仅新增本任务接口测试 item，expectedBase 写回，冲突重试 |
+| {项目英文缩写}-dbd-v{当前版本号}.md / .sql | dbd 阶段 | 多任务并发覆盖写 | 先读最新，合并本任务表/字段/索引变更（SQL 按新增对象追加，不重写他人已建对象），expectedBase 写回，冲突重试，回读校验 |
+| {项目英文缩写}-api-v{当前版本号}.md | api 阶段 | 多任务并发覆盖写 | 先读最新，合并本任务接口定义，expectedBase 写回，冲突重试，回读校验 |
+| {项目英文缩写}-ui-test-record-v{当前版本号}.md | writetest 阶段 | 多任务并发覆盖写 | 先读最新，追加本任务测试记录段落，expectedBase 写回，冲突重试 |
+| {项目英文缩写}-api-test-v{当前版本号}.postman_collection.json（版本目录 docs/api-test/{项目英文缩写}-v{当前版本号}/） | writetest 阶段 | 多任务并发覆盖写 | 先读最新集合 JSON，保留他人 item，仅新增本任务接口测试 item，expectedBase 写回，冲突重试 |
 
 **通用规避铁律**：
 1. 本任务只写自己的任务目录 docs/{项目英文缩写}-v{当前版本号}/task_{任务编号}/ 下的文件（context.md/cs.md/ws.md/testcase.md）与本任务对应的代码文件，禁止写其他任务目录。
@@ -95,7 +94,7 @@ impm-coding（PM）确定某任务可执行（无前置任务或前置任务全�
 判断是否为分前后端项目且当前任务为后端任务（impm_project_info 项目类型 + 任务 taskType）；如果分前后端且为后端任务，则启动 TL subagent 执行 impm-task-coding-api 技能设计接口；否则跳过此阶段。API 版本文档写入遵守「版本目录写入冲突规避」规则。
 
 ### 步骤 8：阶段 6 编写测试用例
-启动 TE subagent 执行 impm-task-coding-testcase 技能，按 TESTCASE-TEMPLATE.MD 模板编写当前任务的测试用例（单元/接口/功能/UI），写入任务目录 testcase.md，并合并到版本测试用例文档（遵守写冲突规避规则）。
+启动 TE subagent 执行 impm-task-coding-testcase 技能，按 TESTCASE-TEMPLATE.MD 模板编写当前任务的测试用例（单元/接口/功能/UI），写入任务目录 testcase.md。
 
 ### 步骤 9：阶段 7 编码实现
 根据任务类型（taskType）启动对应 subagent 执行 impm-task-coding-code 技能实现编码：backend→BEE subagent，frontend→FEE subagent，common→SSE subagent。编码只改本任务对应文件，不越界。
@@ -104,10 +103,10 @@ impm-coding（PM）确定某任务可执行（无前置任务或前置任务全�
 启动 TE subagent 执行 impm-task-coding-writetest 技能，编写单元测试函数、接口测试用例（Postman Collection v2.1，版本目录 docs/api-test/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-api-test-v{当前版本号}.postman_collection.json，遵守写冲突规避规则）与功能/UI测试记录文档（版本目录 ui-test-record 文档，遵守写冲突规避规则）。
 
 ### 步骤 11：阶段 9 执行测试
-启动 TE subagent 执行 impm-task-coding-runtest 技能，执行全部测试并更新测试结果；如果测试失败，回退到步骤 3 重新收集信息并编码，再按序重新执行；连续失败达上限（3次）则中止本任务并向用户报告失败原因。
+启动 TE subagent 执行 impm-task-coding-runtest 技能，执行全部测试并更新测试结果；如果测试失败，回退到步骤 3 重新收集信息并编码，再按序重新执行；连续失败达上限（3次）则中止本任务并向用户报告失败原因。全部测试通过后，当前任务编码完成。
 
 ### 步骤 12：记录任务编码完成
-全部测试通过后，调用 impm_progress（action=add，projectName={项目英文名称}，version={当前版本号}，stepName=impm-task-coding，status={任务编号}-已完成），记录当前任务编码完成；整理任务完成报告返回调度方（PM）：产出文件清单、测试结果、版本目录写入/变更清单（testcase/dbd/api/ui-test-record/api-test 脚本的变更内容）。
+全部测试通过后，调用 impm_progress（action=add，projectName={项目英文名称}，version={当前版本号}，stepName=impm-task-coding，status={任务编号}-已完成），记录当前任务编码完成；整理任务完成报告返回调度方（PM）：产出文件清单、测试结果、版本目录写入/变更清单（dbd/api/ui-test-record/api-test 脚本的变更内容）。
 
 ## 交付物
 - 任务目录 docs/{项目英文缩写}-v{当前版本号}/task_{任务编号}/ 下的 context.md、cs.md、ws.md、testcase.md

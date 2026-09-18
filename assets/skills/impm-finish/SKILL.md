@@ -53,7 +53,7 @@ description: 编排回归测试和版本文档整理阶段（阶段4）的全部
 ## 执行步骤
 ### 步骤 1：执行回归测试
 1. 检查 docs/{项目英文缩写}-v{当前版本号}/version_progress.md，确认 impm-regression-test 步骤状态。若状态已为"已完成"，则跳过本步骤直接进入步骤 2；否则：
-2. 启动 TE subagent，通过 Skill 工具加载 impm-regression-test 技能，由 TE 完成：合并测试用例到主测试用例、全量运行单元测试、运行当前版本目录 docs/api-test/{项目英文缩写}-v{当前版本号}/ 下全部接口测试用例（Postman Collection v2.1，经 docs/api-test/run_api_test.py 执行），并分别写入回归测试结果。
+2. 启动 TE subagent，通过 Skill 工具加载 impm-regression-test 技能，由 TE 完成：全量运行单元测试、运行当前版本目录 docs/api-test/{项目英文缩写}-v{当前版本号}/ 下全部接口测试用例（Postman Collection v2.1，经 docs/api-test/run_api_test.py 执行），并分别写入回归测试结果。
 3. TE 执行完成后，重新核对 version_progress.md 中 impm-regression-test 步骤状态已记录为"已完成"，方可继续下一步。
 
 ### 步骤 2：执行代码备注
