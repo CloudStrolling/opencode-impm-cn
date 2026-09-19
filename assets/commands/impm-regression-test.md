@@ -1,5 +1,5 @@
 ---
-description: 执行版本回归测试（合并测试用例、全量运行单元测试与接口测试并记录结果）
+description: 执行版本回归测试（全量运行单元测试与接口测试并记录结果）
 agent: pm
 subtask: false
 ---

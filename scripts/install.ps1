@@ -86,7 +86,7 @@ $presetFile = Join-Path $PSScriptRoot "agent-models.json"
 $globalConfigDir = Join-Path $HOME ".config\opencode"
 
 # 安装时默认注册的插件（impm 套件 + 浏览器插件，供 UI/网络相关技能使用）
-$defaultPlugins = @("opencode-impm-cn", "opencode-browser")
+$defaultPlugins = @("opencode-browser")
 
 # --agent-type 可选值
 $agentTypes = @("opencode-zen-free", "opencode-go-lite", "opencode-go-balance", "opencode-go-optimize", "custom", "clear")
@@ -342,7 +342,9 @@ if ($pkgTypeModuleWritten) {
 }
 
 # 更新 opencode.json 配置（npm 安装模式注册插件名；本地自安装模式由入口文件自动发现）
+	
 $configPath = Join-Path $targetRoot "opencode.json"
+
 if (Test-Path $configPath) {
     $config = Get-Content -Path $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
 } else {
@@ -364,13 +366,17 @@ if (-not $isSelfInstall) {
         }
     }
     $config | Add-Member -NotePropertyName plugin -NotePropertyValue $plugins -Force
+	<# 
     if ($manifest.pluginNames -notcontains "opencode-impm-cn") {
         $manifest.pluginNames = @($manifest.pluginNames + "opencode-impm-cn")
     }
+	#>
     Write-Host "配置文件已更新: $configPath（plugin: $($defaultPlugins -join ', ')）"
 } else {
     Write-Host "本地自安装：跳过 config.plugin 注册（插件入口文件由 plugins/ 自动发现）"
 }
+	
+
 
 # 应用 agent 模型配置预设 / 清理 impm 管理的 agent 模型配置
 $managedAgents = @()

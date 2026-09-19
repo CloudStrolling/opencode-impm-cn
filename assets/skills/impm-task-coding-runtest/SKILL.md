@@ -60,13 +60,19 @@ description: 执行当前任务全部测试并更新测试结果。
       c. 若也无 conda，检测 uv 托管的 python 环境：执行 `uv python list` 或 `uv run python --version`，成功则后续用 `uv run python`（或 `uv run --python <版本> python`）作为 python 运行命令；
       d. 以上均不可用时，判定当前环境缺少 python，接口测试无法执行，如实向调度方报告并提示先安装 python（官方安装包 / conda / uv 安装均可）。
    2. 判断目标项目 docs/api-test/ 目录下是否已存在接口测试执行程序 run_api_test.py；若不存在，则调用 impm_template_reader 读取 assets/skills/template/API-TEST-RUNNER.py 模板内容，在 docs/api-test/ 目录下创建 run_api_test.py（即把模板复制到该路径）；
-   3. 找到本任务在 docs/api-test/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-api-test-v{当前版本号}.postman_collection.json 中生成的接口测试用例（Postman Collection v2.1 格式）；
-   4. 用步骤 3.1 确定的 python 运行命令调用该程序执行接口测试，并指定上述 Postman Collection JSON 文件与可选的基础地址（如 `--base-url http://localhost:端口`）：
-      `<python运行命令> docs/api-test/run_api_test.py docs/api-test/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-api-test-v{当前版本号}.postman_collection.json --report-dir docs/api-test/{项目英文缩写}-v{当前版本号}`
-   5. 程序会读取集合、逐个发送请求、对比 expected 预期结果、生成测试报告（控制台 + docs/api-test/{项目英文缩写}-v{当前版本号}/api-test-report.md、api-test-report.json）；根据报告中的 PASS/FAIL 汇总判断接口测试是否通过。
+    3. 找到本任务在 docs/api-test/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-api-test-v{当前版本号}.postman_collection.json 中生成的接口测试用例（Postman Collection v2.1 格式）；
+    4. **检查并启动服务与中间件**：
+       > 本步骤确保接口测试所需的服务及依赖中间件已启动，避免因服务未就绪导致测试失败。
+       a. **识别服务与中间件**：分析项目结构，识别被测服务及其依赖的中间件（如数据库、消息队列、缓存、外部 API 等）；查找项目根目录下的配置文件（如 `.env`、`config.*`、`docker-compose.yml`、`Makefile`、`scripts/` 目录等），确定服务的启动方式和依赖关系；如有 `docker-compose.yml`，优先使用 Docker Compose 管理服务与中间件。
+       b. **检查服务状态**：检查被测服务是否已启动（尝试访问服务健康检查端点或检查进程/端口）；检查依赖中间件是否已启动（尝试连接数据库、消息队列等，或检查对应进程/端口）；记录检查结果。
+       c. **启动未运行的服务与中间件**：若存在 `docker-compose.yml`，使用 `docker-compose up -d` 启动；若存在启动脚本（如 `scripts/start.sh`、`Makefile` 中的 `start` 目标），执行相应命令；若服务为独立进程，根据项目文档或配置文件中的说明启动；启动后等待服务就绪（如等待端口监听、健康检查返回 200 等），设置合理超时（如 30 秒）。
+       d. **验证启动状态**：重新检查所有服务与中间件是否已成功启动；若仍有服务未启动，记录错误并终止接口测试，向调度方报告启动失败原因。
+    5. 用步骤 3.1 确定的 python 运行命令调用该程序执行接口测试，并指定上述 Postman Collection JSON 文件与可选的基础地址（如 `--base-url http://localhost:端口`）：
+       `<python运行命令> docs/api-test/run_api_test.py docs/api-test/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-api-test-v{当前版本号}.postman_collection.json --report-dir docs/api-test/{项目英文缩写}-v{当前版本号}`
+    6. 程序会读取集合、逐个发送请求、对比 expected 预期结果、生成测试报告（控制台 + docs/api-test/{项目英文缩写}-v{当前版本号}/api-test-report.md、api-test-report.json）；根据报告中的 PASS/FAIL 汇总判断接口测试是否通过。
 
 ### 步骤 4：更新测试结果
-每一个测试完成后，更新当前任务的测试用例的测试通过情况（更新任务目录 testcase.md，标注通过/失败及失败原因）；接口测试需结合步骤 3.5 生成的 api-test-report 报告，将每条用例的执行结果（HTTP 状态码、耗时、断言失败详情）回填到 testcase.md 对应用例的"测试结果"栏。
+每一个测试完成后，更新当前任务的测试用例的测试通过情况（更新任务目录 testcase.md，标注通过/失败及失败原因）；接口测试需结合步骤 3.6 生成的 api-test-report 报告，将每条用例的执行结果（HTTP 状态码、耗时、断言失败详情）回填到 testcase.md 对应用例的"测试结果"栏。
 
 ### 步骤 5：处理失败（单元测试与接口测试）
 全部测试完成后，如果单元测试或接口测试中有部分用例失败（UI 测试不计入失败判定）：
