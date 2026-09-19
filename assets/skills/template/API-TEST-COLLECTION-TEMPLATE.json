@@ -7,6 +7,35 @@
   "variable": [
     { "key": "base_url", "value": "http://localhost:8080" }
   ],
+  "auth_config": {
+    "_comment": "可选认证配置：当接口需要登录态时填写，API-TEST-RUNNER.py 会自动处理登录并注入 token/cookie",
+    "enabled": false,
+    "login": {
+      "_comment": "登录接口配置",
+      "url": "{{base_url}}/api/auth/login",
+      "method": "POST",
+      "headers": { "Content-Type": "application/json" },
+      "body": "{\"username\": \"{{username}}\", \"password\": \"{{password}}\"}",
+      "token_path": "$.data.token",
+      "token_type": "Bearer",
+      "token_header": "Authorization",
+      "cookie_name": "",
+      "cookie_path": ""
+    },
+    "credentials": {
+      "_comment": "数据库查询配置：从数据库获取管理员账号密码",
+      "source": "database",
+      "db_type": "mysql",
+      "db_host": "localhost",
+      "db_port": 3306,
+      "db_name": "",
+      "db_user": "",
+      "db_password": "",
+      "query": "SELECT username, password FROM sys_user WHERE role='admin' AND status=1 LIMIT 1",
+      "username_field": "username",
+      "password_field": "password"
+    }
+  },
   "item": [
     {
       "name": "{接口路径} - {用例名称} ({用例ID})",
