@@ -11,6 +11,7 @@
 ## 二、认证配置（接口测试适用）
 > 当接口测试用例需要登录态时，在 Postman Collection JSON 的 `auth_config` 中配置认证信息，API-TEST-RUNNER.py 会在执行前自动完成登录并注入 token/cookie。
 
+### 单步登录配置（login）
 | 配置项 | 说明 | 示例值 |
 | --- | --- | --- |
 | auth_config.enabled | 是否启用自动认证 | true / false |
@@ -23,6 +24,58 @@
 | login.token_header | token 写入的请求头名称 | Authorization |
 | login.cookie_name | 从 Set-Cookie 中提取的 cookie 名称（可选） | JSESSIONID |
 | login.cookie_path | 从登录响应体提取 cookie 值的 JSON 路径（可选） | $.data.sessionId |
+
+### 多步登录配置（steps）
+> 当登录流程需要多步时（如先获取 loginTicket，再用 loginTicket 换取 token），使用 `steps` 数组配置多步登录。每步可提取响应中的变量，供后续步骤使用。
+
+| 配置项 | 说明 | 示例值 |
+| --- | --- | --- |
+| steps | 多步登录配置数组 | 见下方示例 |
+| steps[].name | 步骤名称（用于日志输出） | "第一步：获取 loginTicket" |
+| steps[].url | 请求接口地址（支持 {{variable}} 占位符） | {{base_url}}/api/auth/getLoginTicket |
+| steps[].method | 请求方法 | POST |
+| steps[].headers | 请求头 | {"Content-Type": "application/json"} |
+| steps[].body | 请求体模板（支持 {{variable}} 占位符） | {"username":"{{username}}"} |
+| steps[].token_path | 从响应中提取 token 的 JSON 路径（可选） | $.data.token |
+| steps[].cookie_name | 从 Set-Cookie 中提取的 cookie 名称（可选） | JSESSIONID |
+| steps[].cookie_path | 从响应体提取 cookie 值的 JSON 路径（可选） | $.data.sessionId |
+| steps[].extract_vars | 从响应中提取的变量（key=变量名，value=JSON路径） | {"loginTicket": "$.data.loginTicket"} |
+
+**多步登录示例**：
+```json
+{
+  "auth_config": {
+    "enabled": true,
+    "steps": [
+      {
+        "name": "第一步：获取 loginTicket",
+        "url": "{{base_url}}/api/auth/getLoginTicket",
+        "method": "POST",
+        "headers": {"Content-Type": "application/json"},
+        "body": "{\"username\": \"{{username}}\", \"password\": \"{{password}}\"}",
+        "extract_vars": {
+          "loginTicket": "$.data.loginTicket"
+        }
+      },
+      {
+        "name": "第二步：用 loginTicket 换取 token",
+        "url": "{{base_url}}/api/auth/login",
+        "method": "POST",
+        "headers": {"Content-Type": "application/json"},
+        "body": "{\"loginTicket\": \"{{loginTicket}}\"}",
+        "token_path": "$.data.token",
+        "token_type": "Bearer",
+        "token_header": "Authorization"
+      }
+    ],
+    "credentials": { ... }
+  }
+}
+```
+
+### 数据库凭证配置（credentials）
+| 配置项 | 说明 | 示例值 |
+| --- | --- | --- |
 | credentials.db_type | 数据库类型 | mysql / sqlite / postgresql |
 | credentials.db_host | 数据库地址 | localhost |
 | credentials.db_port | 数据库端口 | 3306 |

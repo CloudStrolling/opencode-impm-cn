@@ -202,6 +202,110 @@ def _call_login(login_cfg, username, password, variables, timeout):
     return auth_state
 
 
+def _call_login_step(step_cfg, variables, timeout):
+    """执行单步登录/认证请求，返回 (auth_state, extracted_vars)。"""
+    url = _resolve_variables(step_cfg.get("url", ""), variables)
+    method = (step_cfg.get("method") or "POST").upper()
+    headers = {}
+    for k, v in (step_cfg.get("headers") or {}).items():
+        headers[_resolve_variables(k, variables)] = _resolve_variables(v, variables)
+
+    body_tpl = step_cfg.get("body", "{}")
+    body = _resolve_variables(body_tpl, variables)
+
+    auth_state = {"token": None, "cookies": {}, "session_id": None}
+    extracted_vars = {}
+
+    try:
+        if _HAS_REQUESTS:
+            resp = requests.request(method=method, url=url, headers=headers,
+                                    data=body if body else None, timeout=timeout)
+            
+            resp_json = None
+            if resp.text:
+                try:
+                    resp_json = resp.json()
+                except Exception:
+                    pass
+
+            token_path = step_cfg.get("token_path", "")
+            if token_path and resp_json:
+                token_val = _json_get(resp_json, token_path)
+                if token_val is not object():
+                    auth_state["token"] = str(token_val)
+
+            cookie_name = step_cfg.get("cookie_name", "")
+            cookie_path = step_cfg.get("cookie_path", "")
+            if cookie_name:
+                for c in resp.cookies:
+                    if c.name == cookie_name:
+                        auth_state["cookies"][c.name] = c.value
+                        auth_state["session_id"] = c.value
+                        break
+            elif cookie_path and resp_json:
+                cookie_val = _json_get(resp_json, cookie_path)
+                if cookie_val is not object():
+                    auth_state["cookies"]["session"] = str(cookie_val)
+                    auth_state["session_id"] = str(cookie_val)
+
+            for c in resp.cookies:
+                auth_state["cookies"][c.name] = c.value
+
+            extract_vars = step_cfg.get("extract_vars", {})
+            if extract_vars and resp_json:
+                for var_name, json_path in extract_vars.items():
+                    val = _json_get(resp_json, json_path)
+                    if val is not object():
+                        extracted_vars[var_name] = str(val)
+                        print("提取变量：%s = %s" % (var_name, str(val)[:50]))
+
+            print("步骤执行成功：token=%s, cookies=%d 个, 提取变量 %d 个" % (
+                "已获取" if auth_state["token"] else "未获取",
+                len(auth_state["cookies"]),
+                len(extracted_vars)))
+        else:
+            data = body.encode("utf-8") if isinstance(body, str) else body
+            req = urllib.request.Request(url=url, data=data, method=method)
+            for k, v in headers.items():
+                req.add_header(k, v)
+            try:
+                resp = urllib.request.urlopen(req, timeout=timeout)
+                resp_text = resp.read().decode("utf-8", errors="replace")
+
+                resp_json = None
+                if resp_text:
+                    try:
+                        resp_json = json.loads(resp_text)
+                    except Exception:
+                        pass
+
+                token_path = step_cfg.get("token_path", "")
+                if token_path and resp_json:
+                    token_val = _json_get(resp_json, token_path)
+                    if token_val is not object():
+                        auth_state["token"] = str(token_val)
+
+                cookie_header = resp.headers.get("Set-Cookie", "")
+                if cookie_header:
+                    for part in cookie_header.split(";"):
+                        kv = part.strip().split("=", 1)
+                        if len(kv) == 2:
+                            auth_state["cookies"][kv[0].strip()] = kv[1].strip()
+
+                extract_vars = step_cfg.get("extract_vars", {})
+                if extract_vars and resp_json:
+                    for var_name, json_path in extract_vars.items():
+                        val = _json_get(resp_json, json_path)
+                        if val is not object():
+                            extracted_vars[var_name] = str(val)
+            except urllib.error.HTTPError as e:
+                print("警告：登录接口返回 HTTP %s" % e.code, file=sys.stderr)
+    except Exception as exc:
+        print("警告：调用登录接口失败：%s" % exc, file=sys.stderr)
+
+    return auth_state, extracted_vars
+
+
 def _save_auth_state(auth_state, collection_dir):
     """将 auth_state 保存到 collection 同目录的临时文件。"""
     path = os.path.join(collection_dir, _AUTH_STATE_FILE)
@@ -232,13 +336,13 @@ def _load_auth_state(collection_dir):
 
 
 def _setup_authentication(collection, collection_dir, variables, timeout, no_auth=False):
-    """完整的认证流程：检查配置 -> 查询数据库 -> 调用登录 -> 保存状态。"""
+    """完整的认证流程：检查配置 -> 查询数据库 -> 调用登录 -> 保存状态。支持多步登录。"""
     if no_auth:
-        return None
+        return None, {}
 
     auth_cfg = _load_auth_config(collection)
     if not auth_cfg:
-        return None
+        return None, {}
 
     print("=" * 40)
     print("检测到接口认证配置，开始自动登录...")
@@ -247,20 +351,45 @@ def _setup_authentication(collection, collection_dir, variables, timeout, no_aut
     cached = _load_auth_state(collection_dir)
     if cached and (cached.get("token") or cached.get("cookies")):
         print("使用缓存的登录态")
-        return cached
+        return cached, cached.get("extracted_vars", {})
 
-    username, password = _get_db_credentials(auth_cfg)
-    if username is None:
-        print("警告：无法获取数据库凭证，跳过认证", file=sys.stderr)
-        return None
-    print("从数据库获取到管理员账号：%s" % username)
+    steps = auth_cfg.get("steps", [])
+    if steps:
+        print("检测到多步登录配置（%d 步）" % len(steps))
+        all_extracted_vars = {}
+        final_auth_state = {"token": None, "cookies": {}, "session_id": None}
+        
+        for i, step in enumerate(steps):
+            print("\n--- 执行登录步骤 %d/%d: %s ---" % (i + 1, len(steps), step.get("name", "未命名")))
+            step_variables = dict(variables)
+            step_variables.update(all_extracted_vars)
+            
+            auth_state, extracted_vars = _call_login_step(step, step_variables, timeout)
+            all_extracted_vars.update(extracted_vars)
+            
+            if auth_state.get("token"):
+                final_auth_state["token"] = auth_state["token"]
+            if auth_state.get("cookies"):
+                final_auth_state["cookies"].update(auth_state["cookies"])
+            if auth_state.get("session_id"):
+                final_auth_state["session_id"] = auth_state["session_id"]
+        
+        final_auth_state["extracted_vars"] = all_extracted_vars
+        _save_auth_state(final_auth_state, collection_dir)
+        return final_auth_state, all_extracted_vars
+    else:
+        username, password = _get_db_credentials(auth_cfg)
+        if username is None:
+            print("警告：无法获取数据库凭证，跳过认证", file=sys.stderr)
+            return None, {}
+        print("从数据库获取到管理员账号：%s" % username)
 
-    login_cfg = auth_cfg.get("login", {})
-    auth_state = _call_login(login_cfg, username, password, variables, timeout)
-
-    _save_auth_state(auth_state, collection_dir)
-
-    return auth_state
+        login_cfg = auth_cfg.get("login", {})
+        auth_state = _call_login(login_cfg, username, password, variables, timeout)
+        auth_state["extracted_vars"] = {}
+        
+        _save_auth_state(auth_state, collection_dir)
+        return auth_state, {}
 
 
 def _inject_auth_to_headers(headers, auth_state, login_cfg):
@@ -619,7 +748,13 @@ def main(argv=None):
 
     # 自动认证流程
     collection_dir = os.path.dirname(os.path.abspath(args.collection))
-    auth_state = _setup_authentication(collection, collection_dir, variables, args.timeout, args.no_auth)
+    auth_state, extracted_vars = _setup_authentication(collection, collection_dir, variables, args.timeout, args.no_auth)
+    
+    # 将提取的变量合并到变量字典中
+    if extracted_vars:
+        variables.update(extracted_vars)
+        print("已加载 %d 个登录步骤提取的变量" % len(extracted_vars))
+    
     login_cfg = {}
     if auth_state:
         auth_cfg = _load_auth_config(collection)

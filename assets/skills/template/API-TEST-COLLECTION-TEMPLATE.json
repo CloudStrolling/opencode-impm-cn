@@ -11,7 +11,7 @@
     "_comment": "可选认证配置：当接口需要登录态时填写，API-TEST-RUNNER.py 会自动处理登录并注入 token/cookie",
     "enabled": false,
     "login": {
-      "_comment": "登录接口配置",
+      "_comment": "单步登录接口配置（与 steps 二选一）",
       "url": "{{base_url}}/api/auth/login",
       "method": "POST",
       "headers": { "Content-Type": "application/json" },
@@ -22,6 +22,31 @@
       "cookie_name": "",
       "cookie_path": ""
     },
+    "steps": [
+      {
+        "_comment": "多步登录配置示例：第一步获取 loginTicket，第二步用 loginTicket 换取 token",
+        "name": "第一步：获取 loginTicket",
+        "url": "{{base_url}}/api/auth/getLoginTicket",
+        "method": "POST",
+        "headers": { "Content-Type": "application/json" },
+        "body": "{\"username\": \"{{username}}\", \"password\": \"{{password}}\"}",
+        "token_path": "",
+        "extract_vars": {
+          "loginTicket": "$.data.loginTicket"
+        }
+      },
+      {
+        "name": "第二步：用 loginTicket 换取 token",
+        "url": "{{base_url}}/api/auth/login",
+        "method": "POST",
+        "headers": { "Content-Type": "application/json" },
+        "body": "{\"loginTicket\": \"{{loginTicket}}\"}",
+        "token_path": "$.data.token",
+        "token_type": "Bearer",
+        "token_header": "Authorization",
+        "extract_vars": {}
+      }
+    ],
     "credentials": {
       "_comment": "数据库查询配置：从数据库获取管理员账号密码",
       "source": "database",

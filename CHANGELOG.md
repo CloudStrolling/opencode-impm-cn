@@ -2,6 +2,14 @@
 
 本项目版本号遵循语义化版本（SemVer）：主版本.次版本.修订版本。
 
+## [1.0.7] - 2026-09-19
+
+### 更新
+- API 接口测试支持多步登录：auth_config 新增 steps 数组配置，支持多步登录流程（如先获取 loginTicket，再用 loginTicket 换取 token），每步可提取响应中的变量供后续步骤使用
+- API-TEST-RUNNER.py 新增 `_call_login_step` 函数支持多步登录，extract_vars 配置可从响应中提取任意变量
+- TESTCASE-TEMPLATE.MD 新增多步登录配置说明与示例
+- API-TEST-COLLECTION-TEMPLATE.json 新增多步登录配置示例
+
 ## [1.0.6] - 2026-09-19
 
 ### 更新
