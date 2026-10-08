@@ -20,9 +20,9 @@ impm 瀑布式开发流程完成设计阶段（阶段2）、任务清单 docs/{�
 ## 并发调度模型（本技能核心）
 1. **并行度上限**：同一时刻最多同时执行 **5** 个编码任务。
 2. **可并行条件**：任务状态为"未完成"，且全部前置任务（upstreamTaskIds）状态为"已完成"，即可纳入批次；与当前批次内其他任务是否同时执行由 PM 统一调度。
-3. **阶段波次并行**：每个任务按 impm-task-coding 的标准步骤顺序执行：context → cs → ws → dbd(按需) → api(按需) → testcase → code → writetest → runtest。PM 在**同一阶段**为批次内全部适用任务**并发**派发该阶段子步骤 subagent（同一轮多个 task 调用），本阶段全部返回并核对通过后，才进入下一阶段。
+3. **阶段波次并行**：每个任务按 impm-task-coding 的标准步骤顺序执行：context → cs → ws → dbd(按需) → api(按需) → testcase → code → write-unit-test → run-unit-test → write-api-test → run-api-test → gitcommit。PM 在**同一阶段**为批次内全部适用任务**并发**派发该阶段子步骤 subagent（同一轮多个 task 调用），本阶段全部返回并核对通过后，才进入下一阶段。
 4. **状态标记**：批次选定后，立即将批次内每个任务状态标记为"执行中"（impm_task_manager update），防止重复调度；git 提交完成后由 scm 标记为"已完成"。
-5. **串行提交**：批次内全部任务完成 runtest 后，对每个成功任务**逐个串行**启动 scm subagent 执行 impm-task-coding-gitcommit（一次只提交一个任务），前一个提交完成确认后再提交下一个。
+5. **串行提交**：批次内全部任务完成 run-api-test 后，对每个成功任务**逐个串行**启动 scm subagent 执行 impm-task-coding-gitcommit（一次只提交一个任务），前一个提交完成确认后再提交下一个。
 6. **批次循环**：每批次全部完成（提交完毕）后，重新读取任务清单计算下一批可并行任务，直到无任务可执行。
 
 ## 通用调度要求（本技能所有子步骤必须遵守）
@@ -43,9 +43,11 @@ impm 瀑布式开发流程完成设计阶段（阶段2）、任务清单 docs/{�
 | 5 | impm-task-coding-api | tl | 接口设计变更（非前后端分离项目或非后端任务时跳过） |
 | 6 | impm-task-coding-testcase | te | 编写测试用例并合并到版本测试用例文档 |
 | 7 | impm-task-coding-code | sse/fee/bee | 编码实现（按任务 taskType：common→sse、frontend→fee、backend→bee） |
-| 8 | impm-task-coding-writetest | te | 编写单元测试函数、接口测试脚本与功能/UI测试记录 |
-| 9 | impm-task-coding-runtest | te | 执行全部测试并合并测试结果 |
-| 10 | impm-task-coding-gitcommit | scm | git 提交并标记任务完成（串行，一次一个） |
+| 8 | impm-task-coding-write-unit-test | te | 编写单元测试函数与功能/UI测试记录 |
+| 9 | impm-task-coding-run-unit-test | te | 执行单元测试并更新测试结果 |
+| 10 | impm-task-coding-write-api-test | te | 编写接口测试 Postman Collection 用例 |
+| 11 | impm-task-coding-run-api-test | te | 执行接口测试并更新测试结果 |
+| 12 | impm-task-coding-gitcommit | scm | git 提交并标记任务完成（串行，一次一个） |
 
 ## 版本目录写入冲突规避（必须遵守）
 多个任务并行编码时，任务会向版本目录 docs/{项目英文缩写}-v{当前版本号}/ 及共享脚本目录写入内容，存在并发写冲突。**所有存在写入冲突的地方及规避规则如下**：
@@ -55,8 +57,8 @@ impm 瀑布式开发流程完成设计阶段（阶段2）、任务清单 docs/{�
 | version_progress.md | 全部子步骤 subagent（impm_progress action=add） | 多个 subagent 并发「读-改-写」可能丢失进度行 | 进度状态必须带 {任务编号} 前缀（如 {任务编号}-已完成），天然区分；impm_progress 对相同 (stepName, status) 幂等去重；工具层文件写锁（读改写全程加锁）保证并发不丢行 |
 | {项目英文缩写}-dbd-v{当前版本号}.md / .sql | dbd 子步骤 | 多任务并发覆盖写 | 先读最新，在最新内容上合并本任务表/字段/索引变更（SQL 按新增对象追加，不重写他人已建对象），expectedBase 写回，冲突重试，回读校验 |
 | {项目英文缩写}-api-v{当前版本号}.md | api 子步骤 | 多任务并发覆盖写 | 先读最新，合并本任务接口定义，expectedBase 写回，冲突重试，回读校验 |
-| {项目英文缩写}-ui-test-record-v{当前版本号}.md | writetest 子步骤 | 多任务并发覆盖写 | 先读最新，在最新内容后追加本任务测试记录段落，expectedBase 写回，冲突重试 |
-| {项目英文缩写}-api-test-v{当前版本号}.postman_collection.json（版本目录 docs/api-test/{项目英文缩写}-v{当前版本号}/） | writetest 子步骤 | 多任务并发覆盖写 | 先读最新集合 JSON，保留他人 item，仅新增本任务接口测试 item，expectedBase 写回，冲突重试 |
+| {项目英文缩写}-ui-test-record-v{当前版本号}.md | write-unit-test 子步骤 | 多任务并发覆盖写 | 先读最新，在最新内容后追加本任务测试记录段落，expectedBase 写回，冲突重试 |
+| {项目英文缩写}-api-test-v{当前版本号}.postman_collection.json（版本目录 docs/{项目英文缩写}-v{当前版本号}/） | write-api-test 子步骤 | 多任务并发覆盖写 | 先读最新集合 JSON，保留他人 item，仅新增本任务接口测试 item，expectedBase 写回，冲突重试 |
 | {项目英文缩写}-task-v{当前版本号}.json | PM（标记"执行中"）、scm（标记"已完成"） | 并发更新互相覆盖 | 任务状态只由 PM 与 scm 独占更新，子步骤 subagent 一律不更新；提交串行化；工具层文件写锁保证并发更新不丢失 |
 | git 工作区 | impm_git commit | 并发 commit 会混入他人任务文件 | gitcommit 强制串行：一次只启动一个 scm 提交，前一个提交完成并确认后再提交下一个；提交前 impm_git（action=status）核对工作区改动仅含本任务与已完成任务的文件，若混入其他进行中任务的文件则暂缓提交并报告 PM |
 
@@ -106,9 +108,11 @@ impm 瀑布式开发流程完成设计阶段（阶段2）、任务清单 docs/{�
    - 阶段 5 api：仅当项目前后端分离且任务 taskType=backend 时为相应任务并发启动 tl subagent 执行 impm-task-coding-api，否则跳过；
    - 阶段 6 testcase：为批次内每个任务并发启动 te subagent 执行 impm-task-coding-testcase；
    - 阶段 7 code：按每个任务 taskType 并发启动对应 subagent（common→sse、frontend→fee、backend→bee）执行 impm-task-coding-code；
-   - 阶段 8 writetest：为批次内每个任务并发启动 te subagent 执行 impm-task-coding-writetest；
-   - 阶段 9 runtest：为批次内每个任务并发启动 te subagent 执行 impm-task-coding-runtest。
-4. **处理失败重试**：本批次某任务任一阶段失败时，将该任务放入重试队列；本批次其他任务继续。批次内全部成功任务完成后，对重试队列中每个任务**单独**重跑步骤序列（阶段1→阶段9），重试仍失败则再次进入重试队列；同一任务连续失败达上限（3次）则中止该任务：调用 impm_task_manager（action=update，status=未完成）置回未完成并记录失败原因，向用户报告后由人工介入，其余任务不受影响。
+   - 阶段 8 write-unit-test：为批次内每个任务并发启动 te subagent 执行 impm-task-coding-write-unit-test；
+   - 阶段 9 run-unit-test：为批次内每个任务并发启动 te subagent 执行 impm-task-coding-run-unit-test；
+   - 阶段 10 write-api-test：为批次内每个任务并发启动 te subagent 执行 impm-task-coding-write-api-test；
+   - 阶段 11 run-api-test：为批次内每个任务并发启动 te subagent 执行 impm-task-coding-run-api-test。
+4. **处理失败重试**：本批次某任务任一阶段失败时，将该任务放入重试队列；本批次其他任务继续。批次内全部成功任务完成后，对重试队列中每个任务**单独**重跑步骤序列（阶段1→阶段11），重试仍失败则再次进入重试队列；同一任务连续失败达上限（3次）则中止该任务：调用 impm_task_manager（action=update，status=未完成）置回未完成并记录失败原因，向用户报告后由人工介入，其余任务不受影响。
 5. **串行提交**：对本批次全部成功完成任务，**逐个串行**启动 scm subagent（subagent_type=scm）执行 impm-task-coding-gitcommit：先启动任务 A 的 scm，等待其提交完成并核对通过后，再启动任务 B 的 scm，依此类推，一次只提交一个任务。
 6. 回到本步骤第 1 条，重新计算下一批可并行任务；如果无任务可执行，跳到步骤 4。
 

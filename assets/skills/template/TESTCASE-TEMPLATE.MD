@@ -104,8 +104,8 @@
 - **预期结果**：
   1. 
   2. 
-- **自动化测试函数/脚本位置**：（由 impm-task-coding-writetest 步骤标注）
-- **测试过程与结论**：（由 impm-task-coding-runtest 步骤记录，通过/失败/失败详情）
+- **自动化测试函数/脚本位置**：（由 impm-task-coding-write-unit-test / impm-task-coding-write-api-test 步骤标注）
+- **测试过程与结论**：（由 impm-task-coding-run-unit-test / impm-task-coding-run-api-test 步骤记录，通过/失败/失败详情）
 
 ## 四、执行汇总
 | 结果 | 数量 |

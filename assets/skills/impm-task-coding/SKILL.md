@@ -1,6 +1,6 @@
 ---
 name: impm-task-coding
-description: 单个编码任务的步骤蓝本（context→cs→ws→dbd→api→testcase→code→writetest→runtest），由 PM 在 impm-coding 的阶段波次并发调度中直接执行，并遵守版本目录写入冲突规避规则。
+description: 单个编码任务的步骤蓝本（context→cs→ws→dbd→api→testcase→code→write-unit-test→run-unit-test→write-api-test→run-api-test），由 PM 在 impm-coding 的阶段波次并发调度中直接执行，并遵守版本目录写入冲突规避规则。
 ---
 
 # impm-task-coding 技能
@@ -34,8 +34,10 @@ impm-coding（PM）确定某任务可执行（无前置任务或前置任务全�
 | 5 | impm-task-coding-api | tl | 接口设计变更（非前后端分离项目或非后端任务时跳过） |
 | 6 | impm-task-coding-testcase | te | 编写测试用例并合并到版本测试用例文档 |
 | 7 | impm-task-coding-code | sse/fee/bee | 编码实现（按任务 taskType：common→sse、frontend→fee、backend→bee） |
-| 8 | impm-task-coding-writetest | te | 编写单元测试函数、接口测试脚本与功能/UI测试记录 |
-| 9 | impm-task-coding-runtest | te | 执行全部测试并合并测试结果 |
+| 8 | impm-task-coding-write-unit-test | te | 编写单元测试函数与功能/UI测试记录 |
+| 9 | impm-task-coding-run-unit-test | te | 执行单元测试并更新测试结果 |
+| 10 | impm-task-coding-write-api-test | te | 编写接口测试 Postman Collection 用例 |
+| 11 | impm-task-coding-run-api-test | te | 执行接口测试并更新测试结果 |
 
 ## 版本目录写入冲突规避（本技能所有子步骤必须遵守）
 多个任务并行编码时，任务会向版本目录写入内容，存在并发写冲突。**所有存在写入冲突的地方及规避规则如下**：
@@ -45,8 +47,8 @@ impm-coding（PM）确定某任务可执行（无前置任务或前置任务全�
 | version_progress.md | 任务各阶段 subagent（impm_progress action=add） | 并发「读-改-写」可能丢失进度行 | 进度状态必须带 {任务编号} 前缀（如 {任务编号}-已完成），天然区分；impm_progress 对相同 (stepName, status) 幂等去重；工具层文件写锁保证并发不丢行 |
 | {项目英文缩写}-dbd-v{当前版本号}.md / .sql | dbd 阶段 | 多任务并发覆盖写 | 先读最新，合并本任务表/字段/索引变更（SQL 按新增对象追加，不重写他人已建对象），expectedBase 写回，冲突重试，回读校验 |
 | {项目英文缩写}-api-v{当前版本号}.md | api 阶段 | 多任务并发覆盖写 | 先读最新，合并本任务接口定义，expectedBase 写回，冲突重试，回读校验 |
-| {项目英文缩写}-ui-test-record-v{当前版本号}.md | writetest 阶段 | 多任务并发覆盖写 | 先读最新，追加本任务测试记录段落，expectedBase 写回，冲突重试 |
-| {项目英文缩写}-api-test-v{当前版本号}.postman_collection.json（版本目录 docs/api-test/{项目英文缩写}-v{当前版本号}/） | writetest 阶段 | 多任务并发覆盖写 | 先读最新集合 JSON，保留他人 item，仅新增本任务接口测试 item，expectedBase 写回，冲突重试 |
+| {项目英文缩写}-ui-test-record-v{当前版本号}.md | write-unit-test 阶段 | 多任务并发覆盖写 | 先读最新，追加本任务测试记录段落，expectedBase 写回，冲突重试 |
+| {项目英文缩写}-api-test-v{当前版本号}.postman_collection.json（版本目录 docs/{项目英文缩写}-v{当前版本号}/） | write-unit-test 阶段 | 多任务并发覆盖写 | 先读最新集合 JSON，保留他人 item，仅新增本任务接口测试 item，expectedBase 写回，冲突重试 |
 
 **通用规避铁律**：
 1. 本任务只写自己的任务目录 docs/{项目英文缩写}-v{当前版本号}/task_{任务编号}/ 下的文件（context.md/cs.md/ws.md/testcase.md）与本任务对应的代码文件，禁止写其他任务目录。
@@ -99,20 +101,26 @@ impm-coding（PM）确定某任务可执行（无前置任务或前置任务全�
 ### 步骤 9：阶段 7 编码实现
 根据任务类型（taskType）启动对应 subagent 执行 impm-task-coding-code 技能实现编码：backend→BEE subagent，frontend→FEE subagent，common→SSE subagent。编码只改本任务对应文件，不越界。
 
-### 步骤 10：阶段 8 编写测试脚本
-启动 TE subagent 执行 impm-task-coding-writetest 技能，编写单元测试函数、接口测试用例（Postman Collection v2.1，版本目录 docs/api-test/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-api-test-v{当前版本号}.postman_collection.json，遵守写冲突规避规则）与功能/UI测试记录文档（版本目录 ui-test-record 文档，遵守写冲突规避规则）。
+### 步骤 10：阶段 8 编写单元测试脚本
+启动 TE subagent 执行 impm-task-coding-write-unit-test 技能，编写单元测试函数与功能/UI测试记录文档（版本目录 ui-test-record 文档，遵守写冲突规避规则）。
 
-### 步骤 11：阶段 9 执行测试
-启动 TE subagent 执行 impm-task-coding-runtest 技能，执行全部测试并更新测试结果；如果测试失败，回退到步骤 3 重新收集信息并编码，再按序重新执行；连续失败达上限（3次）则中止本任务并向用户报告失败原因。全部测试通过后，当前任务编码完成。
+### 步骤 11：阶段 9 执行单元测试
+启动 TE subagent 执行 impm-task-coding-run-unit-test 技能，执行单元测试并更新测试结果；如果测试失败，按 run-unit-test 技能规则判定过时/非必须测试（删除测试代码与用例）或修复必须测试的被测代码；连续失败达上限（3次）则中止本任务并向用户报告失败原因。全部单元测试通过后，当前任务继续。
 
-### 步骤 12：记录任务编码完成
-全部测试通过后，调用 impm_progress（action=add，projectName={项目英文名称}，version={当前版本号}，stepName=impm-task-coding，status={任务编号}-已完成），记录当前任务编码完成；整理任务完成报告返回调度方（PM）：产出文件清单、测试结果、版本目录写入/变更清单（dbd/api/ui-test-record/api-test 脚本的变更内容）。
+### 步骤 12：阶段 10 编写接口测试脚本
+启动 TE subagent 执行 impm-task-coding-write-api-test 技能，编写接口测试用例（Postman Collection v2.1，版本目录 docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-api-test-v{当前版本号}.postman_collection.json，遵守写冲突规避规则）。
+
+### 步骤 13：阶段 11 执行接口测试
+启动 TE subagent 执行 impm-task-coding-run-api-test 技能，执行接口测试并更新测试结果；如果测试失败，定位失败原因并修复对应代码后重测；连续失败达上限（3次）则中止本任务并向用户报告失败原因。全部接口测试通过后，当前任务编码完成。
+
+### 步骤 14：记录任务编码完成
+全部测试通过后，调用 impm_progress（action=add，projectName={项目英文名称}，version={当前版本号}，stepName=impm-task-coding，status={任务编号}-已完成），记录当前任务编码完成；整理任务完成报告返回调度方（PM）：产出文件清单、单元测试结果、接口测试结果、版本目录写入/变更清单（dbd/api/ui-test-record 的变更内容）。
 
 ## 交付物
 - 任务目录 docs/{项目英文缩写}-v{当前版本号}/task_{任务编号}/ 下的 context.md、cs.md、ws.md、testcase.md
 - 版本数据库设计文档与 SQL 脚本、API 设计文档（如需要变更，已按合并规则写回）
 - 任务编码实现代码
-- docs/api-test/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-api-test-v{当前版本号}.postman_collection.json 接口测试用例（Postman Collection v2.1，已合并）
+- docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-api-test-v{当前版本号}.postman_collection.json 接口测试用例（Postman Collection v2.1，已合并）
 - docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-ui-test-record-v{当前版本号}.md 功能/UI测试记录（已合并）
 - version_progress.md 中的进度记录（{任务编号} 前缀）
 

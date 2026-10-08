@@ -1,6 +1,6 @@
 ---
 name: impm-sprint-test
-description: 敏捷冲刺测试子技能，由TE统一编写测试并运行，合并writetest与runtest为单一环节。
+description: 敏捷冲刺测试子技能，由TE统一编写测试并运行，合并write-unit-test与run-unit-test为单一环节。
 ---
 
 # impm-sprint-test 技能
@@ -12,7 +12,7 @@ description: 敏捷冲刺测试子技能，由TE统一编写测试并运行，�
 - sprint-test
 
 ## 何时使用
-impm-sprint 编排技能（环节4）全部编码任务完成后，需要对本次冲刺的全部代码改动统一编写测试并执行时使用。本技能为敏捷流程专用，将瀑布式的 impm-task-coding-writetest 与 impm-task-coding-runtest 两个技能合并为单一环节，不做任务级拆解。
+impm-sprint 编排技能（环节4）全部编码任务完成后，需要对本次冲刺的全部代码改动统一编写测试并执行时使用。本技能为敏捷流程专用，将瀑布式的 impm-task-coding-write-unit-test 与 impm-task-coding-run-unit-test 两个技能合并为单一环节，不做任务级拆解。
 
 ## 执行角色
 本技能由 测试工程师（subagent_type=te）subagent 负责执行，执行时使用 Skill 工具加载本技能。
@@ -44,7 +44,7 @@ impm-sprint 编排技能（环节4）全部编码任务完成后，需要对本�
 ### 步骤 2：编写测试
 按现有测试框架与项目语言习惯编写测试：
 1. 单元测试：按当前开发语言与常用测试插件，为本次冲刺改动涉及的函数编写单元测试函数（随源码提交）；
-2. 接口测试：生成 Postman Collection v2.1 格式的 JSON 用例文件，放入版本目录 docs/api-test/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-api-test-v{当前版本号}.postman_collection.json，每个用例通过统一的入口（docs/api-test/run_api_test.py）执行；
+2. 接口测试：生成 Postman Collection v2.1 格式的 JSON 用例文件，放入版本目录 docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-api-test-v{当前版本号}.postman_collection.json，每个用例通过统一的入口（docs/api-test/run_api_test.py）执行；
 3. 功能与UI测试：在版本目录 docs/{项目英文缩写}-v{当前版本号}/ 下新增 {项目英文缩写}-ui-test-record-v{当前版本号}.md，调用 impm_doc_writer（docType=ui-test-record），列清楚功能与UI测试的步骤和记录。
 
 ### 步骤 3：运行测试
@@ -55,8 +55,8 @@ impm-sprint 编排技能（环节4）全部编码任务完成后，需要对本�
 4. 以上均不可用时，判定当前环境缺少 python，接口测试无法执行，如实向调度方报告并提示先安装 python（官方安装包 / conda / uv 安装均可）。
 
 确认可用 python 后，用其替换 run_api_test.py 命令中的 `python` 前缀再执行接口测试：
-`<python运行命令> docs/api-test/run_api_test.py docs/api-test/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-api-test-v{当前版本号}.postman_collection.json --report-dir docs/api-test/{项目英文缩写}-v{当前版本号}`
-报告生成于 docs/api-test/{项目英文缩写}-v{当前版本号}/api-test-report.md、api-test-report.json；若有失败，定位失败原因并修复（测试代码问题直接修复，产品代码问题记录后返回给调度方安排修复后重测），重跑直至全部通过。
+`<python运行命令> docs/api-test/run_api_test.py docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-api-test-v{当前版本号}.postman_collection.json --report-dir docs/{项目英文缩写}-v{当前版本号}`
+报告生成于 docs/{项目英文缩写}-v{当前版本号}/api-test-report.md、api-test-report.json；若有失败，定位失败原因并修复（测试代码问题直接修复，产品代码问题记录后返回给调度方安排修复后重测），重跑直至全部通过。
 
 ### 步骤 4：记录测试结果
 将测试结果（通过数/总数、失败详情）写入 docs/{项目英文缩写}-v{当前版本号}/regression-api-test.md，调用 impm_doc_writer（docType=regression-api）写入。
@@ -66,7 +66,7 @@ impm-sprint 编排技能（环节4）全部编码任务完成后，需要对本�
 
 ## 交付物
 - 单元测试函数（随源码提交）
-- docs/api-test/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-api-test-v{当前版本号}.postman_collection.json 接口测试用例
+- docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-api-test-v{当前版本号}.postman_collection.json 接口测试用例
 - docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-ui-test-record-v{当前版本号}.md 功能/UI测试记录文档
 - docs/{项目英文缩写}-v{当前版本号}/regression-api-test.md 测试结果记录
 - version_progress.md 中的进度记录

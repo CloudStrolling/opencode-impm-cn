@@ -1,5 +1,5 @@
 ---
-description: 敏捷冲刺测试：由 te 统一编写并运行测试（合并 writetest + runtest 为单一环节）
+description: 敏捷冲刺测试：由 te 统一编写并运行测试（合并 write-unit-test + run-unit-test 为单一环节）
 agent: pm
 subtask: false
 ---

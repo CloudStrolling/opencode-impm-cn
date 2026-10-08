@@ -51,5 +51,5 @@ permission:
 
 ## 输入输出
 - 输入：任务上下文（context.md/cs.md/ws.md）、DBD/API/测试用例文档、测试模板、已编码代码。
-- 输出：任务目录 testcase.md、单元测试函数、docs/api-test/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-api-test-v{当前版本号}.postman_collection.json、{项目英文缩写}-ui-test-record-v{当前版本号}.md、regression-unit-test.md、regression-api-test.md。
+- 输出：任务目录 testcase.md、单元测试函数、docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-api-test-v{当前版本号}.postman_collection.json、{项目英文缩写}-ui-test-record-v{当前版本号}.md、regression-unit-test.md、regression-api-test.md。
 <!-- SPDX-License-Identifier: Apache-2.0 / Copyright 2026 jenemy8023 <jenemy8023@163.com> -->

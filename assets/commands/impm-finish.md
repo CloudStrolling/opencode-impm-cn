@@ -1,5 +1,5 @@
 ---
-description: 编排执行回归测试和版本文档整理阶段（阶段4）的全部8个步骤
+description: 编排执行回归测试和版本文档整理阶段（阶段4）的全部步骤
 agent: pm
 subtask: false
 ---

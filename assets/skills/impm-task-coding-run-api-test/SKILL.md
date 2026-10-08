@@ -1,0 +1,82 @@
+---
+name: impm-task-coding-run-api-test
+description: 读取接口测试用例 JSON，按需处理登录态后执行接口测试并更新结果。
+---
+
+# impm-task-coding-run-api-test 技能
+
+## 触发词
+- 执行接口测试
+- run-api-test
+
+## 何时使用
+当前任务的接口测试用例编写完成后，需要执行接口测试、确认测试结果并更新文档时使用。
+
+## 执行角色
+本技能由 测试工程师（subagent_type=te）subagent 负责执行，执行时使用 Skill 工具加载本技能。
+
+## 调度说明（PM/上级编排者启动本技能时必须遵守）
+1. 启动方式：使用 task 工具启动 subagent，subagent_type 必须为 `te`；禁止由 PM 或编排者自己代替执行本技能内容。
+2. 提示词必传上下文（缺一不可）：项目根目录绝对路径（projectRoot）、项目英文缩写（{项目英文缩写}）、当前版本号（{当前版本号}）、用户输入 $ARGUMENTS 原文（含用户提到的文件路径）、技能名（impm-task-coding-run-api-test，要求 subagent 先用 Skill 工具加载本技能再执行）、任务编号（taskId，从 $ARGUMENTS 提取，缺失时用 impm_task_manager 查询下一个可执行任务）。
+3. 完成要求：等待 subagent 返回完成结果后，核对产出文件与 version_progress.md 进度记录，全部正确后才能进入下一步。
+
+## 关键变量定义与取值
+| 变量 | 说明 | 获取方式 |
+| 项目中文名称 | 项目的中文名称 | 通过 impm_project_info 从 docs/project.md 读取 |
+| 项目英文名称 | 项目的英文名称 | 通过 impm_project_info 从 docs/project.md 读取 |
+| 项目英文缩写 | 项目的英文缩写，用于拼接所有文档路径 | 通过 impm_project_info 从 docs/project.md 读取 |
+| 当前版本号 | 当前执行的版本号 | 通过 impm_version action=current 获取，或从版本目录名推断 |
+| 任务编号 | 当前执行的任务编号（如 TASK-001） | 由调度方（PM/上级技能）传入 |
+
+## 执行要求
+1. 严格按照执行步骤中的内容和顺序依次执行：不跳过、不乱序、不并行、不合并任何步骤。
+2. 只执行本技能规定的操作，不做与任务无关的工作。
+3. 所有文档路径必须用 {项目英文缩写}、{当前版本号}、{任务编号} 拼接，不得臆造文件名。
+4. 使用 impm_* 工具获取信息，不得编造工具返回结果。
+5. 全程使用简体中文。
+6. 每个步骤完成后，核对产出文件是否存在、内容是否正确。
+7. 本技能为编码流程的一部分，只能被 impm-task-coding 或 impm-coding 调度执行，不能单独脱离版本号和任务编号执行。
+
+## 执行步骤
+### 步骤 1：接收版本号与任务编号
+接收调度方传入的当前版本号与任务编号（{任务编号}，如 TASK-001）。
+
+### 步骤 2：读取接口测试用例 JSON
+读取版本目录 docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-api-test-v{当前版本号}.postman_collection.json，判断其中是否有需要登录态的接口测试用例。
+
+### 步骤 3：检测 Python 环境
+按以下顺序检测并确定可用的 python 运行命令：
+a. 直接检测 shell 能否访问 python：执行 `python --version`；若失败再试 `python3 --version`（Windows 还可试 `py -3 --version`），任一成功即以成功的那条命令作为 python 运行命令；
+b. 若无直接可用的 python，检测 conda 环境：执行 `conda env list` 列出环境，任选其一（如 base）执行 `conda run -n <环境名> python --version` 验证，成功则后续用 `conda run -n <环境名> python` 作为 python 运行命令；
+c. 若也无 conda，检测 uv 托管的 python 环境：执行 `uv python list` 或 `uv run python --version`，成功则后续用 `uv run python`（或 `uv run --python <版本> python`）作为 python 运行命令；
+d. 以上均不可用时，判定当前环境缺少 python，接口测试无法执行，如实向调度方报告并提示先安装 python。
+
+### 步骤 4：处理需登录态的接口测试
+如果测试用例中有需要登录态的用例：
+1. **确定需要登录的微服务名**：分析测试用例中的接口路径与所属服务，确定需要登录的微服务名名称（如 auth、user 等）；
+2. **检查用户文件**：查询 `docs/api-test/{微服务名}-user.json` 是否存在；
+   - 若**存在**：读取文件中的用户名和密码，调用微服务名的登录接口获取 token 或 cookie，将 token 或 cookie 替换到 api json 文件中的占位符（如 `{{token}}` 或 `{{cookie}}`）；
+   - 若**不存在**：调用对应用户管理系统的用户创建接口创建一个测试用户，将用户名和密码写入 `docs/api-test/{微服务名}-user.json`，然后执行同上的登录和占位符替换流程；
+3. 确认所有需要登录态的接口用例的占位符已正确替换。
+
+### 步骤 5：执行接口测试
+1. 确认 docs/api-test/ 目录下存在接口测试执行程序 run_api_test.py；若不存在，则从 assets/skills/template/API-TEST-RUNNER.py 模板复制到该路径；
+2. 用步骤 3 确定的 python 运行命令调用该程序执行接口测试：
+   `<python运行命令> docs/api-test/run_api_test.py docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-api-test-v{当前版本号}.postman_collection.json --report-dir docs/{项目英文缩写}-v{当前版本号}`
+3. 程序会读取集合、逐个发送请求、对比 expected 预期结果、生成测试报告（控制台 + docs/{项目英文缩写}-v{当前版本号}/api-test-report.md、api-test-report.json）；根据报告中的 PASS/FAIL 汇总判断接口测试是否通过。
+
+### 步骤 6：更新测试结果
+将接口测试结果（通过数/总数、失败详情）写入任务目录 testcase.md 对应接口用例的"测试结果"栏，若用例有失败需记录失败原因。
+
+### 步骤 7：记录完成
+调用 impm_progress（action=add，stepName=impm-task-coding-run-api-test，status={任务编号}-已完成）。
+
+## 交付物
+- docs/{项目英文缩写}-v{当前版本号}/api-test-report.md、api-test-report.json 接口测试报告
+- docs/api-test/{微服务名}-user.json（如需登录时创建）
+- 任务目录 testcase.md（已更新接口测试结果）
+- version_progress.md 中的进度记录
+
+## 完成后提示
+- 本技能全部操作完成后必须立即结束并返回调度方：产出文件路径清单与 version_progress.md 中本技能的进度状态；严禁自行继续执行后续阶段或后续任务、严禁等待后续指令，后续调度由调度方（PM）负责。
+<!-- SPDX-License-Identifier: Apache-2.0 / Copyright 2026 jenemy8023 <jenemy8023@163.com> -->

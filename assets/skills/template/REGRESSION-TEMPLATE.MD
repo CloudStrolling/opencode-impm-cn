@@ -4,7 +4,7 @@
 **日期**：
 **撰写**：TE（测试度量）＋ TL（审核质量度量）
 
-> 说明：本报告分两阶段生成。阶段一由 regression-test（TE）生成测试类质量指标；阶段二由 regression-metrics（TL）在代码审核完成后回填审核类质量指标（审核问题数、严重级别分布、修复率、缺陷密度、DRE）。两阶段共用同一份 {项目英文缩写}-v{当前版本号}/regression.md。
+> 说明：本报告分两阶段生成。阶段一由 impm-regression-unit-test / impm-regression-api-test（TE）生成测试类质量指标；阶段二由 impm-regression-metrics（TL）在代码审核完成后回填审核类质量指标（审核问题数、严重级别分布、修复率、缺陷密度、DRE）。两阶段共用同一份 {项目英文缩写}-v{当前版本号}/regression.md。
 
 ## 1. 版本信息与执行范围
 | 项 | 内容 |
@@ -15,7 +15,7 @@
 | 本次变更范围 | |
 | 代码规模参考（TODO：若可用 KLOC / 需求数） | |
 
-## 2. 测试度量（阶段一：regression-test 输出）
+## 2. 测试度量（阶段一：impm-regression-unit-test / impm-regression-api-test 输出）
 ### 2.1 单元测试
 | 指标 | 数值 |
 | --- | --- |

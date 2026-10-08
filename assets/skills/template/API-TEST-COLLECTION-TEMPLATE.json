@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "{项目中文名称} 接口测试 v{当前版本号}",
-    "description": "由 impm-task-coding-writetest 根据当前任务接口测试用例自动生成，符合 Postman Collection v2.1 规范，可供 API-TEST-RUNNER.py 执行接口测试，也可直接导入 Apifox 调试。",
+    "description": "由 impm-task-coding-write-api-test 根据当前任务接口测试用例自动生成，符合 Postman Collection v2.1 规范，可供 API-TEST-RUNNER.py 执行接口测试，也可直接导入 Apifox 调试。",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [

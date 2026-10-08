@@ -9,7 +9,7 @@ description: 在代码审核完成后回填当前版本质量度量报告（阶�
 质量度量、缺陷密度、缺陷移除率、DRE、测试覆盖率、修复率、严重级别分布、审核问题统计、regression-metrics、回归质量
 
 ## 何时使用
-阶段4中，代码审核（impm-coding-review）完成后、版本收尾前，需要将代码审核类质量指标回填到由 impm-regression-test 阶段一生成的 regression.md 质量度量报告时使用。本技能是质量度量的阶段二，与 impm-regression-test 的阶段一共同构成完整的版本质量度量报告。
+阶段4中，代码审核（impm-coding-review）完成后、版本收尾前，需要将代码审核类质量指标回填到由 impm-regression-unit-test / impm-regression-api-test 阶段一生成的 regression.md 质量度量报告时使用。本技能是质量度量的阶段二，与 impm-regression-unit-test / impm-regression-api-test 的阶段一共同构成完整的版本质量度量报告。
 
 ## 执行角色
 本技能由 技术负责人（subagent_type=tl）subagent 负责执行，执行时使用 Skill 工具加载本技能。
@@ -37,7 +37,7 @@ description: 在代码审核完成后回填当前版本质量度量报告（阶�
 ## 执行步骤
 ### 步骤 1：读取审核报告与阶段一回归质量报告
 1. 调用 impm_doc_reader（docType=review，target=version）读取当前版本代码审核报告 docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-review.md。
-2. 调用 impm_doc_reader（docType=regression，target=version）读取当前版本质量度量报告 docs/{项目英文缩写}-v{当前版本号}/regression.md（阶段一由 impm-regression-test 生成）。
+2. 调用 impm_doc_reader（docType=regression，target=version）读取当前版本质量度量报告 docs/{项目英文缩写}-v{当前版本号}/regression.md（阶段一由 impm-regression-unit-test / impm-regression-api-test 生成）。
 3. 若审核报告缺失，说明本版本未执行代码审核，如实报告并跳过回填（审核类指标标注"未执行"），仍进入步骤 6 记录进度。
 
 ### 步骤 2：统计审核问题数及严重级别分布

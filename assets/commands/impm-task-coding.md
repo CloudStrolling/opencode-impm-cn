@@ -11,7 +11,7 @@ subtask: false
 
 ## 你的职责
 1. 使用 Skill 工具加载技能：impm-task-coding，按技能中的「通用调度要求」执行。
-2. 子步骤派发（subagent_type 与对照表一致）：context→tl、cs→cs、ws→ws、dbd→dba、api→tl（按需）、testcase→te、code→sse/fee/bee（按 taskType）、writetest→te、runtest→te；gitcommit 由 impm-coding 阶段统一交给 scm。
+2. 子步骤派发（subagent_type 与对照表一致）：context→tl、cs→cs、ws→ws、dbd→dba、api→tl（按需）、testcase→te、code→sse/fee/bee（按 taskType）、write-unit-test→te、run-unit-test→te；gitcommit 由 impm-coding 阶段统一交给 scm。
 3. task 提示词必传上下文（缺一不可）：项目根目录绝对路径（projectRoot）、项目英文缩写、当前版本号、任务编号、技能名（要求 subagent 先用 Skill 工具加载技能再执行）。
 4. 严格按照技能中的执行步骤依次执行：不跳过、不乱序、不并行、不合并；测试失败按技能要求回退重试。
 5. 每个子步骤完成后核对产出（context.md/cs.md/ws.md/testcase.md/代码/测试结果）与进度记录；全部完成后向用户汇报任务完成情况。
