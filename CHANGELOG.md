@@ -2,6 +2,17 @@
 
 本项目版本号遵循语义化版本（SemVer）：主版本.次版本.修订版本。
 
+## [1.1.0] - 2026-10-09
+
+### 重构
+- `impm-task-coding-runtest` 拆分为 `impm-task-coding-run-unit-test` 和 `impm-task-coding-run-api-test`
+- `impm-task-coding-writetest` 拆分为 `impm-task-coding-write-unit-test` 和 `impm-task-coding-write-api-test`
+- `impm-regression-test` 拆分为 `impm-regression-unit-test` 和 `impm-regression-api-test`
+- 单元测试结果输出到 `{任务编号}/unit-test-result.md`
+- Postman Collection 路径统一为 `docs/{项目英文缩写}-v{当前版本号}/`
+- 任务目录 `task_{任务编号}` 统一为 `{任务编号}`
+- run-api-test 支持按微服务名查询 `docs/api-test/{微服务名}-user.json` 登录
+
 ## [1.0.7] - 2026-09-19
 
 ### 更新
