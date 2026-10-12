@@ -59,13 +59,13 @@ description: 查询三方包、中间件与 SDK 的官方文档和使用方法�
 同时在网络上查询与收集与当前任务相关的资料（如算法、业务方案、排错经验等）。
 
 ### 步骤 7：写入 ws.md
-将查询到的内容分析、合并、汇总后，调用 impm_doc_writer（docType=ws，taskId={任务编号}）写入 docs/{项目英文缩写}-v{当前版本号}/task_{任务编号}/ws.md。
+将查询到的内容分析、合并、汇总后，调用 impm_doc_writer（docType=ws，taskId={任务编号}）写入 docs/{项目英文缩写}-v{当前版本号}/{任务编号}/ws.md。
 
 ### 步骤 8：记录完成
 核对 ws.md 已生成且内容完整，调用 impm_progress（action=add，stepName=impm-task-coding-ws，status={任务编号}-已完成）。
 
 ## 交付物
-- docs/{项目英文缩写}-v{当前版本号}/task_{任务编号}/ws.md
+- docs/{项目英文缩写}-v{当前版本号}/{任务编号}/ws.md
 - version_progress.md 中的进度记录
 
 ## 完成后提示

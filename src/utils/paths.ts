@@ -106,14 +106,24 @@ export function versionDir(
     return join(docsRoot(projectRoot), `${abbrev}-v${normalizeVersion(version)}`);
 }
 
-/** 任务目录：docs/{缩写}-v{版本号}/task_{任务编号} */
+/**
+ * 任务目录：docs/{缩写}-v{版本号}/{任务编号}
+ * 兼容旧版目录命名 task_{任务编号}：新目录不存在而旧目录存在时，回退到旧目录，
+ * 避免升级插件后存量项目的任务上下文、测试用例等文档失联。
+ */
 export function taskDir(
     projectRoot: string,
     abbrev: string,
     version: string,
     taskId: string,
 ): string {
-    return join(versionDir(projectRoot, abbrev, version), `task_${taskId}`);
+    const dir = versionDir(projectRoot, abbrev, version);
+    const current = join(dir, taskId);
+    if (existsSync(current)) {
+        return current;
+    }
+    const legacy = join(dir, `task_${taskId}`);
+    return existsSync(legacy) ? legacy : current;
 }
 
 /** 版本进度文件：docs/{缩写}-v{版本号}/version_progress.md */

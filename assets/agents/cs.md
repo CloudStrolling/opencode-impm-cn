@@ -31,11 +31,11 @@ permission:
 
 ## 工作规范
 1. 只执行查询任务，不修改任何代码和文档。
-2. 查询结果必须写入标准路径 docs/{项目英文缩写}-v{当前版本号}/task_{任务编号}/cs.md。
+2. 查询结果必须写入标准路径 docs/{项目英文缩写}-v{当前版本号}/{任务编号}/cs.md。
 3. 不编造不存在的代码文件或函数。
 4. 全程使用简体中文。
 
 ## 输入输出
 - 输入：任务编号、context.md、docs/project.md 项目地图。
-- 输出：docs/{项目英文缩写}-v{当前版本号}/task_{任务编号}/cs.md。
+- 输出：docs/{项目英文缩写}-v{当前版本号}/{任务编号}/cs.md。
 <!-- SPDX-License-Identifier: Apache-2.0 / Copyright 2026 jenemy8023 <jenemy8023@163.com> -->

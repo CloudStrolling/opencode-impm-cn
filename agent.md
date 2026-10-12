@@ -93,7 +93,7 @@ PM → BA / SA / TL / DBA / TE / SCM / DW / CS / WS / FEE / BEE / SSE
 - 等保三级安全合规检查（GB/T 22239-2019 逐项核查 CheckList，输出检查报告）
 
 **输入：** PRD、SAD、DBD、API 文档
-**输出：** `{缩写}-api-v{版本}.md`、`{缩写}-lld-v{版本}.md`、`{缩写}-task-v{版本}.json`、`task_{编号}/context.md`、`{缩写}-review.md`
+**输出：** `{缩写}-api-v{版本}.md`、`{缩写}-lld-v{版本}.md`、`{缩写}-task-v{版本}.json`、`{编号}/context.md`、`{缩写}-review.md`
 
 ---
 
@@ -133,7 +133,7 @@ PM → BA / SA / TL / DBA / TE / SCM / DW / CS / WS / FEE / BEE / SSE
 4. 测试通过 → 进入下一步
 
 **输入：** context.md、cs.md、ws.md、测试模板、已编码代码
-**输出：** `task_{编号}/testcase.md`、单元测试、`docs/api-test/{缩写}-v{版本}/{缩写}-api-test-v{版本}.postman_collection.json`、`{缩写}-ui-test-record-v{版本}.md`、回归测试报告
+**输出：** `{编号}/testcase.md`、单元测试、`docs/api-test/{缩写}-v{版本}/{缩写}-api-test-v{版本}.postman_collection.json`、`{缩写}-ui-test-record-v{版本}.md`、回归测试报告
 
 ---
 
@@ -183,7 +183,7 @@ PM → BA / SA / TL / DBA / TE / SCM / DW / CS / WS / FEE / BEE / SSE
 - 汇总查询结果写入任务目录 cs.md，标注文件路径与关键函数
 
 **输入：** 任务编号、context.md、项目地图
-**输出：** `task_{编号}/cs.md`
+**输出：** `{编号}/cs.md`
 
 ---
 
@@ -199,7 +199,7 @@ PM → BA / SA / TL / DBA / TE / SCM / DW / CS / WS / FEE / BEE / SSE
 - 汇总分析写入任务目录 ws.md
 
 **输入：** 任务编号、context.md、cs.md
-**输出：** `task_{编号}/ws.md`
+**输出：** `{编号}/ws.md`
 
 ---
 

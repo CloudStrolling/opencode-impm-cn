@@ -51,7 +51,7 @@ impm-coding（PM）确定某任务可执行（无前置任务或前置任务全�
 | {项目英文缩写}-api-test-v{当前版本号}.postman_collection.json（版本目录 docs/{项目英文缩写}-v{当前版本号}/） | write-unit-test 阶段 | 多任务并发覆盖写 | 先读最新集合 JSON，保留他人 item，仅新增本任务接口测试 item，expectedBase 写回，冲突重试 |
 
 **通用规避铁律**：
-1. 本任务只写自己的任务目录 docs/{项目英文缩写}-v{当前版本号}/task_{任务编号}/ 下的文件（context.md/cs.md/ws.md/testcase.md）与本任务对应的代码文件，禁止写其他任务目录。
+1. 本任务只写自己的任务目录 docs/{项目英文缩写}-v{当前版本号}/{任务编号}/ 下的文件（context.md/cs.md/ws.md/testcase.md）与本任务对应的代码文件，禁止写其他任务目录。
 2. 写任何版本目录共享文档前，必须先用 impm_doc_reader 读取最新内容，在最新内容上合并，写回时传 expectedBase=读取到的全文；工具返回并发冲突错误时重新读取合并后再写，禁止基于旧快照整体覆盖。
 3. 写回后立即回读校验：自己的内容已写入且他人内容未被破坏，发现丢失立即重新合并写回。
 4. 本任务不更新任务清单 JSON（{项目英文缩写}-task-v{当前版本号}.json）中的任务状态，该操作由 PM/scm 独占。
@@ -117,7 +117,7 @@ impm-coding（PM）确定某任务可执行（无前置任务或前置任务全�
 全部测试通过后，调用 impm_progress（action=add，projectName={项目英文名称}，version={当前版本号}，stepName=impm-task-coding，status={任务编号}-已完成），记录当前任务编码完成；整理任务完成报告返回调度方（PM）：产出文件清单、单元测试结果、接口测试结果、版本目录写入/变更清单（dbd/api/ui-test-record 的变更内容）。
 
 ## 交付物
-- 任务目录 docs/{项目英文缩写}-v{当前版本号}/task_{任务编号}/ 下的 context.md、cs.md、ws.md、testcase.md
+- 任务目录 docs/{项目英文缩写}-v{当前版本号}/{任务编号}/ 下的 context.md、cs.md、ws.md、testcase.md
 - 版本数据库设计文档与 SQL 脚本、API 设计文档（如需要变更，已按合并规则写回）
 - 任务编码实现代码
 - docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-api-test-v{当前版本号}.postman_collection.json 接口测试用例（Postman Collection v2.1，已合并）

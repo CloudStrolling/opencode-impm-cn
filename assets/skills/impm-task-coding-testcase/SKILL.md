@@ -62,7 +62,7 @@ description: 按 TESTCASE-TEMPLATE.MD 模板为当前任务编写覆盖单元/�
 调用 impm_doc_reader（docType=testcase，target=main）与（docType=testcase，target=version）读取此前的测试用例；如果文件不存在，就不读取。
 
 ### 步骤 6：创建任务测试用例
-根据当前任务需求，参考当前版本的测试用例，套用 impm_template_reader 读取的 TESTCASE-TEMPLATE.MD 模板文件，创建当前任务的测试用例，调用 impm_doc_writer（docType=testcase，taskId={任务编号}）写入 docs/{项目英文缩写}-v{当前版本号}/task_{任务编号}/testcase.md。
+根据当前任务需求，参考当前版本的测试用例，套用 impm_template_reader 读取的 TESTCASE-TEMPLATE.MD 模板文件，创建当前任务的测试用例，调用 impm_doc_writer（docType=testcase，taskId={任务编号}）写入 docs/{项目英文缩写}-v{当前版本号}/{任务编号}/testcase.md。
 
 ### 步骤 7：覆盖四种测试类型
 测试用例中应包含测试类型：单元测试、接口测试、功能测试、UI测试。
@@ -80,7 +80,7 @@ description: 按 TESTCASE-TEMPLATE.MD 模板为当前任务编写覆盖单元/�
 调用 impm_progress（action=add，stepName=impm-task-coding-testcase，status={任务编号}-已完成）。
 
 ## 交付物
-- docs/{项目英文缩写}-v{当前版本号}/task_{任务编号}/testcase.md
+- docs/{项目英文缩写}-v{当前版本号}/{任务编号}/testcase.md
 - docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-testcase-v{当前版本号}.md（已同步更新）
 - version_progress.md 中的进度记录
 

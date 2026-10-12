@@ -10,7 +10,7 @@
 - `impm-regression-test` 拆分为 `impm-regression-unit-test` 和 `impm-regression-api-test`
 - 单元测试结果输出到 `{任务编号}/unit-test-result.md`
 - Postman Collection 路径统一为 `docs/{项目英文缩写}-v{当前版本号}/`
-- 任务目录 `task_{任务编号}` 统一为 `{任务编号}`
+- 任务目录 `task_{任务编号}` 统一为 `{任务编号}`，并保留旧目录 `task_{任务编号}` 的读取回退，存量项目文档不失效
 - run-api-test 支持按微服务名查询 `docs/api-test/{微服务名}-user.json` 登录
 
 ## [1.0.7] - 2026-09-19

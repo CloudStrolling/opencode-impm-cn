@@ -55,13 +55,13 @@ impm-task-coding 启动 TL subagent 收集当前任务需求上下文，需要�
 调用 impm_context_builder（projectName={项目英文名称}，version={当前版本号}，taskId={任务编号}）收集并合并所有相关需求信息，整理为精简上下文。
 
 ### 步骤 6：写入 context.md
-调用 impm_doc_writer（docType=context，taskId={任务编号}），将合并后的上下文写入 docs/{项目英文缩写}-v{当前版本号}/task_{任务编号}/context.md；任务目录不存在时自动创建。
+调用 impm_doc_writer（docType=context，taskId={任务编号}），将合并后的上下文写入 docs/{项目英文缩写}-v{当前版本号}/{任务编号}/context.md；任务目录不存在时自动创建。
 
 ### 步骤 7：记录完成
-核对 docs/{项目英文缩写}-v{当前版本号}/task_{任务编号}/context.md 已生成且内容完整，调用 impm_progress（action=add，stepName=impm-task-coding-context，status={任务编号}-已完成）。
+核对 docs/{项目英文缩写}-v{当前版本号}/{任务编号}/context.md 已生成且内容完整，调用 impm_progress（action=add，stepName=impm-task-coding-context，status={任务编号}-已完成）。
 
 ## 交付物
-- docs/{项目英文缩写}-v{当前版本号}/task_{任务编号}/context.md
+- docs/{项目英文缩写}-v{当前版本号}/{任务编号}/context.md
 - version_progress.md 中的进度记录
 
 ## 完成后提示

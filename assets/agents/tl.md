@@ -51,5 +51,5 @@ permission:
 
 ## 输入输出
 - 输入：URS/PRD/SAD 文档、现有代码资料、模板文件、任务上下文素材。
-- 输出：docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-lld-v{当前版本号}.md、{项目英文缩写}-api-v{当前版本号}.md、{项目英文缩写}-task-v{当前版本号}.json、{项目英文缩写}-rtm-v{当前版本号}.md、task_{任务编号}/context.md、{项目英文缩写}-review.md。
+- 输出：docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-lld-v{当前版本号}.md、{项目英文缩写}-api-v{当前版本号}.md、{项目英文缩写}-task-v{当前版本号}.json、{项目英文缩写}-rtm-v{当前版本号}.md、{任务编号}/context.md、{项目英文缩写}-review.md。
 <!-- SPDX-License-Identifier: Apache-2.0 / Copyright 2026 jenemy8023 <jenemy8023@163.com> -->
