@@ -54,9 +54,10 @@ description: 执行版本单元测试回归，全量运行单元测试并记录�
    c. 记录删除的测试用例清单。
 
 ### 步骤 3：写入单元测试回归结果
-1. 将步骤 1 的测试结果整理为 Markdown 文档，内容包括：测试时间、运行环境、执行命令、统计结果、失败用例清单及失败原因、过时用例删除记录（如有）、结论。
-2. 调用 impm_doc_writer（docType=regression-unit）写入 docs/{项目英文缩写}-v{当前版本号}/regression-unit-test.md。
-3. 核对文件存在且内容正确。
+1. 读取报告模板：调用 impm_template_reader 读取 REGRESSION-UNIT-TEST-TEMPLATE.MD 模板内容，严格按模板的章节结构组织本报告，不得臆造章节。
+2. 将步骤 1 的测试结果与步骤 2 的过时用例处理记录填入模板对应章节；无内容的可选章节（如过时用例删除记录、失败用例清单）标注"无"，不得删除章节。
+3. 调用 impm_doc_writer（docType=regression-unit）写入 docs/{项目英文缩写}-v{当前版本号}/regression-unit-test.md。
+4. 核对文件存在且内容正确。
 
 ### 步骤 4：需求追踪矩阵（RTM）测试用例回填与覆盖校验
 1. 调用 impm_doc_reader（docType=rtm，target=version）读取当前版本需求追踪矩阵 docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-rtm-v{当前版本号}.md；若文档不存在，读取主文档 docs/{项目英文缩写}-rtm.md，或说明本版本未生成 RTM 并跳过本步骤（标注提示）。
