@@ -2,6 +2,13 @@
 
 本项目版本号遵循语义化版本（SemVer）：主版本.次版本.修订版本。
 
+## [1.1.2] - 2026-10-17
+
+### 更新
+- 新增 `REGRESSION-UNIT-TEST-TEMPLATE.MD` 模板，统一版本单元测试回归报告（`regression-unit-test.md`）的章节结构
+- 新增 `REGRESSION-API-TEST-TEMPLATE.MD` 模板，统一版本接口测试回归报告（`regression-api-test.md`）的章节结构
+- `impm-regression-unit-test` 步骤 3、`impm-regression-api-test` 步骤 5 增加"先读模板、按模板章节填写"约束，无内容的可选章节标注"无"而非删除
+
 ## [1.1.0] - 2026-10-09
 
 ### 重构
