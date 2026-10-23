@@ -35,12 +35,82 @@ import {
     writeFileSync,
     rmSync,
 } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { join, resolve } from "node:path";
 
 const ASSET_DIRS = ["commands", "agents", "skills"];
 const PACKAGE_NAME = "opencode-impm-cn";
 /** 安装时默认注册的插件（impm 套件 + 浏览器插件，供 UI/网络相关技能使用） */
 const DEFAULT_PLUGINS = [PACKAGE_NAME, "opencode-browser"];
+
+/**
+ * agent 配置键（双版本）
+ * - `agent`  ：opencode 1.x 读取，条目为 `{ model, reasoning_effort }`
+ * - `agents` ：opencode 2.x 读取，条目为 `{ model: "provider/model#variant" }`
+ */
+const AGENT_CONFIG_KEYS = ["agent", "agents"];
+
+/**
+ * 插件注册键（双版本）
+ * - `plugin`  ：opencode 1.x
+ * - `plugins` ：opencode 2.x（支持字符串与 {package, options} 对象两种元素）
+ */
+const PLUGIN_CONFIG_KEYS = ["plugin", "plugins"];
+
+/**
+ * 探测 opencode 宿主主版本
+ *
+ * opencode 1.x 与 2.x 的配置键不同（plugin/plugins、agent/agents），
+ * 需按宿主版本决定写入哪一套。探测顺序：
+ * 1. 调用方显式传入的 hostMajor（插件运行时已知自身宿主版本，最可靠）
+ * 2. 执行 `opencode --version` 解析首段版本号
+ * 3. 探测失败 → 保守按 1 处理（与改造前行为一致）
+ *
+ * @param {number} [explicit] 调用方传入的主版本号
+ * @returns {1|2} 宿主主版本号
+ */
+export function detectHostMajor(explicit) {
+    if (explicit === 1 || explicit === 2) {
+        return explicit;
+    }
+    try {
+        const raw = execFileSync("opencode", ["--version"], {
+            encoding: "utf-8",
+            stdio: ["ignore", "pipe", "ignore"],
+            shell: process.platform === "win32",
+        });
+        const match = /^\s*v?(\d+)/.exec(String(raw).trim());
+        if (match) {
+            const major = Number(match[1]);
+            if (major >= 2) {
+                return 2;
+            }
+            if (major >= 1) {
+                return 1;
+            }
+        }
+    } catch {
+        /* 未安装 opencode 或探测失败 → 保守按 1 处理 */
+    }
+    return 1;
+}
+
+/**
+ * reasoning_effort → opencode 2.x model variant 映射
+ *
+ * 2.x 将思考深度表达为 model 引用中的 `#variant`，而非独立的 agent 字段。
+ * `max` 无对应 variant，降级为 `high` 并由调用方告警。
+ *
+ * @param {string} effort reasoning_effort 值（low/medium/high/max 或自定义）
+ * @returns {string} variant 名
+ */
+export function variantOf(effort) {
+    const value = String(effort || "").trim().toLowerCase();
+    if (value === "max") {
+        return "high";
+    }
+    return value || "medium";
+}
 
 /** --agent-type 可选值 */
 export const AGENT_TYPES = [
@@ -204,7 +274,7 @@ function loadAgentPresets(pluginRoot) {
     }
 }
 
-/** 应用 agent 模型配置到目标 opencode.json */
+/** 应用 agent 模型配置到目标 opencode.json（双键并写：agent 供 1.x，agents 供 2.x） */
 function applyAgentConfig(config, agentType, assetsDir, pluginRoot, extraManagedAgents = []) {
     if (!agentType) {
         return;
@@ -215,9 +285,13 @@ function applyAgentConfig(config, agentType, assetsDir, pluginRoot, extraManaged
 
     if (agentType === "clear") {
         let cleaned = 0;
-        if (config.agent && typeof config.agent === "object") {
+        for (const key of AGENT_CONFIG_KEYS) {
+            const bucket = config[key];
+            if (!bucket || typeof bucket !== "object") {
+                continue;
+            }
             for (const name of cleanAgents) {
-                const entry = config.agent[name];
+                const entry = bucket[name];
                 if (!entry || typeof entry !== "object") {
                     continue;
                 }
@@ -231,14 +305,14 @@ function applyAgentConfig(config, agentType, assetsDir, pluginRoot, extraManaged
                     changed = true;
                 }
                 if (changed && Object.keys(entry).length === 0) {
-                    delete config.agent[name];
+                    delete bucket[name];
                 }
                 if (changed) {
                     cleaned++;
                 }
             }
-            if (Object.keys(config.agent).length === 0) {
-                delete config.agent;
+            if (Object.keys(bucket).length === 0) {
+                delete config[key];
             }
         }
         console.log(`  agent-type=clear：已清理 ${cleaned} 个 impm 管理的 agent 模型配置`);
@@ -260,25 +334,40 @@ function applyAgentConfig(config, agentType, assetsDir, pluginRoot, extraManaged
     }
 
     config.agent = config.agent || {};
+    config.agents = config.agents || {};
     let synced = 0;
     let preserved = 0;
+    let downgraded = 0;
     for (const [name, setting] of Object.entries(preset.agents)) {
-        const existing = config.agent[name];
+        const existing = config.agent[name] || config.agents[name];
         if (agentType === "custom" && existing && existing.model) {
             preserved++;
             continue;
         }
+        // 1.x 形态：model + reasoning_effort 独立字段
         config.agent[name] = {
-            ...(existing || {}),
+            ...(config.agent[name] || {}),
             model: setting.model,
             reasoning_effort: setting.reasoning_effort,
+        };
+        // 2.x 形态：思考深度并入 model 引用（provider/model#variant）
+        const variant = variantOf(setting.reasoning_effort);
+        if (variant !== String(setting.reasoning_effort || "").toLowerCase()) {
+            downgraded++;
+        }
+        config.agents[name] = {
+            ...(config.agents[name] || {}),
+            model: `${setting.model}#${variant}`,
         };
         synced++;
     }
 
-    const msg = [`  已按预设 ${agentType} 为 ${synced} 个 agent 写入模型配置`];
+    const msg = [`  已按预设 ${agentType} 为 ${synced} 个 agent 写入模型配置（agent + agents 双键）`];
     if (preserved > 0) {
         msg.push(`，保留 ${preserved} 个既有 custom 配置`);
+    }
+    if (downgraded > 0) {
+        msg.push(`，${downgraded} 个 max 档降级为 high variant（2.x 无 max variant）`);
     }
     console.log(msg.join(""));
 }
@@ -309,14 +398,57 @@ function isStaleImpmPlugin(p) {
         return p === PACKAGE_NAME || p.toLowerCase().includes("impm");
     }
     if (p && typeof p === "object") {
-        const n = String(p.name || p.entry || "");
+        const n = String(p.package || p.name || p.entry || "");
         return n.toLowerCase().includes("impm");
     }
     return false;
 }
 
-/** 更新目标 opencode.json：补 $schema、注册插件、应用 agent 模型预设 */
-function updateOpenCodeConfig(projectRoot, agentType, assetsDir, pluginRoot, manifest = null) {
+/**
+ * 取插件注册项中的包名
+ * @param {string|{package?:string,name?:string,entry?:string}} p 注册项
+ * @returns {string} 包名，非字符串形态返回空串
+ */
+function pluginEntryName(p) {
+    if (typeof p === "string") {
+        return p;
+    }
+    if (p && typeof p === "object") {
+        return String(p.package || p.name || p.entry || "");
+    }
+    return "";
+}
+
+/**
+ * 合并插件注册数组：清理 impm 残留后补齐默认插件，保持既有顺序
+ *
+ * opencode 2.x 的 `plugins` 元素还支持 `{ package, options }` 对象形态，
+ * 此处按包名去重，字符串与对象混排也能正确识别。
+ *
+ * @param {unknown} current 现有配置值
+ * @returns {string[]} 合并后的注册项
+ */
+function mergePluginEntries(current) {
+    const kept = (Array.isArray(current) ? current : []).filter(
+        (p) => !isStaleImpmPlugin(p) && pluginEntryName(p),
+    );
+    for (const name of DEFAULT_PLUGINS) {
+        if (!kept.some((p) => pluginEntryName(p) === name)) {
+            kept.push(name);
+        }
+    }
+    return kept;
+}
+
+/** 更新目标 opencode.json：补 $schema、注册插件（双键）、应用 agent 模型预设（双键） */
+function updateOpenCodeConfig(
+    projectRoot,
+    agentType,
+    assetsDir,
+    pluginRoot,
+    manifest = null,
+    hostMajor = 1,
+) {
     const configPath = join(projectRoot, "opencode.json");
     mkdirSync(projectRoot, { recursive: true });
 
@@ -334,18 +466,16 @@ function updateOpenCodeConfig(projectRoot, agentType, assetsDir, pluginRoot, man
     const isSelfInstall = sameResolvedPath(pluginRoot, projectRoot);
 
     if (!isSelfInstall) {
-        const plugins = Array.isArray(config.plugin)
-            ? config.plugin.filter((p) => !isStaleImpmPlugin(p))
-            : [];
-        for (const p of DEFAULT_PLUGINS) {
-            if (!plugins.includes(p)) {
-                plugins.push(p);
-            }
+        // 双键并写：`plugin` 供 1.x，`plugins` 供 2.x。
+        // 各自宿主会忽略自己不认识的键，用户跨版本升级时无需手工改配置。
+        for (const key of PLUGIN_CONFIG_KEYS) {
+            config[key] = mergePluginEntries(config[key]);
         }
-        config.plugin = plugins;
-        console.log(`  配置文件已更新: ${configPath}（plugin: ${DEFAULT_PLUGINS.join(", ")}）`);
+        console.log(
+            `  配置文件已更新: ${configPath}（${PLUGIN_CONFIG_KEYS.join(" + ")}: ${DEFAULT_PLUGINS.join(", ")}；宿主 opencode ${hostMajor}.x）`,
+        );
     } else {
-        console.log("  本地自安装：跳过 config.plugin 注册");
+        console.log(`  本地自安装：跳过 ${PLUGIN_CONFIG_KEYS.join("/")} 注册`);
     }
 
     const extraAgents = manifest
@@ -368,11 +498,20 @@ function updateOpenCodeConfig(projectRoot, agentType, assetsDir, pluginRoot, man
  * @param {string} [options.agentType]  - agent 模型预设类型（空=不调整 agent 配置）
  * @param {string} [options.opencodeDirOverride] - 资源安装目录覆盖（默认 projectRoot/.opencode）；
  *                                         全局安装时传 opencode 全局配置目录（~/.config/opencode）
+ * @param {1|2} [options.hostMajor]    - 宿主主版本号；不传则执行 `opencode --version` 探测
  */
-export function runInstall({ pluginRoot, projectRoot, version, agentType = "", opencodeDirOverride = "" }) {
+export function runInstall({
+    pluginRoot,
+    projectRoot,
+    version,
+    agentType = "",
+    opencodeDirOverride = "",
+    hostMajor,
+}) {
     const assetsDir = join(pluginRoot, "assets");
     const distDir = join(pluginRoot, "dist");
     const opencodeDir = opencodeDirOverride || join(projectRoot, ".opencode");
+    const detectedMajor = detectHostMajor(hostMajor);
 
     console.log("============================================");
     console.log("  opencode-impm-cn 安装");
@@ -381,6 +520,7 @@ export function runInstall({ pluginRoot, projectRoot, version, agentType = "", o
     console.log(`插件目录: ${pluginRoot}`);
     console.log(`目标项目: ${projectRoot}`);
     console.log(`版本: ${version || "（未知）"}`);
+    console.log(`宿主: opencode ${detectedMajor}.x`);
     if (agentType) {
         console.log(`agent-type: ${agentType}`);
     }
@@ -416,9 +556,17 @@ export function runInstall({ pluginRoot, projectRoot, version, agentType = "", o
         everByDir[dir] = existsSync(srcDir) ? readdirSync(srcDir) : [];
     }
     if (!manifest) {
-        manifest = { installedVersion: version || "", everInstalled: everByDir, pluginNames: [], pkgJsonTypeModule: false };
+        manifest = {
+            installedVersion: version || "",
+            everInstalled: everByDir,
+            pluginNames: [],
+            pkgJsonTypeModule: false,
+            hostMajor: detectedMajor,
+        };
     } else {
         manifest.installedVersion = version || manifest.installedVersion || "";
+        // 记录宿主主版本：用户跨 1.x/2.x 升级时据此触发重新安装（配置键不同）
+        manifest.hostMajor = detectedMajor;
         for (const dir of ASSET_DIRS) {
             mergeEver(manifest, dir, everByDir[dir]);
         }
@@ -469,7 +617,7 @@ export function runInstall({ pluginRoot, projectRoot, version, agentType = "", o
     if (!isSelfInstall && !manifest.pluginNames.includes(PACKAGE_NAME)) {
         manifest.pluginNames.push(PACKAGE_NAME);
     }
-    updateOpenCodeConfig(projectRoot, agentType, assetsDir, pluginRoot, manifest);
+    updateOpenCodeConfig(projectRoot, agentType, assetsDir, pluginRoot, manifest, detectedMajor);
 
     // 保存清单
     saveManifest(opencodeDir, manifest);

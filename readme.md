@@ -5,7 +5,7 @@
 **我是项目经理 —— AI 驱动的工程化全流程开发套件**
 
 <p>
-  <a href="#"><img src="https://img.shields.io/badge/version-1.1.2-2ea44f?style=flat-square" alt="version"></a>
+  <a href="#"><img src="https://img.shields.io/badge/version-2.0.0-2ea44f?style=flat-square" alt="version"></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square" alt="license"></a>
   <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/node->=%2022.5-339933?style=flat-square&logo=node.js&logoColor=white" alt="node"></a>
   <a href="https://opencode.ai/"><img src="https://img.shields.io/badge/OpenCode-必需-ff6b6b?style=flat-square" alt="opencode"></a>
@@ -120,7 +120,9 @@ PM Agent 将自动引导完成全部四阶段开发任务。
 ### 环境要求
 
 - [Node.js](https://nodejs.org/) >= 22.5
-- [OpenCode](https://opencode.ai/)（支持插件、技能、命令的版本）
+- [OpenCode](https://opencode.ai/) **>= 1.18.29**（1.x）或 **>= 2.0.0**（2.x）
+  - 2.0.0 起插件入口改为双版本形态，官方对 1.x object entrypoint 的硬性要求为 1.18.29
+  - 需要 1.18.29 以下的 1.x 环境请停留在 `opencode-impm-cn@1.1.2`
 - [Python](https://www.python.org/) 3.8+（**接口测试依赖 python 环境**，用于运行 `docs/api-test/` 下的接口测试执行器与脚本；可用系统 python、conda 环境或 uv 托管环境任一提供，运行时会自动按「shell python → conda → uv」顺序检测）
 
 ### 方式一：OpenCode自动安装（⭐ 推荐）
@@ -132,6 +134,14 @@ PM Agent 将自动引导完成全部四阶段开发任务。
 ```
 如果opencode.json在项目里，就是为项目添加。
 如果opencode.json是全局的，就是为全局添加。
+
+> 💡 **opencode 2.x**：配置键由 `plugin` 改为 `plugins`，或直接执行 `opencode plugin add opencode-impm-cn`：
+> ```1c
+> "plugins": [
+>     "opencode-impm-cn"
+>   ]
+> ```
+> 插件安装器会按宿主版本自动补写对应配置键，跨版本升级时无需手工修改。
 
 ### 方式二：本地安装
 

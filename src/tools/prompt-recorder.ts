@@ -23,9 +23,10 @@
  *    输入token、输出token、缓存命中、缓存写入），会话结束（session.idle）
  *    时按"提问窗口"聚合该次提问的对话消耗（该提问之后、下一次提问之前
  *    的助手消息 + 该时段创建的子会话）回填后 4 列。
- * 2. 对话导出：将主会话与全部子会话的完整对话（含思考与回答）导出到
- *    docs/prompts/prompt-{年月日}-{session_id}.md，文件开头记录整个
- *    会话的累计 token 消耗统计，并在每次提问/会话结束时持续更新。
+ * 2. 对话导出：将主会话与全部子会话的用户输入（含输入时的模型与
+ *    agent）导出到 docs/prompts/prompt-{年月日}-{session_id}.md，
+ *    文件开头记录整个会话的累计 token 消耗统计与会话数量；
+ *    AI 生成的思考、回答与工具调用明细不再写入。
  *
  * 数据源（钩子 + SQLite 混合，不使用 opencode SDK）：
  * - 提问内容：chat.message 钩子（output.parts 中的 text part）
@@ -338,18 +339,31 @@ function readSessionMessages(db: SqliteHandle["db"], sessionId: string): Array<{
     return result;
 }
 
-/** 读取某会话全部 user 消息（按时间排序），提取文本 */
-function readUserMessages(db: SqliteHandle["db"], sessionId: string): Array<{ time: number; text: string }> {
+/** 读取某会话全部 user 消息（按时间排序），提取文本与输入时的模型、agent */
+function readUserMessages(db: SqliteHandle["db"], sessionId: string): Array<{
+    time: number;
+    text: string;
+    model: string;
+    agent: string;
+}> {
     return readSessionMessages(db, sessionId)
         .filter((m) => m.role === "user")
-        .map((m) => ({
-            time: m.timeCreated,
-            text: m.parts
-                .filter((p) => p.type === "text" && !p.data.synthetic)
-                .map((p) => String(p.data.text || ""))
-                .join("\n")
-                .trim(),
-        }))
+        .map((m) => {
+            const model = (m.info.model || {}) as { providerID?: unknown; modelID?: unknown };
+            return {
+                time: m.timeCreated,
+                text: m.parts
+                    .filter((p) => p.type === "text" && !p.data.synthetic)
+                    .map((p) => String(p.data.text || ""))
+                    .join("\n")
+                    .trim(),
+                model:
+                    model.providerID && model.modelID
+                        ? `${String(model.providerID)}/${String(model.modelID)}`
+                        : "",
+                agent: String(m.info.agent || ""),
+            };
+        })
         .filter((m) => m.text)
         .sort((a, b) => a.time - b.time);
 }
@@ -519,80 +533,12 @@ async function finalizeTokens(
     }
 }
 
-/** 渲染单个消息为 Markdown 行（含思考与回答） */
-function renderMessage(msg: {
-    role: string;
-    timeCreated: number;
-    info: Record<string, unknown>;
-    parts: Array<{ id: string; type: string; data: Record<string, unknown>; timeCreated: number }>;
-}): string[] {
-    const lines: string[] = [];
-    const role = msg.role === "user" ? "用户" : "助手";
-    lines.push(`### ${role} ${formatTime(msg.timeCreated)}`);
-    if (msg.role === "assistant") {
-        const model = msg.info.modelID ? `${msg.info.providerID}/${msg.info.modelID}` : "";
-        const agent = msg.info.agent ? ` | agent: ${msg.info.agent}` : "";
-        lines.push(`> 模型: ${model || "未知"}${agent}`);
-    }
-    lines.push("");
-    for (const p of msg.parts) {
-        switch (p.type) {
-            case "text":
-                if (p.data.synthetic) {
-                    break;
-                }
-                if (p.data.text && String(p.data.text).trim()) {
-                    lines.push(String(p.data.text).trim());
-                    lines.push("");
-                }
-                break;
-            case "reasoning":
-                if (p.data.text && String(p.data.text).trim()) {
-                    lines.push("> **思考过程**");
-                    lines.push(">");
-                    lines.push(
-                        String(p.data.text)
-                            .trim()
-                            .split(/\r?\n/)
-                            .map((l) => `> ${l}`)
-                            .join("\n"),
-                    );
-                    lines.push("");
-                }
-                break;
-            case "tool":
-                lines.push(`- 工具调用: \`${String(p.data.tool || "unknown")}\`（状态: ${String(p.data.state || "unknown")}）`);
-                break;
-            case "subtask":
-                lines.push(`- 派遣子任务: **${String(p.data.agent || "?")}** — ${String(p.data.description || p.data.prompt || "")}`);
-                break;
-            case "step-start":
-                lines.push(`- 步骤开始${p.data.snapshot ? "（含快照）" : ""}`);
-                break;
-            case "step-finish": {
-                const t = p.data.tokens as { input?: number; output?: number; reasoning?: number } | undefined;
-                const tok = t ? `tokens: ${t.input ?? 0}+${(t.output ?? 0) + (t.reasoning ?? 0)}` : "";
-                lines.push(`- 步骤结束（原因: ${String(p.data.reason || "?")}${tok ? `, ${tok}` : ""}）`);
-                break;
-            }
-            case "patch":
-                lines.push(`- 文件补丁: ${((p.data.files as string[]) || []).join(", ") || String(p.data.hash || "?")}`);
-                break;
-            case "agent":
-                lines.push(`- 子代理: ${String(p.data.name || "")}`);
-                break;
-            default:
-                break;
-        }
-    }
-    lines.push("");
-    return lines;
-}
-
 /**
- * 导出主会话与全部子会话的对话快照到 docs/prompts/
+ * 导出主会话与全部子会话的用户输入到 docs/prompts/
  * 文件开头记录整个会话的累计 token 消耗统计（session 表口径，随导出持续更新）
- * 数据来源：SQLite message / part 表直读（含思考与回答）
+ * 与会话数量；每条用户输入附输入时的模型与 agent。
+ * 不写入 AI 生成的思考、回答与工具调用明细。
+ * 数据来源：SQLite message / part 表直读
  */
 async function exportSession(
     projectRoot: string,
@@ -649,24 +595,33 @@ async function exportSession(
             `| **合计** | **${sum.input}** | **${sum.output + sum.reasoning}** | **${sum.reasoning}** | **${sum.cacheRead}** | **${sum.cacheWrite}** |`,
         );
         lines.push("");
-        lines.push("## 会话树");
+        lines.push("## 用户输入");
         lines.push("");
         for (const s of sessions) {
-            lines.push(`- ${s.parent_id ? "子会话" : "主会话"} \`${s.id}\`${s.title ? `（${s.title}）` : ""}`);
-        }
-        lines.push("");
-        for (const s of sessions) {
-            lines.push(`## 会话 ${s.id}`);
-            lines.push("");
-            lines.push(`> 创建时间: ${formatTime(s.time_created)}${s.title ? ` | 标题: ${s.title}` : ""}`);
+            lines.push(`### 会话 \`${s.id}\`${s.title ? `（${s.title}）` : ""}`);
             lines.push("");
             if (s.parent_id) {
                 lines.push(`> 子会话（父会话: ${s.parent_id}）`);
                 lines.push("");
             }
-            const messages = readSessionMessages(opened.db, s.id);
-            for (const m of messages) {
-                lines.push(...renderMessage(m));
+            const users = readUserMessages(opened.db, s.id);
+            if (users.length === 0) {
+                lines.push("（无用户输入）");
+                lines.push("");
+                continue;
+            }
+            for (const u of users) {
+                const agent = u.agent ? ` | agent: ${u.agent}` : "";
+                lines.push(`- 【${formatTime(u.time)}】模型: ${u.model || "未知"}${agent}`);
+                lines.push("");
+                lines.push(
+                    u.text
+                        .replace(/^[\r\n]+|[\r\n]+$/g, "")
+                        .split(/\r?\n/)
+                        .map((l) => `    ${l}`)
+                        .join("\n"),
+                );
+                lines.push("");
             }
         }
         const dir = join(projectRoot, "docs", "prompts");
@@ -855,7 +810,7 @@ export async function createPromptRecorder(projectRoot: string) {
             /** 手动导出会话对话快照 */
             impm_prompt_export: {
                 description:
-                    "导出指定会话（主会话 + 全部子会话，含思考与回答）到 docs/prompts/prompt-{年月日}-{session_id}.md，开头含整会话 token 消耗统计",
+                    "导出指定会话（主会话 + 全部子会话）的用户输入（含输入时的模型与 agent）到 docs/prompts/prompt-{年月日}-{session_id}.md，开头含整会话 token 消耗统计，不写入 AI 生成内容",
                 args: {
                     projectRoot: createStringSchema("项目根目录的绝对路径"),
                     sessionID: createStringSchema("会话 ID（必填，主会话）"),

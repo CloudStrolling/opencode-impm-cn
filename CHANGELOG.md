@@ -2,6 +2,35 @@
 
 本项目版本号遵循语义化版本（SemVer）：主版本.次版本.修订版本。
 
+## [2.0.0] - 2026-10-17  更新到支持opencode 2.0。同时支持1.0和2.0的插件。
+
+### 破坏性变更
+- **插件入口改为双版本形态**：`default` 导出由「异步函数」改为「对象 `{ id, setup, server }`」。opencode 1.x（≥ 1.18.29）调用 `server()`，opencode 2.x 调用 `setup(ctx)`。官方明确「V1 插件实现在 V2 完全不运行」，此为 2.x 支持的必要条件。
+- **最低宿主版本提升至 opencode 1.18.29**：官方对 V1 object entrypoint 的硬性要求。低于该版本的 1.x 用户需停留在 1.1.2。
+- **不再对 `@opencode/plugin` 产生任何依赖**（编译期与运行期均无）：2.x 插件契约以本地结构类型 `src/host/plugin-types.ts` 描述。1.x 用户安装时无需也无法被要求安装 2.x 的包。
+
+### 新增
+- 兼容 opencode 2.x：单个 npm 包同时支持 1.x 与 2.x，无需拆分安装。
+- `src/host/detect.ts`：宿主版本探测（2.x 读 `ctx.app.version`，1.x 读 `client.app.get()`），探测失败保守降级为 1.x。
+- `src/host/session.ts`：会话控制端口，屏蔽 `client.session.abort/chat`（1.x）与 `ctx.session.interrupt/prompt`（2.x）的差异，宿主 API 缺失时仅告警不抛异常。
+- `src/host/log.ts`：统一日志出口。1.x 走 `client.app.log` 结构化日志，2.x 走 console（2.x 已移除该端点）。
+- `src/host/install.ts`：插件包根目录按 package.json 向上定位 + 双条件（插件版本 + 宿主主版本）自愈安装。
+- `src/tools/tool-defs.ts`：15 个自定义工具的**单一属性表**，由此派生 1.x 的 `args` 与 2.x 的完整 JSON Schema `input`，消除双份描述漂移。
+- `scripts/install-core.mjs`：`detectHostMajor()` 宿主版本探测（`opencode --version`）；opencode.json 改为**双键并写** —— `plugin` + `plugins`、`agent` + `agents`（后者思考深度并入 `model#variant`），用户跨版本升级宿主时无需手工改配置。
+- `.opencode/impm-manifest.json` 新增 `hostMajor` 字段：宿主主版本变化时自动重跑安装。
+
+### 重构
+- `src/index.ts` 由 525 行入口瘦身为约 80 行双形态入口，业务逻辑迁至 `src/runtime/v1.ts`（1.x 契约）与 `src/runtime/v2.ts`（2.x 契约）。
+- 2.x 侧 15 个工具经 `ctx.tool.transform` 注册，返回值统一为 `{content}`；工具工作目录经 `ctx.session.get().location.directory` 解析。
+- 2.x 侧用户提问记录改由 `ctx.session.hook("prompt")` 捕获，事件处理改由 `ctx.event.subscribe({signal})` 异步迭代，并在 `setup` 返回的 cleanup 中终止订阅。
+
+### 修复
+- 修复分层重构后插件包根目录被推导为 `dist/` 导致自愈安装路径失效的问题。
+
+### 兼容说明
+- 145 个资产文件（13 agents / 66 commands / 66 skills）保持原有形态：opencode 2.x 会自动翻译 agent 的 legacy `permission` frontmatter，command 的 `agent`/`description` 与 skill 的 `name`+`description` 两版本语义一致，无需改写。
+- 已知差异（宿主行为，非本插件）：2.x 无 `todowrite` 工具；`bash`→`shell`、`task`→`subagent`、`apply_patch`→`patch`；`external_directory` 默认放行（1.x 为询问）。
+
 ## [1.1.2] - 2026-10-17
 
 ### 更新
