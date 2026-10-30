@@ -78,6 +78,7 @@ export function detectHostMajor(explicit) {
             encoding: "utf-8",
             stdio: ["ignore", "pipe", "ignore"],
             shell: process.platform === "win32",
+            windowsHide: true, // 隐藏子进程控制台窗口，避免检测时弹窗闪现
         });
         const match = /^\s*v?(\d+)/.exec(String(raw).trim());
         if (match) {

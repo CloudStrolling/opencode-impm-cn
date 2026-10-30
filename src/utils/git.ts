@@ -27,6 +27,8 @@ function gitExec(cwd: string, args: string[]): string {
             cwd,
             encoding: "utf8",
             stdio: ["pipe", "pipe", "pipe"],
+            // 隐藏子进程控制台窗口，避免每次 git 调用弹窗闪现
+            windowsHide: true,
         }).trim();
     } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
