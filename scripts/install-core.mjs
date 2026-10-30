@@ -74,13 +74,15 @@ export function detectHostMajor(explicit) {
         return explicit;
     }
     try {
-        const raw = execFileSync("opencode", ["--version"], {
+        const raw = execFileSync("opencode --version", {
             encoding: "utf-8",
             stdio: ["ignore", "pipe", "ignore"],
-            shell: process.platform === "win32",
+            // 命令为固定字符串且经 shell 调用（Windows 下 opencode 为 .cmd 垫片必须走 shell），
+            // 不传参数数组以规避 Node DEP0190 弃用警告（参数拼接注入风险仅存在于非固定参数场景）
+            shell: true,
             windowsHide: true, // 隐藏子进程控制台窗口，避免检测时弹窗闪现
         });
-        const match = /^\s*v?(\d+)/.exec(String(raw).trim());
+        const match = /[vV]?(\d+)/.exec(String(raw).trim());
         if (match) {
             const major = Number(match[1]);
             if (major >= 2) {

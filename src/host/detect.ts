@@ -44,7 +44,7 @@ export interface HostVersion {
 /**
  * 从版本字符串解析主版本号
  *
- * 容忍 `2`、`2.0`、`v2.0.0`、`2.0.0-beta.1`、`2.0.0+build` 等形态。
+ * 容忍 `2`、`2.0`、`v2.0.0`、`2.0.0-beta.1`、`2.0.0+build`、`opencode v2.1.4` 等形态。
  * 无法解析时返回 null，由调用方决定降级策略。
  *
  * @param version 版本字符串
@@ -54,7 +54,7 @@ export function parseMajor(version: string): HostMajor | null {
     if (typeof version !== "string") {
         return null;
     }
-    const match = /^\s*v?(\d+)/.exec(version);
+    const match = /[vV]?(\d+)/.exec(version.trim());
     if (!match) {
         return null;
     }
