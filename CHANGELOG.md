@@ -2,6 +2,15 @@
 
 本项目版本号遵循语义化版本（SemVer）：主版本.次版本.修订版本。
 
+## [3.0.0] - 2026-10-30  版本号统一为 3.0.0，修复子进程弹窗与技能流程缺口
+
+### 变更
+- 当前版本号统一为 3.0.0（package.json、package-lock.json、readme.md 徽章同步更新），对齐《impm 3.0.0 仅支持 opencode 2.x》重构计划（docs/superpowers/specs|plans/2026-10-29-opencode-2-only-refactor）。
+
+### 修复
+- Windows 下每次 git 子进程调用都会弹窗闪现：`src/utils/git.ts` 的统一封装 `gitExec` 显式增加 `windowsHide: true`；`scripts/install-core.mjs` 的 `opencode --version` 检测同款问题一并修复。
+- 编排技能流程缺口与口径问题（12 个技能文档）：impm-finish 计数与进度核对口径（10 个子技能＋11 步）、impm-coding-review 完成提示跳步、postman_collection.json 写入方归属、impm-docs-review 弹窗条件化、api-test 写回补 expectedBase、单元/接口测试强序声明、LLD 合并步骤缺失、版本目录写冲突补齐与幂等保护等。
+
 ## [2.0.1] - 2026-10-23  prompt-recorder 导出瘦身
 
 ### 变更
