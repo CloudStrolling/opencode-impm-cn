@@ -72,7 +72,7 @@ d. 以上均不可用时判定缺少 python，接口测试无法执行，如实�
 
 ### 步骤 6：更新版本质量度量报告（阶段一：接口测试度量）
 1. 读取 docs/{项目英文缩写}-v{当前版本号}/regression.md（如存在），在阶段一测试度量章节中补充接口测试指标：用例总数、通过数、失败数、通过率。
-2. 调用 impm_doc_writer（docType=regression，target=version）写回（保留已有的单元测试度量部分）。
+2. 调用 impm_doc_writer（docType=regression，target=version，expectedBase=步骤 6.1 读取到的最新全文）写回（保留已有的单元测试度量部分）。
 
 ### 步骤 7：记录进度
 调用 impm_progress add（impm-regression-api-test，已完成），在 version_progress.md 中记录本技能完成状态。

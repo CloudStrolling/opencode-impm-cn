@@ -1,6 +1,6 @@
 ---
 name: impm-init
-description: 编排初始化阶段全部13个步骤（impm-init-isinit、impm-init-git、impm-init-project、impm-init-version、impm-init-urs、impm-init-prd、impm-init-sad、impm-init-dbd、impm-init-api、impm-init-lld、impm-init-task、impm-init-testcase、impm-init-commit），严格按顺序依次执行并汇报结果。空项目在创建 project.md 后跳过后续初始化步骤，直接进入 impm-docs。当用户输入 /impm-init 或要求初始化 impm 工程时使用。
+description: 编排初始化阶段全部13个子步骤（impm-init-isinit、impm-init-git、impm-init-project、impm-init-version、impm-init-urs、impm-init-prd、impm-init-sad、impm-init-dbd、impm-init-api、impm-init-lld、impm-init-task、impm-init-testcase、impm-init-commit）；另含 1 个 PM 记账汇报步骤，严格按顺序依次执行并汇报结果。空项目在创建 project.md 后跳过后续初始化步骤，直接进入 impm-docs。当用户输入 /impm-init 或要求初始化 impm 工程时使用。
 ---
 
 # impm-init 技能

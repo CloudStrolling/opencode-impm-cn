@@ -1,6 +1,6 @@
 ---
 name: impm
-description: impm 总流程技能，自动执行瀑布式开发全部四个阶段（项目初始化、需求分析整理、编码开发、回归测试和版本文档整理）。当用户输入 /impm 或要求执行 impm 全流程开发时使用。
+description: impm 总流程技能，自动执行瀑布式开发全部四个阶段（项目初始化、需求分析整理、编码开发、回归测试和版本文档整理）。空项目在创建 project.md 后跳过后续初始化步骤，直接进入 impm-docs。当用户输入 /impm 或要求执行 impm 全流程开发时使用。
 ---
 
 # impm 技能
@@ -24,7 +24,7 @@ description: impm 总流程技能，自动执行瀑布式开发全部四个阶�
 3. task 提示词模板（每个子步骤照此填写）：
    "以 {subagent 中文名}（subagent_type={x}）身份执行 impm 的 {技能名} 技能；先用 Skill 工具加载技能 {技能名}；必须携带的上下文：项目根目录={绝对路径}、项目英文缩写={缩写}、当前版本号={版本号}、用户输入={原文}、任务编号={taskId}（如适用）；按技能执行步骤完成全部操作后，返回：产出文件路径清单与 version_progress.md 中 {技能名} 的进度状态。"
 4. 完成核对：每步 subagent 返回后，核对产出文件存在、version_progress.md 已记录该步骤状态，全部正确才能进入下一步。
-5. 顺序纪律：严格执行顺序，不跳过、不乱序、不并行、不合并；任一子步骤失败时先定位原因，必要时回退重做，不得绕过。
+5. 顺序纪律：严格执行顺序，不跳过、不乱序、不并行（阶段内部并发规则以各阶段技能定义为准）、不合并；任一子步骤失败时先定位原因，必要时回退重做，不得绕过。
 
 ### 子步骤 subagent 对照表（impm）
 | 子步骤 | 技能名 | subagent_type |
@@ -70,7 +70,7 @@ description: impm 总流程技能，自动执行瀑布式开发全部四个阶�
 3. 全部任务完成后，检查 version_progress.md 确认 impm-coding 状态已记录。
 
 ### 阶段四：回归测试和版本文档整理（impm-finish）
-1. 使用 Skill 工具加载并执行 impm-finish 技能，依次执行：impm-regression-unit-test / impm-regression-api-test → impm-coding-comment → impm-coding-review → impm-regression-metrics → impm-project-update → impm-doc-merge → impm-doc-update → impm-deploy-update → impm-git-merge。
+1. 使用 Skill 工具加载并执行 impm-finish 技能，依次执行：impm-regression-unit-test → impm-regression-api-test（先后强序：接口测试需读取单元测试成稿的 regression.md 补充指标，不得先执行）→ impm-coding-comment → impm-coding-review → impm-regression-metrics → impm-project-update → impm-doc-merge → impm-doc-update → impm-deploy-update → impm-git-merge。
 2. 全部步骤完成后，调用 impm_progress（action=finalize）在退出前结算进度表最后一行（impm-finish，已完成）的总耗时与 token（幂等：impm-finish 已结算时自动跳过）。
 3. 向用户汇报本次版本开发的完整产出。
 

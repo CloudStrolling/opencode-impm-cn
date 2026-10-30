@@ -66,9 +66,21 @@ description: 将当前版本的 URS、PRD、API、DBD、DBD SQL、LLD 文档重�
 5. 用 impm_doc_writer（docType=prd，target=main）写回主文档。
 6. 核对：主文档为全局产品需求摘要、按项目/模块/业务逻辑重组排序、无版本号分节，编号全局唯一不重复，历史内容保留。
 
-### 步骤 3：合并 API 文档（重构式合并）+ OpenAPI 合并
+### 步骤 3：合并 LLD 文档（重构式合并，按子系统/业务模块排序）
+1. 用 impm_doc_reader（docType=lld，target=main）读取主文档 docs/{项目英文缩写}-lld.md；若主文档不存在且当前版本 LLD 文档存在，按其结构+架构基准创建。
+2. 将版本文档 docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-lld-v{当前版本号}.md 的内容按**子系统 → 业务模块 → 业务逻辑**重构并入主文档，**不按版本号分节**：
+   - **模块划分**：以 SAD 的模块划分为基准，新模块插入与架构一致的位置；已有模块同名原位更新，模块结构随系统演进变化时，重构主文档的分组与排序以匹配当前模块划分。
+   - **业务流程**：按子系统/模块归并整体业务流程，模块内按业务逻辑排序（主流程在前，支线在后）；已有流程原位更新，新增流程插入所属模块对应位置。
+   - **核心业务逻辑**：已有逻辑（含逻辑描述、判断/分支、状态流转等）原位更新；新增逻辑插入对应模块/业务流程位置；下线或废弃逻辑移入"废弃/下线逻辑"小节并标注下线版本。
+   - 版本溯源：每个模块/流程/逻辑条目保留「来源版本」列，标注首次引入和最近修改版本。
+3. 版本演进表追加当前版本行；完整文档索引追加当前版本文件路径。
+4. 若当前版本无实质性 LLD 变更（版本文档不存在或为空），跳过本步骤。
+5. 用 impm_doc_writer（docType=lld，target=main）写回主文档。
+6. 核对：主文档按子系统/业务模块/业务逻辑组织、不按版本号分节、无重复模块或逻辑定义、历史结构保留且与当前系统结构一致。
 
-#### 3.1 合并 Markdown API 文档
+### 步骤 4：合并 API 文档（重构式合并）+ OpenAPI 合并
+
+#### 4.1 合并 Markdown API 文档
 1. 用 impm_doc_reader（docType=api，target=main）读取主文档 docs/{项目英文缩写}-api.md；若主文档不存在且当前版本 API 文档存在，按其结构+架构基准创建。
 2. 确定接口分组：以 sad.md/LLD 的模块划分为准；现有分组保留，新模块接口插入与架构一致的位置。
 3. 将版本文档 docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-api-v{当前版本号}.md 的接口逐条并入：
@@ -86,7 +98,7 @@ description: 将当前版本的 URS、PRD、API、DBD、DBD SQL、LLD 文档重�
 6. 用 impm_doc_writer（docType=api，target=main）写回主文档。
 7. 核对：主文档按模块分组、无重复定义、接口与编号/来源版本可追溯，历史接口保留。
 
-#### 3.2 合并 OpenAPI 3.0 JSON
+#### 4.2 合并 OpenAPI 3.0 JSON
 1. 读取项目级主文档 docs/openapi.json（如不存在则创建空结构）：
 ```json
 {
@@ -119,7 +131,7 @@ description: 将当前版本的 URS、PRD、API、DBD、DBD SQL、LLD 文档重�
 8. 更新 info.version 为当前版本号。
 9. 写入主文档 docs/openapi.json。
 
-#### 3.3 生成项目级 Swagger UI HTML
+#### 4.3 生成项目级 Swagger UI HTML
 根据以下模板生成项目级 Swagger UI 入口文件 docs/index.html：
 ```html
 <!DOCTYPE html>
@@ -142,7 +154,7 @@ description: 将当前版本的 URS、PRD、API、DBD、DBD SQL、LLD 文档重�
 </html>
 ```
 
-### 步骤 4：合并 DBD 文档（重构式合并，按子系统/业务模块排序）
+### 步骤 5：合并 DBD 文档（重构式合并，按子系统/业务模块排序）
 1. 用 impm_doc_reader（docType=dbd，target=main）读取主文档 docs/{项目英文缩写}-dbd.md。
 2. 将版本文档 docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-dbd-v{当前版本号}.md 的内容按**子系统 → 业务模块 → 业务逻辑**重构并入主文档，**不按版本号分节**：
    - **物理模型**：按子系统缩写分组，子系统内按业务模块分组；新表插入对应子系统/模块分组下；已有表（同名）原位更新字段/索引并标注变更版本；废弃表移入"废弃表"小节。表名必须遵循 `{子系统缩写}_{模块缩写}_{实体名}` 命名规范，不合规的表名需在合并时修正。
@@ -155,7 +167,7 @@ description: 将当前版本的 URS、PRD、API、DBD、DBD SQL、LLD 文档重�
 4. 用 impm_doc_writer（docType=dbd，target=main）写回主文档。
 5. 核对：主文档按子系统/业务模块组织、不按版本号分节、无重复表定义、表名符合命名规范、历史结构保留且与当前版本结构一致。
 
-### 步骤 5：合并 DBD SQL 脚本（重构式合并，按子系统/业务模块排序）
+### 步骤 6：合并 DBD SQL 脚本（重构式合并，按子系统/业务模块排序）
 1. 用 impm_doc_reader（docType=sql，target=main）读取主文档 docs/{项目英文缩写}-dbd.sql；若主文档不存在则按版本 SQL 结构创建。
 2. 将版本 SQL docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-dbd-v{当前版本号}.sql 并入，按**子系统 → 业务模块**分组组织：
    - 新表追加 CREATE TABLE 到对应子系统/模块分组；
@@ -167,13 +179,13 @@ description: 将当前版本的 URS、PRD、API、DBD、DBD SQL、LLD 文档重�
 4. 用 impm_doc_writer（docType=sql，target=main）写回主文档。
 5. 核对：SQL 语句完整、按子系统/业务模块组织、无重复冲突、数据初始化语句包含在内、可直接执行。
 
-### 步骤 6：记录进度
+### 步骤 7：记录进度
 1. 调用 impm_progress add（impm-doc-merge，已完成），在 version_progress.md 中记录本技能完成状态。
 2. 核对 version_progress.md 中已记录本步骤状态。
 
 ## 交付物
 - docs/{项目英文缩写}-urs.md、docs/{项目英文缩写}-prd.md（需求/功能/用户故事**摘要**汇总主文档，非完整内容）
-- docs/{项目英文缩写}-api.md、docs/{项目英文缩写}-dbd.md、docs/{项目英文缩写}-dbd.sql（按项目组织方式、代码结构、系统架构**重构式合并**后的完整设计主文档）
+- docs/{项目英文缩写}-api.md、docs/{项目英文缩写}-lld.md、docs/{项目英文缩写}-dbd.md、docs/{项目英文缩写}-dbd.sql（按项目组织方式、代码结构、系统架构**重构式合并**后的完整设计主文档）
 - docs/openapi.json（项目级 OpenAPI 3.0 格式）
 - docs/index.html（项目级 Swagger UI 入口）
 - version_progress.md 进度记录

@@ -20,7 +20,7 @@ impm 瀑布式开发流程完成设计阶段（阶段2）、任务清单 docs/{�
 ## 并发调度模型（本技能核心）
 1. **并行度上限**：同一时刻最多同时执行 **5** 个编码任务。
 2. **可并行条件**：任务状态为"未完成"，且全部前置任务（upstreamTaskIds）状态为"已完成"，即可纳入批次；与当前批次内其他任务是否同时执行由 PM 统一调度。
-3. **阶段波次并行**：每个任务按 impm-task-coding 的标准步骤顺序执行：context → cs → ws → dbd(按需) → api(按需) → testcase → code → write-unit-test → run-unit-test → write-api-test → run-api-test → gitcommit。PM 在**同一阶段**为批次内全部适用任务**并发**派发该阶段子步骤 subagent（同一轮多个 task 调用），本阶段全部返回并核对通过后，才进入下一阶段。
+3. **阶段波次并行**：每个任务按 impm-task-coding 的标准步骤顺序执行：context → cs → ws → dbd(按需) → api(按需) → testcase → code → write-unit-test → run-unit-test → write-api-test → run-api-test（11 段）。gitcommit 不属于 impm-task-coding 任务内标准步骤，由 PM 在该任务全部子步骤返回并通过核对后，串行派发阶段 12（impm-task-coding-gitcommit，一次只提交一个任务）收尾。PM 在**同一阶段**为批次内全部适用任务**并发**派发该阶段子步骤 subagent（同一轮多个 task 调用），本阶段全部返回并核对通过后，才进入下一阶段。
 4. **状态标记**：批次选定后，立即将批次内每个任务状态标记为"执行中"（impm_task_manager update），防止重复调度；git 提交完成后由 scm 标记为"已完成"。
 5. **串行提交**：批次内全部任务完成 run-api-test 后，对每个成功任务**逐个串行**启动 scm subagent 执行 impm-task-coding-gitcommit（一次只提交一个任务），前一个提交完成确认后再提交下一个。
 6. **批次循环**：每批次全部完成（提交完毕）后，重新读取任务清单计算下一批可并行任务，直到无任务可执行。
@@ -47,7 +47,7 @@ impm 瀑布式开发流程完成设计阶段（阶段2）、任务清单 docs/{�
 | 9 | impm-task-coding-run-unit-test | te | 执行单元测试并更新测试结果 |
 | 10 | impm-task-coding-write-api-test | te | 编写接口测试 Postman Collection 用例 |
 | 11 | impm-task-coding-run-api-test | te | 执行接口测试并更新测试结果 |
-| 12 | impm-task-coding-gitcommit | scm | git 提交并标记任务完成（串行，一次一个） |
+| 12 | impm-task-coding-gitcommit | scm | git 提交并标记任务完成（串行，一次一个；调度方串行收尾，不属于 impm-task-coding 标准步骤） |
 
 ## 版本目录写入冲突规避（必须遵守）
 多个任务并行编码时，任务会向版本目录 docs/{项目英文缩写}-v{当前版本号}/ 及共享脚本目录写入内容，存在并发写冲突。**所有存在写入冲突的地方及规避规则如下**：

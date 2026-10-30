@@ -1,6 +1,6 @@
 ---
 name: impm-docs
-description: 编排并执行需求分析整理阶段（阶段2）的全部10个步骤（版本创建、URS、PRD、SAD更新、DBD、API、LLD、任务清单、需求追踪矩阵、git提交），确保各步骤严格按顺序依次执行。
+description: 编排并执行需求分析整理阶段（阶段2）的全部 10 个子步骤（版本创建、URS、PRD、SAD更新、DBD、API、LLD、任务清单、需求追踪矩阵、git提交）；正文另含 2 个 PM 直接执行环节（确定当前版本号、结算汇报），确保各步骤严格按顺序依次执行。
 ---
 
 # impm-docs 技能
@@ -104,7 +104,7 @@ description: 编排并执行需求分析整理阶段（阶段2）的全部10个�
 调用 impm_progress（action=finalize）在退出前结算进度表最后一行（impm-analysis-commit，已完成）的总耗时与 token（含该步骤主会话与 subagent 子会话消耗）；汇总本阶段全部产出文件清单、各步骤完成状态，并向用户说明下一步建议（进入编码开发阶段，输入 /impm-coding）。
 
 ## 交付物
-- docs/{项目英文缩写}-v{当前版本号}/version_progress.md（版本进度表，10 个步骤全部记录）
+- docs/{项目英文缩写}-v{当前版本号}/version_progress.md（版本进度表，10 个子步骤全部记录）
 - docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-urs-v{当前版本号}.md
 - docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-prd-v{当前版本号}.md
 - docs/{项目英文缩写}-v{当前版本号}/{项目英文缩写}-dbd-v{当前版本号}.md（如适用）

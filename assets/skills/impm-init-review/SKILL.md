@@ -1,6 +1,6 @@
 ---
 name: impm-init-review
-description: 编排初始化阶段全部13个步骤（impm-init-isinit、impm-init-git、impm-init-project、impm-init-version、impm-init-urs、impm-init-prd、impm-init-sad、impm-init-dbd、impm-init-api、impm-init-lld、impm-init-task、impm-init-testcase、impm-init-commit），并在 project/urs/prd/sad/dbd/api/lld/task/testcase 每一步文档生成后先提取文档摘要显示在对话框中、再弹出提示框请用户审核文档，审核通过后才执行下一步。空项目在创建 project.md 后跳过后续初始化步骤，直接进入 impm-docs-review。当用户输入 /impm-init-review 或要求初始化 impm 工程并逐文档审核时使用。
+description: 编排初始化阶段全部13个子步骤（impm-init-isinit、impm-init-git、impm-init-project、impm-init-version、impm-init-urs、impm-init-prd、impm-init-sad、impm-init-dbd、impm-init-api、impm-init-lld、impm-init-task、impm-init-testcase、impm-init-commit）；另含 1 个 PM 记账汇报步骤，并在 project/urs/prd/sad/dbd/api/lld/task/testcase 每一步文档生成后先提取文档摘要显示在对话框中、再弹出提示框请用户审核文档，审核通过后才执行下一步。空项目在创建 project.md 后跳过后续初始化步骤，直接进入 impm-docs-review。当用户输入 /impm-init-review 或要求初始化 impm 工程并逐文档审核时使用。
 ---
 
 # impm-init-review 技能
