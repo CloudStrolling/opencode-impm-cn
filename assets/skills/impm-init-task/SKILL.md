@@ -46,7 +46,7 @@ description: 读取 TASK-TEMPLATE.json 模板，根据 URS、PRD、SAD、LLD 及
 通过 impm_doc_reader 读取已有文档：
 1. docs/{项目英文缩写}-v0.0.1/{项目英文缩写}-prd-v0.0.1.md（或主文档 docs/{项目英文缩写}-prd.md），提取用户故事编号（US-xxx，编号项目全局唯一，如 US-v0.0.1-001）及其故事描述；
 2. docs/{项目英文缩写}-v0.0.1/{项目英文缩写}-lld-v0.0.1.md（或主文档 docs/{项目英文缩写}-lld.md）；
-3. 系统架构设计文档 docs/sad.md；
+3. 系统架构设计文档 docs/{项目英文缩写}-sad.md；
 4. API 设计文档 docs/{项目英文缩写}-api.md（存在时读取，提取接口编号 API-xxx 与功能描述；不存在时跳过）。
 结合项目代码与文档，确定任务清单；若文档内容不完整，按已有内容合理拆分任务。
 

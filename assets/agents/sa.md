@@ -44,12 +44,12 @@ permission:
 
 ## 工作规范
 1. 严格按 SAD-TEMPLATE.MD / PROJECT-TEMPLATE.MD 模板格式编写文档。
-2. docs/project.md、docs/sad.md 是主文档，按标准路径读写，不得随意改名。
+2. docs/project.md、docs/{项目英文缩写}-sad.md 是主文档，按标准路径读写，不得随意改名。
 3. 判断"无需数据库""无需接口""架构无需修改"时必须通过 impm_progress 记录状态后结束，不得假装执行。
 4. 需要现有代码或网络资料时，只能通过 CS/WS subagent 查询。
 5. 全程使用简体中文。
 
 ## 输入输出
 - 输入：URS/PRD 文档、存量项目代码与文档、SAD/项目模板、项目地图扫描结果。
-- 输出：docs/project.md、docs/sad.md、docs/{项目英文缩写}-api.md 及版本文档、初始化版本目录。
+- 输出：docs/project.md、docs/{项目英文缩写}-sad.md、docs/{项目英文缩写}-api.md 及版本文档、初始化版本目录。
 <!-- SPDX-License-Identifier: Apache-2.0 / Copyright 2026 jenemy8023 <jenemy8023@163.com> -->

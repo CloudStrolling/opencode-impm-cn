@@ -2,6 +2,16 @@
 
 本项目版本号遵循语义化版本（SemVer）：主版本.次版本.修订版本。
 
+## [3.0.1] - 2026-11-01  SAD 主文档路径统一为 docs/{项目英文缩写}-sad.md
+
+### 变更
+- SAD 主文档命名统一：全项目不再使用固定路径 `docs/sad.md`，一律写为 `docs/{项目英文缩写}-sad.md`（与 urs/prd/dbd/api/lld 主文档命名对齐），不做旧路径兼容回退。
+- `src/utils/paths.ts`：`getDocPath(docType=sad)` 改为与设计文档一致的 target 机制（`target=main` → `docs/{缩写}-sad.md`；`target=version` → 版本目录内 `{缩写}-sad-v{版本}.md`）；`sad` 移出 `FIXED_PATH_DOC_TYPES`。
+- `src/tools/project-state.ts`：`impm_isinit` 初始化判定改为检查 `docs/project.md` 与 `docs/{项目英文缩写}-sad.md`，缩写无法确定时扫描 docs 目录匹配 `{缩写}-sad.md`。
+- `src/tools/context-builder.ts`：任务上下文改为读取 `{缩写}-sad.md` 主文档（显式 target=main），缺失提示动态显示实际路径。
+- 技能与文档统一（18 个文件）：impm-init、impm-init-review、impm-init-sad、impm-init-isinit、impm-init-dbd、impm-init-api、impm-init-task、impm、impm-review-edition、impm-sprint、impm-sprint-code、impm-hotfix、impm-doc-merge、assets/commands/impm-init-sad.md、assets/agents/sa.md、agent.md、readme.md、docs/requirement.md 中全部 `docs/sad.md` 引用改为 `docs/{项目英文缩写}-sad.md`。
+- 当前版本号统一为 3.0.1（package.json、package-lock.json、readme.md 徽章同步更新）。
+
 ## [3.0.0] - 2026-10-30  版本号统一为 3.0.0，修复子进程弹窗与技能流程缺口
 
 ### 变更

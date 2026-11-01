@@ -75,7 +75,7 @@ PM → BA / SA / TL / DBA / TE / SCM / DW / CS / WS / FEE / BEE / SSE
 - 更新项目地图（impm_project_analyzer 扫描源码）
 
 **输入：** PRD 文档、源代码结构
-**输出：** `docs/project.md`、`docs/sad.md`
+**输出：** `docs/project.md`、`docs/{项目英文缩写}-sad.md`
 
 ---
 
@@ -231,7 +231,7 @@ PM → BA / SA / TL / DBA / TE / SCM / DW / CS / WS / FEE / BEE / SSE
                     ├── [阶段1 初始化] /impm-init
                     │   ├── PM   → 判定项目类型（空项目/存量项目）
                     │   ├── SCM  → git init、版本目录、进度表、提交
-                    │   ├── SA   → project.md、sad.md
+                    │   ├── SA   → project.md、{缩写}-sad.md
                     │   ├── BA   → urs.md、prd.md
                     │   ├── DBA  → dbd.md / 无需数据库
                     │   ├── TL   → api.md、lld.md

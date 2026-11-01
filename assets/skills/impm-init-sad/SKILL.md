@@ -1,6 +1,6 @@
 ---
 name: impm-init-sad
-description: 读取 SAD-TEMPLATE.MD 模板，根据项目代码、文档及 PRD 反推系统架构设计文档，写入 docs/sad.md。当初始化阶段需要编写系统架构设计文档时使用。
+description: 读取 SAD-TEMPLATE.MD 模板，根据项目代码、文档及 PRD 反推系统架构设计文档，写入 docs/{项目英文缩写}-sad.md。当初始化阶段需要编写系统架构设计文档时使用。
 ---
 
 # impm-init-sad 技能
@@ -47,14 +47,14 @@ description: 读取 SAD-TEMPLATE.MD 模板，根据项目代码、文档及 PRD 
 - 存量项目：从现有代码、技术栈与文档反推架构设计各章节。
 - 空项目：按模板结构写入空文档，章节标题保留，内容填写“待补充”或空值。
 
-### 步骤 3：写入 docs/sad.md
-调用 impm_doc_writer(projectRoot, sad, {项目中文名称}, {当前版本号}, {任务编号}, main, 内容) 写入主文档 docs/sad.md（sad 仅主文档，无版本内文档，主文档不存在则创建）。核对 docs/sad.md 已创建且内容完整。
+### 步骤 3：写入 docs/{项目英文缩写}-sad.md
+调用 impm_doc_writer(projectRoot, sad, {项目中文名称}, {当前版本号}, {任务编号}, main, 内容) 写入主文档 docs/{项目英文缩写}-sad.md（sad 常规形态仅主文档，主文档不存在则创建）。核对 docs/{项目英文缩写}-sad.md 已创建且内容完整。
 
 ### 步骤 4：记录进度
 调用 impm_progress(projectRoot, {项目英文缩写}, {当前版本号}, add, impm-init-sad, 已完成) 记录本步骤完成。
 
 ## 交付物
-- docs/sad.md
+- docs/{项目英文缩写}-sad.md
 
 ## 完成后提示
 - 如需继续执行下一步骤，请输入 /impm-init-dbd

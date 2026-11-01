@@ -5,7 +5,7 @@
 **我是项目经理 —— AI 驱动的工程化全流程开发套件**
 
 <p>
-  <a href="#"><img src="https://img.shields.io/badge/version-3.0.0-2ea44f?style=flat-square" alt="version"></a> 
+  <a href="#"><img src="https://img.shields.io/badge/version-3.0.1-2ea44f?style=flat-square" alt="version"></a> 
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square" alt="license"></a>
   <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/node->=%2022.5-339933?style=flat-square&logo=node.js&logoColor=white" alt="node"></a>
   <a href="https://opencode.ai/"><img src="https://img.shields.io/badge/OpenCode-必需-ff6b6b?style=flat-square" alt="opencode"></a>
@@ -277,7 +277,7 @@ flowchart LR
 | 文档类型 | 路径 |
 |:---------|:-----|
 | 项目基本信息 | `docs/project.md` |
-| 系统架构设计 | `docs/sad.md` |
+| 系统架构设计 | `docs/{项目英文缩写}-sad.md` |
 | 版本目录 | `docs/{项目英文缩写}-v{版本号}/` |
 | 版本需求/设计文档 | `docs/{缩写}-v{版本}/{缩写}-{urs|prd|dbd|api|lld|testcase}-v{版本}.md` |
 | 敏捷需求简报 | `docs/{缩写}-v{版本}/{缩写}-urs-v{版本}.md`（复用 urs 路径，敏捷简报格式） |

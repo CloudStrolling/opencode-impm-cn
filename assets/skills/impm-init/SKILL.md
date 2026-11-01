@@ -62,7 +62,7 @@ description: 编排初始化阶段全部13个子步骤（impm-init-isinit、impm
 ## 执行步骤
 ### 步骤 a：执行 impm-init-isinit（初始化判定，PM 直接执行，不启动 subagent）
 加载并执行 impm-init-isinit 技能（先加载技能，再按技能步骤执行）：调用 impm_isinit(projectRoot) 判断当前项目是否已初始化：
-- 若 docs/project.md 与 docs/sad.md 都存在且非空：项目已初始化，直接跳过整个初始化阶段，向用户报告判定结论并结束本技能，不再执行后续步骤。
+- 若 docs/project.md 与 docs/{项目英文缩写}-sad.md 都存在且非空：项目已初始化，直接跳过整个初始化阶段，向用户报告判定结论并结束本技能，不再执行后续步骤。
 - 若为空项目：按空项目初始化，各文档按模板写入空结构。**空项目在完成步骤 b（git）和步骤 c（project.md）后将跳过步骤 d-m，直接进入 impm-docs 需求分析整理阶段。**
 - 若为存量项目：按存量项目反推补全各文档。
 执行完毕后核对 version_progress.md 中 impm-init-isinit 的进度记录；若子技能未记录（version_progress.md 尚未创建），暂不处理，由步骤 d（impm-init-version）统一补录。将判定结果（空项目/存量项目/已初始化）作为上下文传给后续步骤。
@@ -93,17 +93,17 @@ description: 编排初始化阶段全部13个子步骤（impm-init-isinit、impm
 完成后核对版本文档为完整内容、主文档为摘要内容，并核对/补录进度行（impm-init-prd，已完成）。
 
 ### 步骤 g：执行 impm-init-sad（系统架构设计，仅存量项目）
-启动 SA subagent（subagent_type=sa）执行 impm-init-sad 技能：由 SA 调用 impm_template_reader(projectRoot, SAD-TEMPLATE.MD) 读取模板，根据项目代码、文档及 PRD 反推或按空结构生成系统架构设计文档，impm_doc_writer docType=sad target=main 写入 docs/sad.md（sad 仅主文档，无版本内文档）。
-完成后核对 docs/sad.md 存在且内容完整，并核对/补录进度行（impm-init-sad，已完成）。
+启动 SA subagent（subagent_type=sa）执行 impm-init-sad 技能：由 SA 调用 impm_template_reader(projectRoot, SAD-TEMPLATE.MD) 读取模板，根据项目代码、文档及 PRD 反推或按空结构生成系统架构设计文档，impm_doc_writer docType=sad target=main 写入 docs/{项目英文缩写}-sad.md（sad 仅主文档，无版本内文档）。
+完成后核对 docs/{项目英文缩写}-sad.md 存在且内容完整，并核对/补录进度行（impm-init-sad，已完成）。
 
 ### 步骤 h：执行 impm-init-dbd（数据库设计，仅存量项目）
-启动 DBA subagent（subagent_type=dba）执行 impm-init-dbd 技能：由 DBA 根据 docs/project.md 与 docs/sad.md 判断是否需要数据库：
+启动 DBA subagent（subagent_type=dba）执行 impm-init-dbd 技能：由 DBA 根据 docs/project.md 与 docs/{项目英文缩写}-sad.md 判断是否需要数据库：
 - 无需数据库：仅记录进度行（impm-init-dbd，无需数据库），跳过文档生成。
 - 需要数据库：读取 DBD-TEMPLATE.MD 模板，反推数据库设计文档与初始化 SQL，impm_doc_writer docType=dbd 与 docType=sql 分别写入版本文档并复制到主文档 docs/{项目英文缩写}-dbd.md、docs/{项目英文缩写}-dbd.sql。
 完成后核对文件存在，并核对/补录进度行（impm-init-dbd，已完成）。
 
 ### 步骤 i：执行 impm-init-api（接口设计，仅存量项目）
-启动 SA subagent（subagent_type=sa）执行 impm-init-api 技能：由 SA 根据 docs/project.md 与 docs/sad.md 判断是否前后端分离或接口对接、是否需要设计接口：
+启动 SA subagent（subagent_type=sa）执行 impm-init-api 技能：由 SA 根据 docs/project.md 与 docs/{项目英文缩写}-sad.md 判断是否前后端分离或接口对接、是否需要设计接口：
 - 无需接口：仅记录进度行（impm-init-api，无需接口），跳过文档生成。
 - 需要接口：读取 API-TEMPLATE.MD 模板，反推接口设计文档，impm_doc_writer docType=api target=main 写入版本文档并复制到主文档 docs/{项目英文缩写}-api.md。
 完成后核对文件存在，并核对/补录进度行（impm-init-api，已完成）。
@@ -131,7 +131,7 @@ description: 编排初始化阶段全部13个子步骤（impm-init-isinit、impm
 若为空项目，步骤 c 完成后 PM 直接向用户汇报空项目初始化完成，汇报内容包括：已完成的步骤（impm-init-isinit、impm-init-git、impm-init-project）、产出文件（docs/project.md、.gitignore、git 初始提交）、下一步建议（直接进入 impm-docs 需求分析整理阶段）。
 
 ## 交付物
-- **存量项目**：版本目录 docs/{项目英文缩写}-v0.0.1/ 及其全部初始化文档、主文档（project.md、sad.md、urs.md、prd.md、api.md、dbd.md、dbd.sql、lld.md、testcase.md）、任务清单、版本进度表 version_progress.md、.gitignore 与 git 初始提交记录、接口测试用例与执行器
+- **存量项目**：版本目录 docs/{项目英文缩写}-v0.0.1/ 及其全部初始化文档、主文档（project.md、{缩写}-sad.md、{缩写}-urs.md、{缩写}-prd.md、{缩写}-api.md、{缩写}-dbd.md、{缩写}-dbd.sql、{缩写}-lld.md、{缩写}-testcase.md）、任务清单、版本进度表 version_progress.md、.gitignore 与 git 初始提交记录、接口测试用例与执行器
 - **空项目**：docs/project.md、.gitignore 与 git 初始提交记录
 
 ## 完成后提示

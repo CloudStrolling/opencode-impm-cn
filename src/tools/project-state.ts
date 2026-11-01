@@ -18,14 +18,22 @@
  * impm_project_info / impm_isinit 工具
  *
  * - impm_project_info：读取 docs/project.md 解析项目基本信息。
- * - impm_isinit：检查项目是否已初始化（project.md / sad.md 是否存在），
+ * - impm_isinit：检查项目是否已初始化（project.md / docs/{项目英文缩写}-sad.md 是否存在），
  *   并判断是否为空项目（除系统目录外无任何源码文件）。
  */
 
-import { existsSync } from "fs";
+import { existsSync, readdirSync } from "fs";
 import { join } from "path";
-import { EXCLUDED_DIRS, listFilesRecursive } from "../utils/paths.js";
-import { formatProjectInfo, readProjectInfo } from "../utils/project.js";
+import {
+    EXCLUDED_DIRS,
+    docsRoot,
+    listFilesRecursive,
+} from "../utils/paths.js";
+import {
+    formatProjectInfo,
+    readProjectInfo,
+    resolveAbbrevSafe,
+} from "../utils/project.js";
 
 export const projectInfoDefinition = {
     description:
@@ -48,9 +56,31 @@ export function projectInfoExecute(args: { projectRoot: string }) {
     }
 }
 
+/** 定位 SAD 主文档：docs/{项目英文缩写}-sad.md；缩写无法确定时扫描 docs 目录匹配 {缩写}-sad.md */
+function resolveSadMainPath(root: string): { path: string; exists: boolean } {
+    const prefix = join(root, "docs");
+    const abbrev = resolveAbbrevSafe(root) ?? "";
+    if (abbrev) {
+        const path = join(prefix, `${abbrev}-sad.md`);
+        if (existsSync(path)) {
+            return { path, exists: true };
+        }
+    }
+    const docs = docsRoot(root);
+    if (existsSync(docs)) {
+        for (const name of readdirSync(docs)) {
+            const path = join(docs, name);
+            if (/^[a-z0-9_-]+-sad\.md$/i.test(name)) {
+                return { path, exists: true };
+            }
+        }
+    }
+    return { path: abbrev ? join(prefix, `${abbrev}-sad.md`) : join(prefix, "{缩写}-sad.md"), exists: false };
+}
+
 export const isInitDefinition = {
     description:
-        "检查项目是否已初始化：判断 docs/project.md 与 docs/sad.md 是否存在且非空，并扫描项目根目录判断是否为空项目（排除 node_modules、.git、docs 等系统目录后无任何文件）。初始化阶段判定项目类型（空项目/存量项目）时使用。",
+        "检查项目是否已初始化：判断 docs/project.md 与 docs/{项目英文缩写}-sad.md 是否存在且非空，并扫描项目根目录判断是否为空项目（排除 node_modules、.git、docs 等系统目录后无任何文件）。初始化阶段判定项目类型（空项目/存量项目）时使用。",
 };
 
 export function isInitExecute(args: { projectRoot: string }) {
@@ -63,10 +93,10 @@ export function isInitExecute(args: { projectRoot: string }) {
             };
         }
         const projectMdPath = join(root, "docs", "project.md");
-        const sadMdPath = join(root, "docs", "sad.md");
+        const { path: sadMdPath, exists: sadMdExists } =
+            resolveSadMainPath(root);
 
         const projectMdExists = existsSync(projectMdPath);
-        const sadMdExists = existsSync(sadMdPath);
 
         let files: string[] = [];
         try {

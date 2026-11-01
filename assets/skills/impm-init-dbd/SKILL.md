@@ -40,7 +40,7 @@ description: 判断项目是否需要数据库，需要时读取 DBD-TEMPLATE.MD
 
 ## 执行步骤
 ### 步骤 1：判断是否需要数据库
-通过 impm_doc_reader 读取 docs/project.md 与 docs/sad.md，判断当前项目是否需要数据库，以及具体数据库产品（如 MySQL、PostgreSQL 等）与版本：
+通过 impm_doc_reader 读取 docs/project.md 与 docs/{项目英文缩写}-sad.md，判断当前项目是否需要数据库，以及具体数据库产品（如 MySQL、PostgreSQL 等）与版本：
 - 无需数据库：调用 impm_progress(projectRoot, {项目英文缩写}, {当前版本号}, add, impm-init-dbd, 无需数据库) 记录进度并结束本技能。
 - 需要数据库：继续执行步骤 2。
 

@@ -54,7 +54,6 @@ export type DocType =
 /** 固定路径文档类型（无需版本目录，直接位于 docs/ 或项目根目录） */
 export const FIXED_PATH_DOC_TYPES: DocType[] = [
     "project",
-    "sad",
     "readme",
     "agent",
     "deploy-build",
@@ -139,7 +138,9 @@ export function progressFilePath(
  * 按文档类型返回标准文件路径。
  * docType 为 task 类型文档时返回 {缩写}-task-v{版本}.json；
  * docType 为 context/cs/ws 时必须提供 taskId；
- * docType 为 testcase 且提供 taskId 时返回任务目录内 testcase.md。
+ * docType 为 testcase 且提供 taskId 时返回任务目录内 testcase.md；
+ * docType 为 sad 与 urs/prd 等设计文档一致：
+ * target=main 返回 docs/{缩写}-sad.md，target=version 返回版本目录内 {缩写}-sad-v{版本}.md。
  */
 export function getDocPath(
     projectRoot: string,
@@ -152,8 +153,6 @@ export function getDocPath(
     switch (docType) {
         case "project":
             return join(docsRoot(projectRoot), "project.md");
-        case "sad":
-            return join(docsRoot(projectRoot), "sad.md");
         case "readme":
             return join(projectRoot, "readme.md");
         case "agent":
@@ -179,6 +178,7 @@ export function getDocPath(
                       versionDir(projectRoot, abbrev, version),
                       `${abbrev}-testcase-v${normalizeVersion(version)}.md`,
                   );
+        case "sad":
         case "urs":
         case "prd":
         case "dbd":

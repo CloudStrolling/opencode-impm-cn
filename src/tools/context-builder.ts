@@ -17,7 +17,7 @@
 /**
  * impm_context_builder 工具
  * 为编码任务收集相关需求信息，构建精简上下文：
- *   任务信息 + 对应用户故事（PRD）+ 项目信息（project.md）+ 系统架构相关章节（sad.md）
+ *   任务信息 + 对应用户故事（PRD）+ 项目信息（project.md）+ 系统架构相关章节（docs/{项目英文缩写}-sad.md 主文档）
  */
 
 import { existsSync, readFileSync } from "fs";
@@ -31,7 +31,7 @@ function escapeRegExp(text: string): string {
 
 export const contextBuilderDefinition = {
     description:
-        "构建任务编码上下文：按 taskId 汇总任务信息、对应用户故事（从 PRD 提取）、项目信息（project.md）与系统架构相关章节（sad.md），生成精简上下文 Markdown，供编码阶段使用。",
+        "构建任务编码上下文：按 taskId 汇总任务信息、对应用户故事（从 PRD 提取）、项目信息（project.md）与系统架构相关章节（docs/{项目英文缩写}-sad.md 主文档），生成精简上下文 Markdown，供编码阶段使用。",
 };
 
 /** 按用户故事编号从 PRD 中提取对应章节 */
@@ -104,7 +104,7 @@ function extractSadSections(sadContent: string): string {
     flush();
 
     if (sections.length === 0) {
-        return "（sad.md 未找到与任务相关的架构章节）";
+        return "（SAD 主文档未找到与任务相关的架构章节）";
     }
     return sections.join("\n\n");
 }
@@ -164,9 +164,11 @@ export function contextBuilderExecute(args: {
             projectInfo = readFileSync(projectPath, "utf8");
         }
 
-        // 4. 系统架构相关章节（sad.md）
-        let sadSections = "（docs/sad.md 缺失）";
-        const sadPath = getDocPath(args.projectRoot, abbrev, version, "sad");
+        // 4. 系统架构相关章节（docs/{缩写}-sad.md 主文档）
+        let sadSections = `（docs/${abbrev}-sad.md 缺失）`;
+        const sadPath = getDocPath(args.projectRoot, abbrev, version, "sad", {
+            target: "main",
+        });
         if (existsSync(sadPath)) {
             sadSections = extractSadSections(readFileSync(sadPath, "utf8"));
         }

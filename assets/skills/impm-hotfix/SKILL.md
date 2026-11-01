@@ -53,7 +53,7 @@ description: impm热修复编排技能，3环节轻量完成bug定位到修复�
 ### 步骤 1：前置检查（PM 直接执行）
 调用 impm_isinit(projectRoot) 判断项目状态：
 - 若 docs/project.md 不存在：向用户提示"项目未初始化，请先执行 /impm-init"，本技能结束。
-- 若 docs/project.md 存在：继续执行步骤 2（不强制要求 sad.md，hotfix 门槛低于敏捷流程）。
+- 若 docs/project.md 存在：继续执行步骤 2（不强制要求 {缩写}-sad.md，hotfix 门槛低于敏捷流程）。
 
 ### 步骤 2：定位分析（PM 直接执行）
 1. 从用户输入 $ARGUMENTS 提取 bug 描述、报错信息、相关文件/日志路径；信息不足时向用户提问补充（复现步骤、期望行为、实际行为、环境信息）。

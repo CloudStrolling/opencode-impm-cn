@@ -40,7 +40,7 @@ description: 判断项目是否需要接口设计，需要时读取 API-TEMPLATE
 
 ## 执行步骤
 ### 步骤 1：判断是否需要接口设计
-通过 impm_doc_reader 读取 docs/project.md 与 docs/sad.md，判断项目是否前后端分离或存在接口对接（如 Web 服务、第三方系统对接等），是否需要设计接口：
+通过 impm_doc_reader 读取 docs/project.md 与 docs/{项目英文缩写}-sad.md，判断项目是否前后端分离或存在接口对接（如 Web 服务、第三方系统对接等），是否需要设计接口：
 - 无需接口：调用 impm_progress(projectRoot, {项目英文缩写}, {当前版本号}, add, impm-init-api, 无需接口) 记录进度并结束本技能。
 - 需要接口：继续执行步骤 2。
 

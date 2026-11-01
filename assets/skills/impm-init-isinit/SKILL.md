@@ -1,6 +1,6 @@
 ---
 name: impm-init-isinit
-description: 判断当前项目是否已初始化（docs/project.md 与 docs/sad.md 是否都存在且非空），并确定初始化方式：空项目按模板空结构写入、存量项目反推补全。当初始化阶段第一步需要判定项目状态时使用。
+description: 判断当前项目是否已初始化（docs/project.md 与 docs/{项目英文缩写}-sad.md 是否都存在且非空），并确定初始化方式：空项目按模板空结构写入、存量项目反推补全。当初始化阶段第一步需要判定项目状态时使用。
 ---
 
 # impm-init-isinit 技能

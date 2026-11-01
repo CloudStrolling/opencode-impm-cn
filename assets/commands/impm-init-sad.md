@@ -1,5 +1,5 @@
 ---
-description: 生成并写入系统架构设计文档 docs/sad.md
+description: 生成并写入系统架构设计文档 docs/{项目英文缩写}-sad.md
 agent: pm
 subtask: false
 ---
